@@ -26,12 +26,11 @@ import matplotlib.pyplot as plt
 # <https://docs.python.org/3/library/logging.html#module-logging>
 import logging
 
+# Module de la bibliothèque standard
+# Permet de tenir compte du temps
+# En particulier, de mesurer le nombre de ns depuis le début
+# de l'exécution du programme.
 import time
-import os
-import sys
-import json
-
-logger = logging.getLogger(__name__)
 
 # Port de communication série du Arduino
 # Pour trouver quel port utiliser:
@@ -43,16 +42,19 @@ PORT: str = '/dev/cu.usbmodemFA13201'
 # oxy_base.ino sinon les programmes ne pourront pas communiquer.
 DEBIT: int = 115200 # Le plus rapide possible pour notre micro-contrôleur
 DELAI: int = 1 # Attente en lecture
-BASELINE_FILE = "baseline.json"
+ESPACEMENT: int = 1e6 # [ns] Temps d'attente entre les mesures, en ns
+
+# Facteurs de conversion
+ns2s: float = 1e-9 # Pour l'axe du temps
+GHz2Hz: float = 1e9 # Pour l'axe des fréquences
 
 # Définition des indices pour les deux types de mesures
 IR: int = 0
 VIS: int = 1
 
-# Commandes que le micro-contrôleur s'attend à recevoir
-# IR    VIS
-# i     v
-CMDS: bytes = b'iv'
+# Définition des indices pour les deux types de graphiques
+BRUT: int = 0
+FFT: int = 1
 
 # ============================
 # = Définitions de fonctions =
@@ -73,62 +75,29 @@ CMDS: bytes = b'iv'
 # ...                           Les autres arguments n'ont pas d'ordre
 #                               particulier.
 
-def get_1(res: list[list[int]],
-          ser: serial.Serial,
-          pd: int,
-          cmds: bytes,
-          logger: logging.Logger = logger) -> int|None:
-    # Vider les tampons de lecture et d'écriture
-    # Ça revient à ignorer toute requête trop longue
-    # ou données manquées.
-    ser.reset_output_buffer()
-    ser.reset_input_buffer()
+def prendre_mesure(res: list[list[int]],
+               ser: serial.Serial) -> tuple[int|None]:
+    temps = time.process_time_ns()
+    res[0].append(temps)
     
-    ser.write(cmds[pd:pd+1]) # Envoyer la commande
-    ser.flush() # Vider le tampon d'écriture (envoyer toutes les instructions)
-    octet = ser.read() # Lecture d'un octet
-    
-    if len(octet) == 1:
-        val = int.from_bytes(octet)
-        res[pd].append(val)
-        return val
-    else:
-        # Conserver les valeurs d'erreurs permet
-        # de facilement garder deux listes de même longueur.
-        # On pourra ignorer les valeurs nulles plus tard.
-        if 0 not in [len(x) for x in res]:
-            logger.warning('%s: (%s, %s)', len(res[0]), res[0][-1], res[1][-1])
+    for i in range(1, len(res)):
+        ser.write(bytes([i-1]))
+        ser.flush()
+        ligne = ser.readline().decode('utf-8').strip()
+        
+        if ligne.isdigit():
+            res[i].append(int(ligne))
         else:
-            logger.warning('Valeur ignorée.')
-        res[pd].append(None)
-        return None
+            res[i].append(None)
 
-def get_all(res: list[list[int]],
-            ser: serial.Serial,
-            pds: tuple[int] = (IR, VIS),
-            cmds: bytes = CMDS,
-            logger: logging.Logger = logger) -> tuple[int|None]:
-    return tuple(get_1(res, ser, pd, cmds, logger=logger) for pd in pds)
-
-def display(res: list[list[int]],
-            pds: tuple[int],
-            logger: logging.Logger = logger):
-        import pandas
-        cadre = pandas.DataFrame({'IR': res[IR], 'VIS': res[VIS]})
-        print(cadre.tail())
+    return [x[-1] for x in res]
 
 def plot(res: list[list[int]],
-         pds: tuple[int],
-         fig: mpl.figure.Figure,
-         logger: logging.Logger = logger):
+         fig: mpl.figure.Figure):
     
-    logging.debug('pds = %s', pds)
-    logging.debug('fig = %s', fig)
-    logging.debug('fig.axes = %s', fig.axes)
-    logging.debug('fig.axes[0].lines = %s', fig.axes[0].lines)
-    logging.debug('fig.axes[1].lines = %s', fig.axes[1].lines)
-    
-    for pd in pds:
+    fs, *fft_pd = fft(res) # Calculer la FFT
+    ts = res[0]
+    for i, (pd, fpd) in enumerate(zip(res[1:], fft_pd)):
         # fig est la figure passée en argument
         # fig.axes est la liste des axes contenus dans la figure
         # fig.axes[0] est l'axe qu'on utilise pour les données brutes
@@ -140,123 +109,103 @@ def plot(res: list[list[int]],
         #   d'une courbe existante
         # fig.axes[i].lines[pd].get_ydata permet d'obtenir les valeurs en y
         #   d'une courbe existante.
-        fig.axes[0].lines[pd].set_data(np.arange(len(res[pd])), res[pd])
-        fig.axes[1].lines[pd].set_data(*fft(res[pd], logger=logger))
-        fig.axes[0].set_xlim(0, len(res[pd]))
-        plt.pause(0.01)
+        
+        # Afficher jusqu'aux 200 derniers points
+        N: int = min(len(ts), 10000)
+        fig.axes[BRUT].lines[i].set_data(np.array(ts[-N:])*ns2s, pd[-N:])
+        xs = ts[-N]*ns2s, ts[-1]*ns2s
+        dx = xs[1] - xs[0]
+        fig.axes[BRUT].set_xlim(*xs)
+        fig.axes[BRUT].set_xticks(xs, [f'-{dx}', '0'])
+
+        # Afficher la transformée de Fourier
+        fig.axes[FFT].lines[i].set_data(fs*GHz2Hz, fpd)
+    
+    fig.axes[FFT].set_ylim(0, max(max(f) for f in fft_pd))
+
+    plt.pause(0.01) # Petite pause pour permettre l'affichage correct
 
 def setup(pds: tuple[int] = (IR, VIS),
-          cmds: bytes = CMDS,
           port: str = PORT,
           debit: int = DEBIT,
-          delai: int = DELAI,
-         logger: logging.Logger = logger):
+          delai: int = DELAI):
     # Initialisation des paramètres importants
     
     # On utilise la fonction list plutôt que la valeur litérale [] pour ne pas
     # créer un unique object commun répété plusieurs fois dans la liste.
     # Voir https://stackoverflow.com/q/366422 pour ce genre de problèmes.
-    mes: list[list[int]] = [list() for pd in pds]
-    logger.debug('%s', mes)
-    
+    mes: list[list[int]] = [list() for pd in range(len(pds)+1)]
     ser = serial.Serial(port, baudrate=debit, timeout=delai)
-    logger.debug('%s', ser)
     
     # Paramètres des graphiques
     # Affichage interactif, pour pouvoir suivre l'acquisition en direct
-    logging.info('Paramétrage du graphique...')
     plt.ion()
-    logging.info('Mode interactif activé.')
-    #plt.xkcd()
+    
     # Créer une nouvelle figure, qui contiendra nos systèmes d'axes
     # fig.axes pour voir la liste des axes dans la console
-    fig = plt.figure()
-    logging.debug('%r', fig)
-    # Créer un premier système d'axes dans fig
-    ax = fig.gca()
-    logging.info('Système d\'axes créé.')
-    ax.plot([])
-    ax.plot([])
-    logging.info('Graphiques vides initialisés.')
-    # Créer un système d'axe avec les mêmes absisses mais une échelle verticale
-    # différente (pour représenter la transformée de Fourier sur le même
-    # graphique)
-    ax2 = ax.twinx()
-    ax2.plot([])
-    ax2.plot([])
+    #fig = plt.figure()
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    fig.suptitle('Démonstration de principe d\'un programme d\'analyse pour un oxymètre de pouls')
+    
+    ax.set_title('Mesures des photodiodes')
+    ax.set_xlabel('Temps (s)')
+    ax.set_ylabel('Unités CAN (5V / 1024 bits)')
+    ax.plot([], color='black', label='IR')
+    ax.plot([], color='red', label='VIS')
+    ax.legend()
+    
+    ax2.set_title('Transformées de Fourier des signaux')
+    ax2.set_xlabel('Fréquence (Hz)')
+    ax2.plot([], color='black', linestyle='--', label='IR')
+    ax2.plot([], color='red', linestyle='--', label='VIS')
+    ax2.set_yticks([], [])
+    ax2.legend()
+
+    ax.set_ylim(0, 1030)
+    ax.set_xlim(left=-200, right=0)
+    ax2.set_ylim(bottom=0)
+    ax2.set_ylim(auto=True)
+    ax2.set_xlim(left=0, right=50)
+    
     fig.tight_layout()
-    logging.info('Axes pour la transformée de Fourier créés.')
-    ax.set_ylim(0, 255)
-    ax2.set_ylim(0, 1.25)
     plt.pause(0.01)
     plt.show()
 
-    return mes, ser, pds, cmds, fig, logger
+    return mes, ser, fig
 
 def loop(res: list[list[int]],
          ser: serial.Serial,
-         pds: tuple[int],
-         cmds: bytes,
-         fig: mpl.figure.Figure,
-         logger: logging.Logger = logger):
-    
-    if 35 < len(res[0]) < 45:
-        breakpoint()
+         fig: mpl.figure.Figure):
         
     # Lecture des valeurs de chaque photodiode
-    val_ir, val_vis = get_all(res, ser, pds, cmds, logger=logger)
-    logger.info('%s: (%s, %s)', len(res[0]), res[0][-1], res[1][-1]) # Affichage sur la console.
+    temps, val_ir, val_vis = prendre_mesure(res, ser)
     
     # Mise à jour du graphique
-    plot(res, pds, fig, logger=logger)
-    
-    # Affichage des données
-    #display(res, pds, logger=logger)
+    plot(res, fig)
 
 def setdown(res: list[list[int]],
             ser: serial.Serial,
-            pds: tuple[int],
-            cmds: bytes,
-            fig: mpl.figure.Figure,
-            logger: logging.Logger = logger):
+            fig: mpl.figure.Figure):
     
     ser.close()
-
     plt.close(fig)
-    logger.info('Fini')
 
 # ==================================
 # = Fonctions d'analyse de données =
 # ==================================
 
-def fft(res: list[int], logger: logging.Logger = logger) -> np.array:
-    N: int = len(res)
-    
-    if N > 100:
-        cadre = scipy.signal.windows.hann(N)
-        signal = np.array(res) * cadre
-        ys = np.abs(np.fft.rfft(signal))
-    else:
-        ys = np.ones(N)
-    
-    logger.debug('N = %s, N_{fft} = %s', N, ys)
-    return np.arange(len(ys)), ys
+def fft(res: list[list[int]]) -> tuple[np.array]:
+    N: int = min(len(res[0]), 10000)
 
-def spo2(res: list[list[int]],
-         n_f: int,
-         logger: logging.Logger = logger) -> np.array:
-    # Estimation du taux d'oxygénation
-    # Voir <https://en.wikipedia.org/wiki/Pulse_oximetry>
-    ir_fft = fft(res[IR])
-    vis_fft = fft(res[VIS])
+    ys = []
+    for sig in res[1:]:
+        cadre = scipy.signal.windows.hann(N)
+        signal = np.array(sig[-N:]) * cadre
+        ys.append(np.abs(np.fft.rfft(signal)))
     
-    ir_fn = ir_fft[n_f]
-    vis_fn = vis_fft[n_f]
-    ir_f0 = ir_fft[0]
-    vis_f0 = vis_fft[0]
-    R = (vis_fn / vis_f0) / (ir_fn / ir_f0)
-    res = 110 - 25 * R
-    return res
+    fs = np.fft.rfftfreq(signal.size, d=ESPACEMENT)
+
+    return fs, *ys
 
 
 # =======================
@@ -285,27 +234,33 @@ def spo2(res: list[list[int]],
 # examiner les valeurs des variables et le contexte du code.
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG,
-     format='%(levelname)s:%(filename)s:%(lineno)s:%(funcName)s\t%(message)s')
     
-    params = setup(logger=logger) # Initialiser le programme avec les valeurs par défaut
-    logger.debug('''Paramètres:
-
-- res = %r
-- ser = %r
-- pds = %r
-- cmds = %r
-- fig = %r
-- logger = %r''', *params)
+    params = setup() # Initialiser le programme avec les valeurs par défaut
     
     try:
-        while True: # Boucle infinie (ne s'arrêtera pas d'elle même)
-            loop(*params) # Exécuter la fonction à répéter
+        derniere_mesure = time.process_time_ns()
+        
+        # Cette boucle est infinie à toutes fins pratiques, càd équivalente à
+        # while True:
+        #   ...
+        # Techniquement, elle s'arrête quand la fenêtre du graphique est fermée,
+        # ou que l'utilisateur entre ^C sur la ligne de commande.
+        while plt.get_fignums():
+            if time.process_time_ns() > (derniere_mesure + ESPACEMENT):
+                loop(*params) # Exécuter la fonction à répéter
+                
+                # S'il y a un problème de communication, reprendre la valeur
+                # sans attendre.
+                if None in [d[-1] for d in params[0]]:
+                    for i in len(params[0]):
+                        params[0][i].pop(-1) # Retirer la mauvaise valeur
+                else:
+                    derniere_mesure = params[0][0][-1]
     except KeyboardInterrupt:
         # Détection de la combinaison ^C pour arrêter le programme
-        logger.critical('Sortie forcée par l\'utilisateur.')
+        logging.critical('Sortie forcée par l\'utilisateur.')
     except Exception:
-        logger.exception('Erreur inattendue dans l\'exécution du programme.')
+        logging.exception('Erreur inattendue dans l\'exécution du programme.')
     finally:
         # Procédures de fin
         # Ce bloc est toujours exécuté, peu importe la raison de l'arrêt

@@ -20,7 +20,7 @@
 
 // Utilitaires de débogage
 // Laisser l'instruction suivante commentée pour masquer les messages de débogage.
-#define DEBUG
+//#define DEBUG
 
 // Les instructions à exécuter pour le débogage seront inclusent de cette façon:
 // #ifdef DEBUG
@@ -40,11 +40,14 @@
 #define DEBIT 115200
 #define DELAI 100 // Le temps d'attente
 
-int broche[2] = {A0, A2}; // Liste pour les broches de lecture
+// Si vous voulez mesurer les valeurs de plus de diodes,
+// Augmentez la valeur de N_broches et ajoutez des valeurs
+// aux listes en conséquence.
+const int N_broches = 2; // Nombre de broches
+const int broche[N_broches] = {A0, A2}; // Liste pour les broches de lecture
+int mesure[N_broches] = {0, 0}; // Liste pour les lectures analogiques
 
-byte mesure[2] = {0, 0}; // Liste pour les lectures analogiques
-
-// Initialisation du port série à 115200 bits par seconde et un timeout de 100ms
+// Initialisation du port série à 115200 bits par seconde et un timeout de DELAI
 void setup() {
 	// Initialisation du port série
 	Serial.begin(DEBIT);
@@ -54,8 +57,9 @@ void setup() {
 
 void loop() {
 	// Lecture des données des ports de conversion analogiques
-	mesure[IR] = (byte) analogRead(broche[IR]);
-	mesure[VIS] = (byte) analogRead(broche[VIS]);
+	for (int i=0; i < N_broches; i++) {
+		mesure[i] = analogRead(broche[i]);
+	}
 	
 	// Serial.available retourne le nombre d'octets (max. 64o) disponibles
 	// dans le tampon du micro-contrôleur. Si la fonction retourne 0,
@@ -64,40 +68,10 @@ void loop() {
 		// cmd contient une instruction d'1 octet envoyé par un programme 
 		// client via la communication série.
 		int cmd = Serial.read(); // Lire 1 caractère
-
-		#ifdef DEBUG
-		Serial.print("Reçu le caractère "); Serial.print((int)cmd); Serial.print(" ou "); Serial.println((char)cmd);
-		Serial.print("Mesure de "); Serial.print(mesure[IR]); Serial.print(" pour la photodiode IR, et de "); Serial.print(mesure[VIS]); Serial.println(" pour la photodiode visible.");
-		#endif
 		
-		// Serial.availableForWrite indique si il y a suffisamment d'espace
-		// libre dans le tampon d'écriture pour envoyer les données.
-		if ( cmd == 'i' && Serial.availableForWrite() > 0 ) {
-			#ifdef DEBUG
-			Serial.print("Envoi de la valeur "); Serial.println((int)mesure[IR]);
-			#endif
-
-			Serial.write(mesure[IR]); // Envoyer la valeur IR dans un octet
-			Serial.flush();
-			#ifdef DEBUG
-			Serial.println();
-			#endif
-		} else if ( cmd == 'v' && Serial.availableForWrite() > 0 ) {
-			#ifdef DEBUG
-			Serial.print("Envoi de la valeur "); Serial.println((int)mesure[IR]);
-			#endif
-
-			Serial.write(mesure[VIS]); // Envoyer la valeur vis. dans un octet
-			Serial.flush();
-			#ifdef DEBUG
-			Serial.println();
-			#endif
+		if ( cmd < N_broches ) {
+			Serial.println(mesure[cmd]);
 		}
-		#ifdef DEBUG
-		else if ( Serial.availableForWrite() > 0 ) {
-			Serial.println("Aucune commande valide reçue.");
-		}
-		#endif
 	}
 }
 
