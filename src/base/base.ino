@@ -64,10 +64,10 @@ void loop() {
 	// Serial.available retourne le nombre d'octets (max. 64o) disponibles
 	// dans le tampon du micro-contrôleur. Si la fonction retourne 0,
 	// le bloc conditionnel sera ignoré.
-	if ( Serial.available() > 0 ) {
+	while ( Serial.available() > 0 ) {
 		// cmd contient une instruction d'1 octet envoyé par un programme 
 		// client via la communication série.
-		int cmd = Serial.read(); // Lire 1 caractère
+		int cmd = Serial.read(); // Lire 1 octet
 		
 		if ( cmd < N_broches ) {
 			Serial.println(mesure[cmd]);

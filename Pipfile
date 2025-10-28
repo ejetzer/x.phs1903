@@ -13,6 +13,15 @@ numpy = "*"
 scipy = "*"
 pandas = "*"
 
+[docs]
+sphinx = "*"
+
+[tests]
+
 [scripts]
-debug = "python -m pdb -c continue oxy_base.py"
-run = "python oxy_base.py"
+debug = "python -m pdb -c continue src/base.py"
+run = "python src/base.py"
+docs = "make -C ./docs html"
+pdfdocs = "make -C ./docs latexpdf"
+
+[dev-packages]
