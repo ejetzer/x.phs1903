@@ -10,16 +10,14 @@ Python permet de préciser le type d'une variable dans le code,
 selon la syntaxe ``<nom>: <type> = <valeur>``. Dans les définitions ci-dessous,
 vous verrez des définitions de la forme:
 
-.. code-block:: python
+.. literalinclude:: ../../../src/base.py
+	:language: python
+	:lines: 37,45,59
 
-    PORT: str = '...'
-    DEBIT: int = 0405
-    ns2s: float = 0.4235
-
-pour définir respectivement des variables de texte, de nombre entier, et de
-nombre à virgule flottante. Ces annotations ne sont pas contraignantes.
+pour définir respectivement des variables de :py:type:`texte <str>`, de :py:type:`nombre entier <int>`, et de
+:py:type:`nombre à virgule flottante <float>`. Ces :py:mod:`annotations <annotationlib>` ne sont pas contraignantes.
 Vous pouvez en apprendre plus dans la documentation officielle.
-:python:typing.
+:external:py:mod:`typing`.
 
 -------------------------
 Constantes

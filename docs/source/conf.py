@@ -22,11 +22,13 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
 #    'sphinx.ext.linkcode',
-    'sphinx.ext.viewcode'
+    'sphinx.ext.viewcode',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
+
+autosectionlabel_prefix_document = True
 
 apidoc_modules = [
     {
@@ -36,7 +38,9 @@ apidoc_modules = [
 ]
 
 extlinks = {
-    'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s')
+    'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
+    'arduino-card': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
+    'gammon': ('https://www.gammon.com.au/', '%s')
 }
 
 extlinks_detect_hardcoded_links = True
@@ -44,7 +48,7 @@ extlinks_detect_hardcoded_links = True
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'numpy': ('http://docs.scipy.org/doc/numpy', None),
-    'scipy': ('http://docs.scipy.org/doc/scipy/reference', None),
+    'scipy': ('http://docs.scipy.org/doc/scipy/', None),
     'matplotlib': ('http://matplotlib.org/stable', None),
     'Sphinx': ('https://www.sphinx-doc.org/en/master/', None),
     'serial': ('https://pyserial.readthedocs.io/en/latest/', None),

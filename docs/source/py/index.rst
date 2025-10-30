@@ -3,14 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Code de base pour PHS1903
-...........................................................
+Programme Python
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 .. toctree::
 	:maxdepth: 4
 	:caption: Table des matières
 
 	self
-	py/index
-	cpp/index
-	glos
+	eg
+	deps
+	defs
+	fonc
+	main
+
+.. automodule:: base

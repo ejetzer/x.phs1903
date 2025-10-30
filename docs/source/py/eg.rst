@@ -1,3 +1,5 @@
+.. _eg:
+
 ===========
  Exemple 
 ===========
@@ -19,7 +21,7 @@ sur Windows. Vous pouvez aussi exécuter votre programme directement dans
 votre IDE pendant le développement, si vous utilisez par exemple:
 
 - `Visual Studio`_
-- :external+python:module:idle
+- `IDLE`_
 - TextMate_
 - Spyder_
 - PyCharm_
@@ -33,7 +35,7 @@ officielle de Python sur l'utilisation et configuration`_.
 .. _Visual Studio:
     https://visualstudio.microsoft.com
 
-.. _IDLE:
+ .. _IDLE:
     https://docs.python.org/3/library/idle.html
 
 .. _TextMate:

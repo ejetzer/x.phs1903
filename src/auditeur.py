@@ -38,12 +38,11 @@ PORT: str = '/dev/cu.usbmodemFA13201'
 '''Port série à utiliser pour le programme
 
 Sous Windows, ressemblera à 'COM2'. Sous les autres plate-formes,
-ressemblera à '/dev/cu.usbmodemFA13201'. Le module ``serial`` a un outil
-dédié à la découverte des ports série disponibles:
-<https://pythonhosted.org/pyserial/tools.html#module-serial.tools.list_ports>
+ressemblera à '/dev/cu.usbmodemFA13201'. Le module :external:py:class:`serial <serial.Serial>`
+a un outil dédié à la découverte des ports série disponibles, :py:mod:`serial.tools.list_ports`, ou :py:func:`serial.tools.list_ports.comports`.
 '''
 
-DEBIT: int = 115200
+DEBIT: int = 1000000
 '''Débit de communication
 
 Doit correspondre à la constante équivalente dans le programme
@@ -51,31 +50,22 @@ oxy_base.ino sinon les programmes ne pourront pas communiquer.
 
 115200 est le débit le plus rapide pratique pour les Arduino nano et micro.
 Un débit plus rapide cause des problèmes au niveau de l'acquisition et de
-la fiabilité. Voir la `documentation officielle`_ pour plus de détails.
+la fiabilité. Voir la documentation de :py:class:`serial <serial.Serial>` ou de :arduino:`Serial.begin <functions/communication/serial/begin/>`  pour plus de détails.
 
 .. _documentation officielle:
     https://pythonhosted.org/pyserial/pyserial_api.html
 '''
 
-DELAI: float = 1 # Attente en lecture
+DELAI: float = 0.005 # Attente en lecture
 '''Délai maximal en secondes avant d'abandonner une tentative de lecture
 
-Certaines valeurs spéciales sont décrites dans la `documentation officielle`_.
-
-.. _documentation officielle:
-    https://pythonhosted.org/pyserial/pyserial_api.html
+Certaines valeurs spéciales sont décrites dans la documentation officielle de :py:class:`serial <serial.Serial>`. Comme la fréquence de transfert d'un bit
+est d'environ 100kHz (voir :py:const:`DEBIT`), le délai ne devrait pas être
+plus petit que la période associée (0.01ms) multipliée par le nombre de bits
+envoyés. Pour des chiffres, on peut assumer du ASCII 8b, avec un message long
+(eg: ``1021 1012``) faisant donc un peut moins de 80b, on doit avoir au minimum
+un délai de 0.8ms. Avec une petite marge, on arrive à 0.005s.
 '''
-
-ESPACEMENT: int = int(1e7) # [ns] Temps d'attente entre les mesures, en ns
-'''Temps entre les mesures en ns
-
-Ce paramètre est utilisé pour la prise de mesures et l'analyse par
-transformée de Fourier.
-'''
-
-# Facteurs de conversion
-ns2s: float = 1e-9 #: Conversion de ns à secondes pour les axes des graphiques
-GHz2Hz: float = 1e9 #: Conversion de GHz à Hz pour les graphiques
 
 # Définition des indices pour les deux types de graphiques
 BRUT: int = 0 #: Index des graphiques de données dans fig.axes
@@ -101,23 +91,12 @@ def prendre_mesure[R: list[list[int]]](res: R, ser: serial.Serial) -> R:
         Avec les nouvelles valeurs.
 '''
     # Mesure du temps auquel la mesure est prise
-    temps: int = time.process_time_ns()
-    
-    mes: list[float] = [temps]
-    for i in bytes(range(1, len(res))):
-        # Pour demander la photodiode A0, envoyer l'octet \x00, ou
-        # de façon équivalente bytes([0]).
-        # En général, si on veut de A0 à A1, et qu'on itère de 1 à 2, on a
-        #
-        # A0    \x00    bytes([0])  bytes([1-1])
-        # A1    \x01    bytes([1])  bytes([2-1])
-        ser.write(i)
-        ser.flush() # S'assurer que la commande est envoyée immédiatement.
-        mes.append(ser.readline())
-
-    mes[1:] = map(int, mes[1:])
-    for r, m in zip(res, mes):
-        r.append(m)
+    lignes: list[str] = ser.readlines()
+    for l in lignes:
+        t, *v = map(float, l.split())
+        res[0].append(t)
+        for i, w in enumerate(v):
+            res[i+1].append(w)
 
     return res
 
@@ -209,6 +188,7 @@ def setup(pds: int = 2, port: str = PORT, debit: int = DEBIT, delai: int = DELAI
     #: Voir https://stackoverflow.com/q/366422 pour ce genre de problèmes.
     res: list[list[int]] = [[] for pd in range(pds+1)]
     ser = serial.Serial(port, baudrate=debit, timeout=delai)
+    ser.read()
     
     #: Paramètres des graphiques
     #: Affichage interactif, pour pouvoir suivre l'acquisition en direct
@@ -257,6 +237,13 @@ def loop(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
         les données.
     fig
         Figure contenant les différents graphiques
+    
+    Returns
+    ---------------
+    res: list[list[int]]
+    ser: serial.Serial
+    fig: matplotlib.figure.Figure
+    derniere_mesure: int
     '''
     # Lecture des valeurs de chaque photodiode
     res = prendre_mesure(res, ser)
@@ -286,8 +273,16 @@ def setdown(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
 # = Fonctions d'analyse de données =
 # ==================================
 
-def fft(res: list[list[int]], N_max: int = 500) -> tuple[np.array, ...]:
-    '''Retourne la transformée de Fourier des données contenues dans res
+def fft(
+    res: list[list[int]],
+    N_max: int = 1700,
+    cadre: str = 'hann'
+) -> tuple[np.array, ...]:
+    '''Retourne la transformée de Fourier des données contenues dans :py:data:`res`. C'est une bonne idée de personnaliser cette fonction selon
+    vos besoins. Pour bien comprendre ce que fait la fonction, vous devriez
+    consulter :py:func:`scipy.signal.get_window`, :py:func:`numpy.fft.rfft` et
+    :py:func:`numpy.fft.rfftfreq`. Pour les mathématiques derrière, consultez
+    dans un premier lieu votre chargé de groupe.
     
     Parameters
     ------------
@@ -311,7 +306,7 @@ def fft(res: list[list[int]], N_max: int = 500) -> tuple[np.array, ...]:
 
     ys = []
     for sig in res[1:]:
-        cadre = scipy.signal.windows.hann(N)
+        cadre = scipy.signal.get_window(cadre, N)
         signal = np.array(sig[-N:]) * cadre
         ys.append(np.abs(np.fft.rfft(signal)))
     
@@ -330,9 +325,8 @@ if __name__ == '__main__':
         #   ...
         # Techniquement, elle s'arrête quand la fenêtre du graphique est fermée,
         # ou que l'utilisateur entre ^C sur la ligne de commande.
-        while plt.get_fignums() > 0:
-            if time.process_time_ns() > (derniere_mesure + ESPACEMENT):
-                *params, derniere_mesure = loop(*params)
+        while len(plt.get_fignums()) > 0:
+            *params, derniere_mesure = loop(*params)
     except KeyboardInterrupt:
         # Détection de la combinaison ^C pour arrêter le programme
         logging.critical('Sortie forcée par l\'utilisateur.')

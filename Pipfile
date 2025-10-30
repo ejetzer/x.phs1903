@@ -15,6 +15,7 @@ pandas = "*"
 
 [docs]
 sphinx = "*"
+zot4rst = "*"
 
 [tests]
 
