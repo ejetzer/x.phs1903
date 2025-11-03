@@ -9,6 +9,11 @@
 
 .. include:: ../../README.rst
 
+Ces fichiers sont fournis par l'équipe technique du cours PHS1903 à l'automne
+2025, pour faciliter le développement rapide de prototypes de projets
+utilisant des micro-contrôleurs. Consultez vos chargés de cours et techniciens
+pour des détails, si cette documentation n'est pas suffisante.
+
 .. toctree::
 	:maxdepth: 2
 	:caption: Table des matières
@@ -17,4 +22,8 @@
 	python
 	arduino
 	license
+	arch
+	py/index
+	cpp/index
 	glos
+

@@ -15,12 +15,12 @@ pandas = "3.0.1"
 sphinx = "9.1.0"
 matplotlib = "3.10.8"
 twine = "*"
-clang = "*"
 build = "*"
 ruff = "*"
 "x.phs1903" = {file = ".", editable = true}
-libclang = "*"
 hawkmoth = "*"
+libclang = "*"
+clang = "*"
 
 [scripts]
 debug = "python -m pdb -c continue tests/demo.py"

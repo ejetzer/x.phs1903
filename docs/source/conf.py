@@ -46,6 +46,12 @@ autodoc_typehints_description_target = 'all'
 autodoc_typehints_format = 'short'
 autodoc_inherit_docstrings = True
 
+
+sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
+
+hawkmoth_root = str(Path('..', '..', 'src').resolve())
+hawkmoth_clang = ['-DA0=23', '-DA1=22', '-DA2=21']
+
 autosectionlabel_prefix_document = True
 
 apidoc_modules = [{'path': '../../src/', 'destination': '../source/'}]
@@ -57,7 +63,7 @@ readthedocs.clang_setup()
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
     'arduinocard': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
-    'gammon': ('https://www.gammon.com.au/', '%s'),
+    'gammon': ('https://www.gammon.com.au/%s', '%s')
 }
 
 extlinks_detect_hardcoded_links = True
@@ -81,12 +87,6 @@ language = 'fr'
 
 html_theme = 'classic'
 html_static_path = ['_static']
-
-# Configuration d'autodoc
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
 
 # Options pour la sortie LaTeX
 latex_additional_files = [
