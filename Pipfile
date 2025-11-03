@@ -15,14 +15,13 @@ pandas = "*"
 
 [docs]
 sphinx = "*"
-zot4rst = "*"
+hawkmoth = "*"
 
 [tests]
 
 [scripts]
-debug = "python -m pdb -c continue src/base.py"
-run = "python src/base.py"
+debug = "python -m pdb -c continue"
 docs = "make -C ./docs html"
-pdfdocs = "make -C ./docs latexpdf"
+pdf = "make -C ./docs latexpdf"
 
 [dev-packages]

@@ -17,25 +17,19 @@ release = '1.0.1'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-#    'sphinx.ext.apidoc',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
-#    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
+    'hawkmoth' # https://github.com/jnikula/hawkmoth
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
-autosectionlabel_prefix_document = True
+hawkmoth_root = 'src/'
 
-apidoc_modules = [
-    {
-        'path': '../../src/',
-        'destination': '../source/'
-     }
-]
+autosectionlabel_prefix_document = True
 
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
