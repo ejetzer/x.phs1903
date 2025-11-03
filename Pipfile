@@ -26,6 +26,6 @@ hawkmoth = "*"
 debug = "python -m pdb -c continue tests/demo.py"
 run = "python -m xphs1903"
 demo = "python tests/demo.py"
-docs = "make -C ./docs singlehtml"
+docs = "make -C ./docs singlehtml latexpdf"
 
 [dev-packages]
