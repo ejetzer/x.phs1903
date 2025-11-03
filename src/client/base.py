@@ -71,7 +71,7 @@ FREQ: float = 9.6e3 # [Hz]
 '''La fréquence d'échantillonage en Hertz.
 
 Ce paramètre ne devrait pas être plus haut que la fréquence d'échantillonage
-de votre appareil de mesure. Le CAN (ADC) d'un :arduino-card:`Arduino Nano Every <nano-every/#tech-specs>`. La fréquence d'acuisition normale d'un Arduino Nano Every est autour de :gammon:`10kHz <adc>`.
+de votre appareil de mesure. Le CAN (ADC) d'un :arduinocard:`Arduino Nano Every <nano-every/>`. La fréquence d'acuisition normale d'un Arduino Nano Every est autour de :gammon:`10kHz <adc>`.
 '''
 ESPACEMENT: int = int(1e9/FREQ) # [ns] Temps d'attente entre les mesures, en ns
 '''Temps entre les mesures en ns

@@ -21,20 +21,29 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
-    'hawkmoth' # https://github.com/jnikula/hawkmoth
+    'hawkmoth', # https://github.com/jnikula/hawkmoth
+    'hawkmoth.ext.napoleon'
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
-hawkmoth_root = 'src/'
+# Configuration d'autodoc
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
+
+from clang.cindex import Config
+hawkmoth_root = str(Path('..', '..', 'src').resolve())
+hawkmoth_clang = ['-DA0=23', '-DA1=22', '-DA2=21']
 
 autosectionlabel_prefix_document = True
 
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
-    'arduino-card': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
-    'gammon': ('https://www.gammon.com.au/', '%s')
+    'arduinocard': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
+    'gammon': ('https://www.gammon.com.au/%s', '%s')
 }
 
 extlinks_detect_hardcoded_links = True
@@ -59,8 +68,3 @@ language = 'fr'
 html_theme = 'classic'
 html_static_path = ['_static']
 
-# Configuration d'autodoc
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path('..', '..', 'src').resolve()))

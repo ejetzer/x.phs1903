@@ -16,12 +16,14 @@ pandas = "*"
 [docs]
 sphinx = "*"
 hawkmoth = "*"
+libclang = "*"
+clang = "*"
 
 [tests]
 
 [scripts]
 debug = "python -m pdb -c continue"
-docs = "make -C ./docs html"
+docs = "make -C ./docs singlehtml"
 pdf = "make -C ./docs latexpdf"
 
 [dev-packages]

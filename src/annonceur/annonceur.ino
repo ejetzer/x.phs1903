@@ -18,6 +18,8 @@
 // 
 // #define <nom> <valeur>
 
+void set_PF(unsigned char);
+
 // Paramètres de la communication série.
 // Un débit plus lent interfère avec les mesures
 // et un débit plus rapide fait chauffer le micro-contrôleur
@@ -29,8 +31,8 @@
 // aux listes en conséquence.
 #define N_broches 1 // Nombre de broches
 #define M_mesures 1700 // Nombre de mesures
-const uint8_t broche[N_broches] = {A1}; // Liste pour les broches de lecture
-uint8_t mesure[N_broches+1][M_mesures]; // Liste pour les lectures analogiques
+const unsigned char broche[N_broches] = {A1}; // Liste pour les broches de lecture
+unsigned char mesure[N_broches+1][M_mesures]; // Liste pour les lectures analogiques
 
 // Initialisation du port série à 115200 bits par seconde et un timeout de DELAI
 void setup() {
@@ -42,12 +44,12 @@ void setup() {
 	set_PF(2);
 }
 
-uint16_t j = 0;
+unsigned int j = 0;
 
 void loop() {
 	// Lecture des données des ports de conversion analogiques
 	mesure[0][j] = micros();
-	for (uint8_t i=0; i < N_broches; i++) {
+	for (unsigned char i=0; i < N_broches; i++) {
 		mesure[i+1][j] = analogRead(broche[i]);
 	}
 	
@@ -60,7 +62,7 @@ void loop() {
 		// Envoyer toutes les données récoltées d'un coup
 		for (int m=0; m<M_mesures; m++) {
 			Serial.print(mesure[0][m]);
-			for (int n=1; n<=N_broches; n++) {
+			for (byte n=1; n<=N_broches; n++) {
 				Serial.print("\t");
 				Serial.print(mesure[n][m]);
 			}

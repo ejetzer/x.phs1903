@@ -6,11 +6,16 @@
 Code de base pour PHS1903
 ...........................................................
 
+Ces fichiers sont fournis par l'équipe technique du cours PHS1903 à l'automne
+2025, pour faciliter le développement rapide de prototypes de projets
+utilisant des micro-contrôleurs. Consultez vos chargés de cours et techniciens
+pour des détails, si cette documentation n'est pas suffisante.
+
 .. toctree::
 	:maxdepth: 4
-	:caption: Table des matières
-
-	self
+	
+	arch
 	py/index
 	cpp/index
 	glos
+

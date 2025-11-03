@@ -12,6 +12,8 @@
 * Python sur un ordinateur.
 */
 
+void set_PF(unsigned char);
+
 // Définitions préliminaires
 // L'instruction de pré-compilation `#define` permet de définir des
 // valeurs nommées, comme des variables, mais sans utiliser de bloc mémoire.
@@ -29,8 +31,8 @@
 // aux listes en conséquence.
 #define N_broches 2 // Nombre de broches
 #define M_mesures 1700 // Nombre de mesures
-const uint8_t broche[N_broches] = {A0, A1}; // Liste pour les broches de lecture
-uint8_t mesure[N_broches+1][M_mesures]; // Liste pour les lectures analogiques
+const unsigned char broche[N_broches] = {A0, A1}; // Liste pour les broches de lecture
+unsigned char mesure[N_broches+1][M_mesures]; // Liste pour les lectures analogiques
 
 // Initialisation du port série à 115200 bits par seconde et un timeout de DELAI
 void setup() {
@@ -42,12 +44,12 @@ void setup() {
 	set_PF(4);
 }
 
-uint16_t j = 0;
+unsigned int j = 0;
 
 void loop() {
 	// Lecture des données des ports de conversion analogiques
 	mesure[0][j] = micros();
-	for (uint8_t i=0; i < N_broches; i++) {
+	for (unsigned char i=0; i < N_broches; i++) {
 		mesure[i+1][j] = analogRead(broche[i]);
 	}
 	
@@ -60,7 +62,7 @@ void loop() {
 		Serial.read(); // Lire 1 octet
 		
 		// Envoyer toutes les données récoltées d'un coup
-		for (int n=0; n<=N_broches; n++) {
+		for (unsigned char n=0; n<=N_broches; n++) {
 			Serial.print(n);
 			for (int m=0; m<M_mesures; m++) {
 				Serial.print(F("\t"));
