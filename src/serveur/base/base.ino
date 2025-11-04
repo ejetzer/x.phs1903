@@ -15,20 +15,26 @@
  * -----------------------------
  */
 
-// L'instruction de pré-compilation `#define` permet de définir des
-// valeurs nommées, comme des variables, mais sans utiliser de bloc mémoire.
-// 
-// #define <nom> <valeur>
+/** L'instruction de pré-compilation `#define` permet de définir des
+ * valeurs nommées, comme des variables, mais sans utiliser de bloc mémoire.
+ *  
+ * .. code-block::
+ * 		:language: cpp
+ * 
+ * 		#define <nom> <valeur>
+ */
 
 /** Paramètres de la communication série.
  * Un débit plus lent interfère avec les mesures
- * et un débit plus rapide fait chauffer le micro-contrôleur
+ * et un débit plus rapide fait chauffer le micro-contrôleur.
+ * Par défaut, Arduino utilise un débit de 9600, mais 115200 est
+ * fréquemment utilisé. 
  */
 #define DEBIT 115200
 #define DELAI 100 // Le temps d'attente
 
 /** Si vous voulez mesurer les valeurs de plus de diodes,
- * Augmentez la valeur de N_broches et ajoutez des valeurs
+ * Augmentez la valeur de :cpp:const:`N_broches` et ajoutez des valeurs
  * aux listes en conséquence.
  */
 
@@ -36,37 +42,41 @@
 const int N_broches = 2;
 
 /** Liste pour les broches de lecture */
-const int broche[N_broches] = {A0, A2};
+const int broche[N_broches] = {A0, A1};
 
-/** Liste pour les lectures analogiques */
+/** Liste pour les lectures analogiques
+ * L'indice auquel se trouve une valeur correspond
+ * à l'indice auquel se trouve la broche dans :c:const:`broche`.
+ */
 int mesure[N_broches] = {0, 0};
 
-/** Initialisation du port série à 115200 bits par seconde
- * et un timeout de DELAI
+/** Initialisation du port série à :c:const:`DEBIT` bits par seconde
+ * et un timeout de :cpp:const:`DELAI`
  */
 void setup() {
-	/** Initialisation du port série */
 	Serial.begin(DEBIT);
 	Serial.setTimeout(DELAI);
 	delay(200);
 }
 
 void loop() {
-	// Lecture des données des ports de conversion analogiques
+	/** Lecture des données des ports de conversion analogiques */
 	for (int i=0; i < N_broches; i++) {
 		mesure[i] = analogRead(broche[i]);
 	}
 	
-	// Serial.available retourne le nombre d'octets (max. 64o) disponibles
-	// dans le tampon du micro-contrôleur. Si la fonction retourne 0,
-	// le bloc conditionnel sera ignoré.
+	/** Serial.available retourne le nombre d'octets (max. 64o) disponibles
+	 * dans le tampon du micro-contrôleur. Si la fonction retourne 0,
+	 * le bloc conditionnel sera ignoré.
+	 */
 	while ( Serial.available() > 0 ) {
-		// cmd contient une instruction d'1 octet envoyé par un programme 
-		// client via la communication série.
+		/** :c:var:`cmd` contient une instruction d'1 octet envoyé
+		 * par un programme client via la communication série.
+		 */
 		int cmd = Serial.read(); // Lire 1 octet
 		
 		if ( cmd < N_broches ) {
-			Serial.println(mesure[cmd]);
+			Serial.println(mesure[cmd], DEC);
 		}
 	}
 }

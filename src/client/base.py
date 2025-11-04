@@ -22,7 +22,7 @@ ressources avant de venir poser vos questions à un technicien.
 '''
 
 # Voir :doc:`deps` pour les détails
-import serial # <https://www.pyserial.com/docs>
+import serial # <https://pyserial.readthedocs.io/en/latest/>
 import numpy as np # <https://numpy.org/>
 import scipy as sp # <https://scipy.org/>
 import scipy.signal.windows
@@ -39,7 +39,8 @@ PORT: str = '/dev/cu.usbmodemFA13201'
 
 Sous Windows, ressemblera à 'COM2'. Sous les autres plate-formes,
 ressemblera à '/dev/cu.usbmodemFA13201'. Le module :external:py:class:`serial <serial.Serial>`
-a un outil dédié à la découverte des ports série disponibles, :py:mod:`serial.tools.list_ports`, ou :py:func:`serial.tools.list_ports.comports`.
+a un outil dédié à la découverte des ports série disponibles, :py:mod:`serial.tools.list_ports`, ou :py:func:`serial.tools.list_ports.comports`. Voir
+<https://pyserial.readthedocs.io/en/latest/tools.html>.
 '''
 
 DEBIT: int = 115200
@@ -67,7 +68,7 @@ envoyés. Pour des chiffres, on peut assumer du ASCII 8b, avec un message long
 un délai de 0.8ms. Avec une petite marge, on arrive à 0.005s.
 '''
 
-FREQ: float = 9.6e3 # [Hz]
+FREQ: float = 10 # [Hz]
 '''La fréquence d'échantillonage en Hertz.
 
 Ce paramètre ne devrait pas être plus haut que la fréquence d'échantillonage
@@ -118,11 +119,13 @@ def prendre_mesure[R: list[list[int]]](res: R, ser: serial.Serial) -> R:
         #
         # A0    \x00    bytes([0])  bytes([1-1])
         # A1    \x01    bytes([1])  bytes([2-1])
-        ser.write(i)
+        ser.write(bytes([i-1]))
         ser.flush() # S'assurer que la commande est envoyée immédiatement.
-        mes.append(ser.readline())
-
-    mes[1:] = map(int, mes[1:])
+        while not ser.in_waiting: time.sleep(0.000000001)
+        mes.append(int(ser.readline()))
+        
+    logging.debug('mes = %s', mes)
+    #mes[1:] = map(int, mes[1:])
     for r, m in zip(res, mes):
         r.append(m)
 
@@ -302,7 +305,7 @@ def setdown(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
 
 def fft(
     res: list[list[int]],
-    N_max: int = 500,
+    N_max: int = 50,
     cadre: str = 'hann'
 ) -> tuple[np.array, ...]:
     '''Retourne la transformée de Fourier des données contenues dans :py:data:`res`. C'est une bonne idée de personnaliser cette fonction selon
@@ -331,9 +334,9 @@ def fft(
     ts: list[float] = res[0]
     d: float = np.mean(np.array(ts[1:]) - np.array(ts[:-1]))
 
+    cadre = scipy.signal.get_window(cadre, N)
     ys = []
     for sig in res[1:]:
-        cadre = scipy.signal.get_window(cadre, N)
         signal = np.array(sig[-N:]) * cadre
         ys.append(np.abs(np.fft.rfft(signal)))
     
@@ -344,6 +347,7 @@ def fft(
     return fs, *ys
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     *params, derniere_mesure = setup()
     
     try:
@@ -352,7 +356,7 @@ if __name__ == '__main__':
         #   ...
         # Techniquement, elle s'arrête quand la fenêtre du graphique est fermée,
         # ou que l'utilisateur entre ^C sur la ligne de commande.
-        while plt.get_fignums() > 0:
+        while len(plt.get_fignums()) > 0:
             if time.process_time_ns() > (derniere_mesure + ESPACEMENT):
                 *params, derniere_mesure = loop(*params)
     except KeyboardInterrupt:

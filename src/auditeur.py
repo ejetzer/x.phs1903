@@ -304,9 +304,9 @@ def fft(
     ts: list[float] = res[0]
     d: float = np.mean(np.array(ts[1:]) - np.array(ts[:-1]))
 
+    cadre = scipy.signal.get_window(cadre, N)
     ys = []
     for sig in res[1:]:
-        cadre = scipy.signal.get_window(cadre, N)
         signal = np.array(sig[-N:]) * cadre
         ys.append(np.abs(np.fft.rfft(signal)))
     
