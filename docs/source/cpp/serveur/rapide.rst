@@ -1,4 +1,1 @@
-Optimisation du serveur
--------------------------
-
-.. cpp:autodoc:: serveur/rapide/*.ino
+.. cpp:autodoc:: serveur/rapide/rapide.ino
