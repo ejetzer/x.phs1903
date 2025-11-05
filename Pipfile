@@ -17,7 +17,6 @@ pandas = "*"
 sphinx = "*"
 hawkmoth = "*"
 libclang = "*"
-clang = "*"
 
 [tests]
 
@@ -27,3 +26,5 @@ docs = "make -C ./docs singlehtml"
 pdf = "make -C ./docs latexpdf"
 
 [dev-packages]
+
+[dev]

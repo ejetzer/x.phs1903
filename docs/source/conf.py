@@ -50,9 +50,9 @@ extlinks_detect_hardcoded_links = True
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    'numpy': ('http://docs.scipy.org/doc/numpy', None),
-    'scipy': ('http://docs.scipy.org/doc/scipy/', None),
-    'matplotlib': ('http://matplotlib.org/stable', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+    'matplotlib': ('https://matplotlib.org/stable', None),
     'Sphinx': ('https://www.sphinx-doc.org/en/master/', None),
     'serial': ('https://pyserial.readthedocs.io/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None),

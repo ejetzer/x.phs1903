@@ -15,8 +15,8 @@ def millis():
 def seconds():
     return np.datetime64('now', 's')
 
-horloges: list[np.datetime64] = []
-processus: list[Process] = []
+__horloges: list[np.datetime64] = []
+__processus: list[Process] = []
 
 DT: Final[np.timedelta64] = np.timedelta64(10, 'us')
 
@@ -25,14 +25,15 @@ def après_au_moins(
     horloge: Callable[[], np.datetime64] = nanos,
     signaler: bool = False
                   ) -> Callable[Callable[..., Any], Callable[..., Any]]:
-    i: int = len(horloges)
-    horloges.append(horloge())
+    i: int = len(__horloges)
+    __horloges.append(horloge())
     
     def déco(f: Callable[..., Any]) -> Callable[..., Any]:
         
         @wraps(f)
         def f_décoré(*args, **kargs):
-            if horloge() >= horloge[i] + dt:
+            if horloge() >= __horloges[i] + dt:
+                __horloges[i] = horloge()
                 return f(*args, **kargs)
             elif signaler:
                 desc = f'Il faut attendre {dt} pour exécuter {f}.'
@@ -43,16 +44,23 @@ def après_au_moins(
 def en_parallèle(f: Callable[..., Any]) -> Callable[..., Any]:
     
     @wraps(f)
-    @contextmanager
     def f_décoré(*args, **kargs):
         proc: Process = Process(target=f, args=args, kargs=kargs)
-        processus.append(proc)
+        __processus.append(proc)
         
-        try:
-            proc.start()
-            yield proc
-        finally:
-            proc.terminate()
-            proc.close()
+        proc.start()
+        return proc
     
     return f_décoré
+
+@contextmanager
+def fermer(f: Callable[..., Any]) -> Callable[..., Any]:
+    
+    @wraps(f)
+    def f_décoré(*args, **kargs):
+        try:
+            yield f(*args, **kargs)
+        finally:
+            for p in __processus:
+                p.terminate()
+                p.close()
