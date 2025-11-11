@@ -699,6 +699,7 @@
             "version": "==2025.2"
         }
     },
+    "dev": {},
     "develop": {},
     "docs": {
         "alabaster": {
@@ -1101,5 +1102,6 @@
             "markers": "python_version >= '3.9'",
             "version": "==2.5.0"
         }
-    }
+    },
+    "tests": {}
 }

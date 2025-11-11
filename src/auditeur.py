@@ -28,6 +28,7 @@ import scipy as sp # <https://scipy.org/>
 import scipy.signal.windows
 import matplotlib as mpl # <https://matplotlib.org/>
 import matplotlib.pyplot as plt
+import pandas as pd
 import logging
 import time
 
@@ -42,7 +43,7 @@ ressemblera à '/dev/cu.usbmodemFA13201'. Le module :external:py:class:`serial <
 a un outil dédié à la découverte des ports série disponibles, :py:mod:`serial.tools.list_ports`, ou :py:func:`serial.tools.list_ports.comports`.
 '''
 
-DEBIT: int = 1000000
+DEBIT: int = 115200
 '''Débit de communication
 
 Doit correspondre à la constante équivalente dans le programme
@@ -71,7 +72,7 @@ un délai de 0.8ms. Avec une petite marge, on arrive à 0.005s.
 BRUT: int = 0 #: Index des graphiques de données dans fig.axes
 FFT: int = 1 #: Index des graphiques de transformée de Fourier dans fig.axes
 
-def prendre_mesure[R: list[list[int]]](res: R, ser: serial.Serial) -> R:
+def prendre_mesure[R: pd.DataFrame](res: R, ser: serial.Serial) -> R:
     '''Prise d'une mesure
     
     prendre_mesure, pour chaque liste de mesures contenues dans ``res``,
@@ -90,17 +91,27 @@ def prendre_mesure[R: list[list[int]]](res: R, ser: serial.Serial) -> R:
     res
         Avec les nouvelles valeurs.
 '''
-    # Mesure du temps auquel la mesure est prise
-    lignes: list[str] = ser.readlines()
-    for l in lignes:
-        t, *v = map(float, l.split())
-        res[0].append(t)
-        for i, w in enumerate(v):
-            res[i+1].append(w)
+    mes = pd.DataFrame(dtype=np.float64)
+    for l in ser.readlines():
+        if not l.strip():
+            break
+
+        try:
+            nom, vs = l.split(b'=', 1)
+            vs = [np.float64(v) for v in vs.strip(b'[] \r\n').split(b', ')]
+            mes.insert(0, nom.strip().decode('utf-8'), vs)
+            logging.info('l = %r', l)
+            logging.info('mes =\\\n%r', mes.tail())
+        except ValueError:
+            logging.debug('l = %s', l)
+            logging.exception('La dernière ligne lue n\'était pas conforme.')
+            continue
+    
+    res = pd.concat([res, mes])
 
     return res
 
-def plot(res: list[list[int]], fig: mpl.figure.Figure):
+def plot(res: pd.DataFrame, fig: mpl.figure.Figure):
     '''Mise à jour du graphique avec de nouvelles données
     
     Met les graphiques contenus dans fig à jour avec les données de res.
@@ -112,50 +123,27 @@ def plot(res: list[list[int]], fig: mpl.figure.Figure):
     fig
         Figure contenant les différents graphiques
     '''
-    fs, *fft_pd = fft(res) # Calculer la FFT
-    ts = res[0]
-    # Python permet le paquetage/dépaquetage dans les définitions de variables
-    # On peut par exemple définir les mêmes variables avec les mêmes valeurs
-    # de plusieurs manières différentes:
-    #
-    # a = 1                             a, b = 1, 2
-    # b = 2
-    #
-    # Dans la boucle for qui suit, on utilise les fonctions
-    # zip_ et enumerate_. zip_ permet d'itérer sur les valeurs de plusieurs
-    # listes simultanément, et enumerate_ permet d'itérer sur les valeurs
-    # et l'index d'une liste. Dans la boucle, on a donc:
-    #
-    # i: int = <index des éléments>
-    # pd: list[float] = <données de la broche/photodiode i>
-    # fpd: list[float] = <transformée de pd>
-    for i, (pd, fpd) in enumerate(zip(res[1:], fft_pd)):
-        # fig est la figure passée en argument
-        # fig.axes est la liste des axes contenus dans la figure
-        # fig.axes[0] est l'axe qu'on utilise pour les données brutes
-        # fig.axes[1] est l'axe qu'on utilise pour la FFT
-        # fig.axes[i].lines est la liste des courbes dessinées sur fig.axes[i]
-        # fig.axes[i].lines[pd] est la courbe associée à la photodiode pd
-        # fig.axes[i].lines[pd].set_ydata permet de modifier les valeurs en y
-        #   d'une courbe existante
-        # fig.axes[i].lines[pd].get_ydata permet d'obtenir les valeurs en y
-        #   d'une courbe existante.
+    logging.debug('res.size = %s', res.size)
+    logging.debug('res.ts.size = %s', res.ts.size)
+    logging.debug('res.tail() =\\\n%r', res.tail())
+    if res.ts.size >= 256:
+        fig.axes[BRUT].lines[0].set_data(res.ts, res.A0)
+        fig.axes[BRUT].set_xlim(res.ts[res.ts.size-256], res.ts[res.ts.size-1]) 
         
-        # Afficher jusqu'aux 200 derniers points
-        fig.axes[BRUT].lines[i].set_data(np.array(ts)*ns2s, pd)
-        fig.axes[BRUT].set_xlim(max(ts)*ns2s-2, max(ts)*ns2s)
+        if not res.ts.size % 256:
+            res = fft(res) # Calculer la FFT
+        
+            fig.axes[FFT].lines[0].set_data(res.fs, res.F)
+            fig.axes[FFT].lines[1].set_data(res.fs, res.F2) 
+            fig.axes[FFT].set_ylim(0, max(res.F.max(), res.F2.max()))
 
-        # Afficher la transformée de Fourier
-        fig.axes[FFT].lines[i].set_data(fs*GHz2Hz, fpd)
-    
-    fig.axes[FFT].set_ylim(0, max(max(f) for f in fft_pd))
-    plt.pause(1e-10) # Petite pause pour permettre l'affichage correct
+    plt.pause(0.01) # Petite pause pour permettre l'affichage correct
 
 # ===========================
 # = Fonctions structurelles =
 # ===========================
 
-def setup(pds: int = 2, port: str = PORT, debit: int = DEBIT, delai: int = DELAI) -> tuple[list[list[int]], serial.Serial, mpl.figure.Figure, int]:
+def setup(port: str = PORT, debit: int = DEBIT, delai: int = DELAI) -> tuple[pd.DataFrame, serial.Serial, mpl.figure.Figure, int]:
     '''Initialisation du programme
     
     Initialise le programme avec les paramètres transmis, et retourne les
@@ -186,9 +174,16 @@ def setup(pds: int = 2, port: str = PORT, debit: int = DEBIT, delai: int = DELAI
     #: On utilise une expression de liste plutôt que la multiplication pour
     #: ne pas créer un unique object commun répété plusieurs fois dans la liste.
     #: Voir https://stackoverflow.com/q/366422 pour ce genre de problèmes.
-    res: list[list[int]] = [[] for pd in range(pds+1)]
+    res: pd.DataFrame = pd.DataFrame(columns=['ts', 'A0', 'cadre', 'signal', 'F', 'fs', 'F2'], dtype=np.float64)
     ser = serial.Serial(port, baudrate=debit, timeout=delai)
-    ser.read()
+    time.sleep(0.01)
+    while ser.in_waiting:
+        l = ser.readline().strip()
+        if len(l) > 0:
+            print(l)
+        else:
+            break
+        time.sleep(0.01)
     
     #: Paramètres des graphiques
     #: Affichage interactif, pour pouvoir suivre l'acquisition en direct
@@ -202,14 +197,13 @@ def setup(pds: int = 2, port: str = PORT, debit: int = DEBIT, delai: int = DELAI
     ax.set_title('Mesures des photodiodes')
     ax.set_xlabel('Temps (s)')
     ax.set_ylabel('Unités CAN (5V / 1024 bits)')
-    ax.plot([], color='black', label='IR')
-    ax.plot([], color='red', label='VIS')
+    ax.plot([], color='black', label='A0')
     ax.legend()
     
     ax2.set_title('Transformées de Fourier des signaux')
     ax2.set_xlabel('Fréquence (Hz)')
-    ax2.plot([], color='black', label='IR')
-    ax2.plot([], color='red', label='VIS')
+    ax2.plot([], color='black', label='FFT (Arduino)')
+    ax2.plot([], color='red', label='FFT (Python)')
     ax2.set_yticks([], [])
     ax2.legend()
 
@@ -223,9 +217,9 @@ def setup(pds: int = 2, port: str = PORT, debit: int = DEBIT, delai: int = DELAI
     plt.pause(0.01)
     plt.show()
 
-    return res, ser, fig, 0
+    return res, ser, fig
 
-def loop(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
+def loop(res: pd.DataFrame, ser: serial.Serial, fig: mpl.figure.Figure):
     '''Prend de nouvelles mesures et les affiche
     
     Parameters
@@ -251,9 +245,9 @@ def loop(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
     # Mise à jour du graphique
     plot(res, fig)
     
-    return res, ser, fig, res[0][-1]
+    return res, ser, fig
 
-def setdown(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
+def setdown(res: pd.DataFrame, ser: serial.Serial, fig: mpl.figure.Figure):
     '''Ferme tous les objets en ayant besoin
     
     Parameters
@@ -265,7 +259,6 @@ def setdown(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
     fig
         Figure, à fermer via pyplot
     '''
-    del res[:]
     ser.close()
     plt.close(fig)
 
@@ -274,10 +267,10 @@ def setdown(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
 # ==================================
 
 def fft(
-    res: list[list[int]],
-    N_max: int = 1700,
+    res: pd.DataFrame,
+    N: int = 256,
     cadre: str = 'hann'
-) -> tuple[np.array, ...]:
+) -> pd.DataFrame:
     '''Retourne la transformée de Fourier des données contenues dans :py:data:`res`. C'est une bonne idée de personnaliser cette fonction selon
     vos besoins. Pour bien comprendre ce que fait la fonction, vous devriez
     consulter :py:func:`scipy.signal.get_window`, :py:func:`numpy.fft.rfft` et
@@ -298,26 +291,34 @@ def fft(
     ys
         Transformées.
     '''
-    N: int = min(len(res[0]), N_max) # Nombre de valeurs à considérer
-    
     # Estimation de l'espacement, basé sur les mesures
-    ts: list[float] = res[0]
-    d: float = np.mean(np.array(ts[1:]) - np.array(ts[:-1]))
-
-    cadre = scipy.signal.get_window(cadre, N)
-    ys = []
-    for sig in res[1:]:
-        signal = np.array(sig[-N:]) * cadre
-        ys.append(np.abs(np.fft.rfft(signal)))
+    d: float = (res.ts[-N+1:] - res.ts[-N:-1]).mean()
     
-    fs = np.fft.rfftfreq(signal.size, d=d)
-
-    # Équivalent à
-    # return fs, ys[0], ys[1], ...
-    return fs, *ys
+    idx = res.index.size - N
+    
+    res.loc[idx:,'cadre'] = scipy.signal.get_window(cadre, N)
+    res.loc[idx:, 'signal'] = res.A0[idx:] * res.cadre[idx:]
+    
+    logging.debug('res = \\\n%r', res.tail())
+    logging.debug('res.signal = \\\n%r', res.signal[idx:])
+    logging.debug('res.signal.to_numpy() = \\\n%r', res.signal[idx:].to_numpy())
+    
+    arr = res.signal[idx:].to_numpy()
+    logging.debug('arr = %r', arr)
+    tran = np.abs(np.fft.rfft(arr))
+    logging.debug('tran = %r', tran)
+    logging.debug('tran.size = %r', tran.size)
+    
+    idx2 = res.index.size - tran.size
+    logging.debug('res.loc[idx2:, \'F2\'].size = %s', res.loc[idx2:, 'F2'].size)
+    res.loc[idx2:, 'F2'] = tran
+    res.loc[idx2:, 'fs'] = np.fft.rfftfreq(tran.size, d)
+    
+    return res
 
 if __name__ == '__main__':
-    *params, derniere_mesure = setup()
+    logging.basicConfig(level=logging.DEBUG)
+    params = setup()
     
     try:
         # Cette boucle est infinie à toutes fins pratiques, càd équivalente à
@@ -326,7 +327,7 @@ if __name__ == '__main__':
         # Techniquement, elle s'arrête quand la fenêtre du graphique est fermée,
         # ou que l'utilisateur entre ^C sur la ligne de commande.
         while len(plt.get_fignums()) > 0:
-            *params, derniere_mesure = loop(*params)
+            params = loop(*params)
     except KeyboardInterrupt:
         # Détection de la combinaison ^C pour arrêter le programme
         logging.critical('Sortie forcée par l\'utilisateur.')

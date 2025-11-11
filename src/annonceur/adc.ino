@@ -12,6 +12,6 @@
 void set_PF(unsigned char pf_pow) {
 	ADC0.CTRLC &= ~( bit(0) | bit(1) | bit(2) ); // 0b11100000
 	ADC0.CTRLC |= bit(0) * (pf_pow % 8);
-	ADC0.CTRLC |= bit(1) * ( (pf_pow % 4) / 2 );
-	ADC0.CTRLC |= bit(2) * ( pf_pow / 4 );
+	ADC0.CTRLC |= bit(1) * ( (pf_pow % 4) >> 1 );
+	ADC0.CTRLC |= bit(2) * ( pf_pow >> 2 );
 }
