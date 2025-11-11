@@ -12,22 +12,33 @@ numpy = "2.4.2"
 scipy = "1.17.0"
 pillow = "12.1.1"
 pandas = "3.0.1"
-sphinx = "9.1.0"
 matplotlib = "3.10.8"
+"x.phs1903" = {file = ".", editable = true}
+
+[dev]
 twine = "*"
 build = "*"
 ruff = "*"
-"x.phs1903" = {file = ".", editable = true}
-hawkmoth = "*"
-libclang = "*"
-contourpy = "*"
+
+[docs]
+alabaster = "1.0.0"
+babel = "2.18.0"
+certifi = "*"
+charset-normalizer = "3.4.4"
+contourpy = "1.3.3"
+cycler = "0.12.1"
+docutils = "0.22.4"
+fonttools = "4.61.1"
+hawkmoth = "0.22.0"
+libclang = "14.0.6"
+clang = "14.0.6"
+jinja2 = "3.1.6"
+keyring = "25.7.0"
+kiwisolver = "1.4.9"
+sphinx = "9.1.0"
 
 [scripts]
 debug = "python -m pdb -c continue src/xphs1903/demos"
 run = "python -m xphs1903"
 demo = "python -m xphs1903.demos"
 docs = "make -C ./docs singlehtml latexpdf"
-
-[dev-packages]
-
-[dev]
