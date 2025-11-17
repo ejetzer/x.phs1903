@@ -28,18 +28,45 @@ import scipy as sp # <https://scipy.org/>
 import scipy.signal.windows
 import matplotlib as mpl # <https://matplotlib.org/>
 import matplotlib.pyplot as plt
-import pandas as pd
-import logging
-import time
+import pandas as pd # <https://pandas.pydata.org/>
+import logging # <https://docs.python.org/3/library/logging.html>
+import time # <https://docs.python.org/3/library/time.html>
 
 # Définitions
 # Voir :doc:`defs`
 
 DELIM_VAL = b'[]\r\n '
+'''Caractères délimitant les listes de valeurs dans la communication avec le micro-contrôleur
+
+Le programme d'annonceur sur le micro-contrôleur envoie les données avec la
+même syntaxe qu'une liste Python. On peut donc retirer les caractères de
+:py:var:`DELIM_VAL` des bouts de la chaîne avec :py:meth:`str.strip`.
+'''
+
 SEP_NOM = b'='
+'''Séparateur du nom de variable ou colonne et de la liste de données
+
+Le nom de la variable ou colonne lue sur la ligne série est séparé des données par un signe ``=``.
+'''
+
 SEP_VAL = b','
+'''Séparateur de valeurs
+
+Les valeurs dans la liste sont séparées par des virgules.
+'''
+
 SEP_LIGNE = b'\r\n'
+'''Séparateur de ligne du micro-contrôleur
+
+Arduino utilise la séquence ``\\r\\n`` pour finir les lignes, au lieu du plus
+commun ``\\n``. Il faut donc régler nos séparateurs en conséquence.
+'''
+
 SEP_BLOC = SEP_LIGNE*2
+'''Séparateur de blocs de données
+
+Les blocs de données sont séparés par une ligne vide, soit deux saut de ligne/retours chariots.
+'''
 
 PORT: str = '/dev/cu.usbmodemFA13201'
 '''Port série à utiliser pour le programme
@@ -75,15 +102,33 @@ un délai de 0.8ms. Avec une petite marge, on arrive à 0.005s.
 '''
 
 DELAI_PLT: float = 0.01
+'''Délai de pause de l'afficahge :py:mod:`matplotlib`
+
+:py:mod:`matplotlib` a besoin d'être interrompu à certains moments pour que le
+programme d'acquisition continue de s'exécuter. La pause n'a pas besoin d'être longue.
+'''
 
 # Définition des indices pour les deux types de graphiques
 BRUT: int = 0 #: Index des graphiques de données dans fig.axes
 FFT: int = 1 #: Index des graphiques de transformée de Fourier dans fig.axes
 
 N_max: int = 256
+'''Nombre de mesures attendues
 
-us = 1e-6
-MHz = 1e6
+Le programme du micro-contrôleur envoie un nombre précis de mesures dans chaque 
+bloc. De vérifier qu'on reçoit le bon nombre de mesures est un test facile pour
+valider l'intégrité des données. Le nombre précis est déterminé par, entre
+autres:
+
+- La mémoire disponible sur l'Arduino
+- Le type des variables stockant les mesures
+- La précision du convertisseur analogique-numérique
+- La fréquence d'échantillonage
+- L'intervalle sur lequel les mesures sont prises.
+'''
+
+us = 1e-6 # Facteur de conversion de µs → s
+MHz = 1e6 # Facteur de conversion de MHz → Hz
 
 def prendre_mesure[R: pd.DataFrame](res: R, ser: serial.Serial) -> R:
     '''Prise d'une mesure
@@ -104,36 +149,71 @@ def prendre_mesure[R: pd.DataFrame](res: R, ser: serial.Serial) -> R:
     res
         Avec les nouvelles valeurs.
 '''
-    mes = pd.DataFrame(dtype=np.float64)
+    mes: pd.DataFrame = pd.DataFrame(dtype=np.float64)
+    '''Cadre de données, :py:class:`pandas.DataFrame` pour les nouvelles mesures'''
     
-    bloc_cru = ser.read_until(SEP_BLOC)
+    bloc_cru: bytes = ser.read_until(SEP_BLOC)
+    '''Bloc de données lues de la ligne série'''
     
+    # Si on n'a reçu aucune données, on ne pourra pas en faire l'analyse
+    # ou les afficher. Donc on quitte la fonction sans modifier :py:var:`res`.
+    # Alternativement, vous pourriez soulever une erreur ou signaler le 
+    # problème de différentes façons. J'ai mis quelques exemples en commentaire.
     if len(bloc_cru) == 0:
+        #logging.warning('Aucune donnée reçue.')
+        #raise RuntimeWarning('Aucune donnée n\'a été reçue.')
         return res
     
-    bloc_ecourte = bloc_cru.strip()
-    lignes = bloc_ecourte.split(SEP_LIGNE)
+    bloc_ecourte = bloc_cru.strip() # Enlever les caractères invisibles
+    lignes = bloc_ecourte.split(SEP_LIGNE) # Diviser par ligne
     for l in lignes:
-        if b'=' not in l:
+        if SEP_NOM not in l: # Vérifier qu'on a bien une ligne de mesures
+            #logging.warning('Pas de \'=\' présent dans %r', l)
+            #raise RuntimeError('Pas de \'=\' présent')
             return res
 
         nom, valeurs = l.split(SEP_NOM, 1)
         
+        # Retirer les caractères invisibles
         nom = nom.strip()\
-                 .decode('utf-8')
+                 .decode('utf-8') # Convertire de :py:type:`bytes` à :py:type:`str`
         
+        # Retirer les caractères invisibles et :py:var:`DELIM_VAL`
         valeurs_isolees = valeurs.strip(DELIM_VAL)
+        
+        # Séparer les valeurs par :py:var:`SEP_VAL`
         valeurs_separees = valeurs_isolees.split(SEP_VAL)
+        
+        global N_max
+        if N_max != len(valeurs_separees):
+            N_max = len(valeurs_separees)
+            logging.info('Changement de N... N=%s', N_max)
+        
+        # Convertir de :py:type:`bytes` à :py:class:`numpy.float64`
         valeurs_converties = [np.float64(v) for v in valeurs_separees]
-
-        diff = len(mes.index) - len(valeurs_converties)
-        diff = diff if diff > 0 else 0
+        
+        # La tranformée de Fourier contient moitié moins de valeurs que
+        # les données. Il faut donc les égaliser avant de les mettre
+        # dans le même ``pandas.DataFrame``. Une alternative serait 
+        # d'utiliser un ``pandas.DataFrame`` pour les données et un
+        # pour la transformée de Fourier.
+        diff = len(mes.index) - len(valeurs_converties) # Différence de longueur
+        diff = diff if diff > 0 else 0 # Validation
+        # Voir :py:func:`numpy.pad`.
+        # Les positions ajoutées en début de liste auront la valeur
+        # :py:`numpy.nan`, qui représente une valeur numérique non-définie.
         valeurs_compensees = np.pad(valeurs_converties,
                                     (diff, 0),
                                     constant_values=np.nan)
         
+        # Voir :py:meth:`pandas.DataFrame.insert`
+        # Ajouter la ligne lue comme une nouvelle colonne de 
+        # :py:var:`mes`.
         mes.insert(0, nom, valeurs_compensees)
     
+    # Voir :py:func:`pandas.concat`
+    # Ajouter les données rangées dans :py:var:`mes` à 
+    # :py:var:`res`.
     res = pd.concat([res, mes], ignore_index=True)
 
     return res
@@ -149,31 +229,50 @@ def plot(res: pd.DataFrame, fig: mpl.figure.Figure, N: int = N_max):
         Liste des mesures prises. Structurée en ``[t, pd1, pd2, ...]``
     fig
         Figure contenant les différents graphiques
+    N
+        Nombre maximal de données.
     '''
+    
+    # Si on n'a pas assez de données, on attend.
+    # En pratique, ça veut dire que le tableau de données
+    # est vide.
     if res.ts.size < N:
         return
 
+    # Axe du temps, converti de us à s.
     ts = res.ts.to_numpy()[-N:] * us
+    
+    # Mesures à la broche A0 (ou autres broches programmées)
     A0 = res.A0.to_numpy()[-N:]
+    
+    # En cas de valeurs problématiques dans la plage à afficher,
+    # on passe à la prochaine.
     if any([np.isnan(ts).sum(), np.isnan(A0).sum()]):
         return
 
+    # On change les valeurs des courbes de mesures
     fig.axes[BRUT].lines[0].set_data(ts, A0)
     fig.axes[BRUT].set_xlim(ts[0], ts[-1])
-    plt.pause(DELAI_PLT)
+    plt.pause(DELAI_PLT) # Petite pause pour permettre l'affichage correct
     
-    res = fft(res) # Calculer la FFT
-    
+    # Axe des fréquences, converti de MHz à Hz
     fs = res.fs.to_numpy()[-N//2:] * MHz
-    F = res.F.to_numpy()[-N//2:]
-    F2 = res.F2.to_numpy()[-N//2:]
-    if any([np.isnan(fs).sum(), np.isnan(F).sum(), np.isnan(F2).sum()]):
+    fig.axes[FFT].set_xlim(fs[0], fs[-1])
+    if any(np.isnan(fs)):
         return
     
-    fig.axes[FFT].lines[0].set_data(fs, F)
-    fig.axes[FFT].lines[1].set_data(fs, F2)
-    fig.axes[FFT].set_xlim(fs[0], fs[-1])
-    fig.axes[FFT].set_ylim(0, max(F.max(), F2.max()))
+    # Spectre calculé sur le Arduino
+    F = res.F.to_numpy()[-N//2:]
+    if not np.isnan(F).sum():
+        fig.axes[FFT].lines[0].set_data(fs, F)
+        fig.axes[FFT].set_ylim(0, F2.max())
+    
+    # Spectre calculé avec Python
+    F2 = res.F2.to_numpy()[-N//2:]
+    if not np.isnan(F2).sum():
+        fig.axes[FFT].lines[0].set_data(fs, F2)
+        fig.axes[FFT].set_ylim(0, F2.max())
+    
     plt.pause(DELAI_PLT) # Petite pause pour permettre l'affichage correct
 
 # ===========================
@@ -213,7 +312,10 @@ def setup(port: str = PORT, debit: int = DEBIT, delai: int = DELAI) -> tuple[pd.
     #: Voir https://stackoverflow.com/q/366422 pour ce genre de problèmes.
     res: pd.DataFrame = pd.DataFrame(columns=['ts', 'A0', 'cadre', 'signal', 'F', 'fs', 'F2'], dtype=np.float64)
     ser = serial.Serial(port, baudrate=debit, timeout=DELAI)
-    time.sleep(2)
+    time.sleep(2) # On laisse le temps au Arduino de se réveiller
+    
+    # La première ligne envoyée par le programme Arduino affiche les paramètres
+    # du micro-contrôleur.
     l = ser.read_until(SEP_BLOC).strip()
     print(l.decode('utf-8'))
     
@@ -240,15 +342,10 @@ def setup(port: str = PORT, debit: int = DEBIT, delai: int = DELAI) -> tuple[pd.
     ax2.legend()
 
     ax.set_ylim(0, 1030)
-    ax.set_xlim(left=-200, right=0)
-    ax2.set_ylim(bottom=0)
-    ax2.set_ylim(bottom=0, auto=True)
-    ax2.set_xlim(left=0, auto=True)
     
     fig.tight_layout()
     plt.pause(0.01)
     plt.show()
-    plt.pause(0.01)
 
     return res, ser, fig
 
@@ -275,6 +372,17 @@ def loop(res: pd.DataFrame, ser: serial.Serial, fig: mpl.figure.Figure):
     # Lecture des valeurs de chaque photodiode
     res = prendre_mesure(res, ser)
     
+    # Calculs et analyse
+    # Dans cet exemple il n'y a que la transformée de Fourier,
+    # mais vous allez devoir y ajouter d'autres fonctions.
+    res = fft(res)
+    #res = SpO_2(res)
+    #res = un_train_arrive(res)
+    
+    # C'est ici que des fonctions pour réagir aux mesures devraient aller
+    #signaler_absence_pouls(res)
+    #bouger_barrière(res)
+    
     # Mise à jour du graphique
     plot(res, fig)
     
@@ -292,6 +400,10 @@ def setdown(res: pd.DataFrame, ser: serial.Serial, fig: mpl.figure.Figure):
     fig
         Figure, à fermer via pyplot
     '''
+    
+    # Si la communication série n'est pas fermée correctement, elle restera
+    # ouverte et bloquera tout autre programme qui essaiera d'y accéder,
+    # comme par exemple votre programme dans 5s, ou l'IDE Arduino.
     ser.close()
     plt.close(fig)
 
@@ -299,15 +411,31 @@ def setdown(res: pd.DataFrame, ser: serial.Serial, fig: mpl.figure.Figure):
 # = Fonctions d'analyse de données =
 # ==================================
 
-def estime_d(res, N):
-    tôt, tard = res.ts[-N:-1].to_numpy(), res.ts[-N+1:].to_numpy()
-    diff = tard - tôt
+def estime_d(res: pd.DataFrame, N: int = N_max) -> float:
+    '''Estimé de la période d'échantillonage
+    
+    Parameters
+    ===============
+    res
+        Les mesures prises, incluant la liste des mesures de temps
+    N
+        Le nombre de mesures depuis la dernière à considérer
+    
+    Returns
+    ========
+    d
+        L'espacement moyen entre chaque mesure
+    '''
+    tôt: np.ndarray[int] = res.ts[-N:-1].to_numpy()
+    tard: np.ndarray[int] = res.ts[-N+1:].to_numpy()
+    diff: np.ndarray[int] = tard - tôt
     d: float = diff.mean()
+    
     return d
 
 def fft(
     res: pd.DataFrame,
-    N: int = 256,
+    N: int = N_max,
     cadre: str = 'hann'
 ) -> pd.DataFrame:
     '''Retourne la transformée de Fourier des données contenues dans :py:data:`res`. C'est une bonne idée de personnaliser cette fonction selon
@@ -336,21 +464,24 @@ def fft(
     logging.info('f = %sMHz', 1/d)
     
     idx = res.index.size - N
-    intervalle = res.ts.to_numpy()[-1] - res.ts.to_numpy()[-N]
+    
+    # Mesure de l'intervalle couvert par la série de mesure
+    # Utile pour vérifier les calculs liés à n, f_{acq}, d, etc.
+    intervalle: int = res.ts.to_numpy()[-1] - res.ts.to_numpy()[-N]
     logging.info('\\Delta t = %sµs', intervalle)
     
-    res.loc[idx:,'cadre'] = scipy.signal.get_window(cadre, N)
-    res.loc[idx:, 'signal'] = res.A0[idx:] * res.cadre[idx:]
+    cadre: np.ndarray[float] =  scipy.signal.get_window(cadre, N)
+    res.loc[idx:,'cadre'] = cadre
     
-    arr = res.signal[idx:].to_numpy()
-    tran = np.abs(np.fft.rfft(arr))
+    A0 = res.A0.to_numpy()[idx:]
+    signal = A0 * cadre
+    res.loc[idx:, 'signal'] = signal
     
-    idx2 = res.index.size - tran.size
-    
-    res.loc[idx2:, 'F2'] = tran
+    fft = np.abs(np.fft.rfft(signal))
+    idx2 = res.index.size - fft.size
+    res.loc[idx2:, 'F2'] = fft
 
     fs = np.fft.rfftfreq(N, d)
-
     res.loc[idx2:, 'fs'] = fs
 
     return res
