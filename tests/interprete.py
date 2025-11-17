@@ -17,26 +17,19 @@ def choix():
 if __name__ == '__main__':
     s = Serial(baudrate=115200)
     s.port = choix().device
-    s.open()
-    m = Miniterm(s, echo=False, eol='lf', filters=[])
-    m.exit_character = '\x1d'
-    m.menu_character = '\x14'
-    m.raw = False
-    m.set_rx_encoding('UTF-8')
-    m.set_tx_encoding('UTF-8')
     
     logging.basicConfig(level=logging.INFO)
     
-    logging.info(f'--- Miniterm sur {m.serial.name}, {m.serial.bytesize}, {m.serial.parity}, {m.serial.stopbits} ---')
-    logging.info(f'--- Quitter: {key_description(m.exit_character)} | Menu: {key_description(m.menu_character)} | Aide: {key_description(m.menu_character)} {key_description("\x08")}')
     input('Prêt?')
     
-    m.start()
+    logging.info('--- Allez! ---')
     try:
-        m.join(True)
+        s.open()
+        while True:
+            bloc = s.read_until(b'\r\n\r\n')
+            print(bloc.decode('utf-8'))
     except KeyboardInterrupt:
         logging.info('Arrêt par ^C.')
     finally:
+        s.close()
         logging.info('--- Sortie. ---')
-        m.join()
-        m.close()

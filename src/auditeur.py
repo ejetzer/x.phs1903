@@ -35,6 +35,12 @@ import time
 # Définitions
 # Voir :doc:`defs`
 
+DELIM_VAL = b'[]\r\n '
+SEP_NOM = b'='
+SEP_VAL = b','
+SEP_LIGNE = b'\r\n'
+SEP_BLOC = SEP_LIGNE*2
+
 PORT: str = '/dev/cu.usbmodemFA13201'
 '''Port série à utiliser pour le programme
 
@@ -43,7 +49,7 @@ ressemblera à '/dev/cu.usbmodemFA13201'. Le module :external:py:class:`serial <
 a un outil dédié à la découverte des ports série disponibles, :py:mod:`serial.tools.list_ports`, ou :py:func:`serial.tools.list_ports.comports`.
 '''
 
-DEBIT: int = 115200
+DEBIT: int = 1000000
 '''Débit de communication
 
 Doit correspondre à la constante équivalente dans le programme
@@ -57,7 +63,7 @@ la fiabilité. Voir la documentation de :py:class:`serial <serial.Serial>` ou de
     https://pythonhosted.org/pyserial/pyserial_api.html
 '''
 
-DELAI: float = 0.005 # Attente en lecture
+DELAI: float = 2 # Attente en lecture
 '''Délai maximal en secondes avant d'abandonner une tentative de lecture
 
 Certaines valeurs spéciales sont décrites dans la documentation officielle de :py:class:`serial <serial.Serial>`. Comme la fréquence de transfert d'un bit
@@ -68,9 +74,16 @@ envoyés. Pour des chiffres, on peut assumer du ASCII 8b, avec un message long
 un délai de 0.8ms. Avec une petite marge, on arrive à 0.005s.
 '''
 
+DELAI_PLT: float = 0.01
+
 # Définition des indices pour les deux types de graphiques
 BRUT: int = 0 #: Index des graphiques de données dans fig.axes
 FFT: int = 1 #: Index des graphiques de transformée de Fourier dans fig.axes
+
+N_max: int = 256
+
+us = 1e-6
+MHz = 1e6
 
 def prendre_mesure[R: pd.DataFrame](res: R, ser: serial.Serial) -> R:
     '''Prise d'une mesure
@@ -92,26 +105,40 @@ def prendre_mesure[R: pd.DataFrame](res: R, ser: serial.Serial) -> R:
         Avec les nouvelles valeurs.
 '''
     mes = pd.DataFrame(dtype=np.float64)
-    for l in ser.readlines():
-        if not l.strip():
-            break
-
-        try:
-            nom, vs = l.split(b'=', 1)
-            vs = [np.float64(v) for v in vs.strip(b'[] \r\n').split(b', ')]
-            mes.insert(0, nom.strip().decode('utf-8'), vs)
-            logging.info('l = %r', l)
-            logging.info('mes =\\\n%r', mes.tail())
-        except ValueError:
-            logging.debug('l = %s', l)
-            logging.exception('La dernière ligne lue n\'était pas conforme.')
-            continue
     
-    res = pd.concat([res, mes])
+    bloc_cru = ser.read_until(SEP_BLOC)
+    
+    if len(bloc_cru) == 0:
+        return res
+    
+    bloc_ecourte = bloc_cru.strip()
+    lignes = bloc_ecourte.split(SEP_LIGNE)
+    for l in lignes:
+        if b'=' not in l:
+            return res
+
+        nom, valeurs = l.split(SEP_NOM, 1)
+        
+        nom = nom.strip()\
+                 .decode('utf-8')
+        
+        valeurs_isolees = valeurs.strip(DELIM_VAL)
+        valeurs_separees = valeurs_isolees.split(SEP_VAL)
+        valeurs_converties = [np.float64(v) for v in valeurs_separees]
+
+        diff = len(mes.index) - len(valeurs_converties)
+        diff = diff if diff > 0 else 0
+        valeurs_compensees = np.pad(valeurs_converties,
+                                    (diff, 0),
+                                    constant_values=np.nan)
+        
+        mes.insert(0, nom, valeurs_compensees)
+    
+    res = pd.concat([res, mes], ignore_index=True)
 
     return res
 
-def plot(res: pd.DataFrame, fig: mpl.figure.Figure):
+def plot(res: pd.DataFrame, fig: mpl.figure.Figure, N: int = N_max):
     '''Mise à jour du graphique avec de nouvelles données
     
     Met les graphiques contenus dans fig à jour avec les données de res.
@@ -123,21 +150,31 @@ def plot(res: pd.DataFrame, fig: mpl.figure.Figure):
     fig
         Figure contenant les différents graphiques
     '''
-    logging.debug('res.size = %s', res.size)
-    logging.debug('res.ts.size = %s', res.ts.size)
-    logging.debug('res.tail() =\\\n%r', res.tail())
-    if res.ts.size >= 256:
-        fig.axes[BRUT].lines[0].set_data(res.ts, res.A0)
-        fig.axes[BRUT].set_xlim(res.ts[res.ts.size-256], res.ts[res.ts.size-1]) 
-        
-        if not res.ts.size % 256:
-            res = fft(res) # Calculer la FFT
-        
-            fig.axes[FFT].lines[0].set_data(res.fs, res.F)
-            fig.axes[FFT].lines[1].set_data(res.fs, res.F2) 
-            fig.axes[FFT].set_ylim(0, max(res.F.max(), res.F2.max()))
+    if res.ts.size < N:
+        return
 
-    plt.pause(0.01) # Petite pause pour permettre l'affichage correct
+    ts = res.ts.to_numpy()[-N:] * us
+    A0 = res.A0.to_numpy()[-N:]
+    if any([np.isnan(ts).sum(), np.isnan(A0).sum()]):
+        return
+
+    fig.axes[BRUT].lines[0].set_data(ts, A0)
+    fig.axes[BRUT].set_xlim(ts[0], ts[-1])
+    plt.pause(DELAI_PLT)
+    
+    res = fft(res) # Calculer la FFT
+    
+    fs = res.fs.to_numpy()[-N//2:] * MHz
+    F = res.F.to_numpy()[-N//2:]
+    F2 = res.F2.to_numpy()[-N//2:]
+    if any([np.isnan(fs).sum(), np.isnan(F).sum(), np.isnan(F2).sum()]):
+        return
+    
+    fig.axes[FFT].lines[0].set_data(fs, F)
+    fig.axes[FFT].lines[1].set_data(fs, F2)
+    fig.axes[FFT].set_xlim(fs[0], fs[-1])
+    fig.axes[FFT].set_ylim(0, max(F.max(), F2.max()))
+    plt.pause(DELAI_PLT) # Petite pause pour permettre l'affichage correct
 
 # ===========================
 # = Fonctions structurelles =
@@ -175,15 +212,10 @@ def setup(port: str = PORT, debit: int = DEBIT, delai: int = DELAI) -> tuple[pd.
     #: ne pas créer un unique object commun répété plusieurs fois dans la liste.
     #: Voir https://stackoverflow.com/q/366422 pour ce genre de problèmes.
     res: pd.DataFrame = pd.DataFrame(columns=['ts', 'A0', 'cadre', 'signal', 'F', 'fs', 'F2'], dtype=np.float64)
-    ser = serial.Serial(port, baudrate=debit, timeout=delai)
-    time.sleep(0.01)
-    while ser.in_waiting:
-        l = ser.readline().strip()
-        if len(l) > 0:
-            print(l)
-        else:
-            break
-        time.sleep(0.01)
+    ser = serial.Serial(port, baudrate=debit, timeout=DELAI)
+    time.sleep(2)
+    l = ser.read_until(SEP_BLOC).strip()
+    print(l.decode('utf-8'))
     
     #: Paramètres des graphiques
     #: Affichage interactif, pour pouvoir suivre l'acquisition en direct
@@ -210,12 +242,13 @@ def setup(port: str = PORT, debit: int = DEBIT, delai: int = DELAI) -> tuple[pd.
     ax.set_ylim(0, 1030)
     ax.set_xlim(left=-200, right=0)
     ax2.set_ylim(bottom=0)
-    ax2.set_ylim(auto=True)
-    ax2.set_xlim(left=0, right=50)
+    ax2.set_ylim(bottom=0, auto=True)
+    ax2.set_xlim(left=0, auto=True)
     
     fig.tight_layout()
     plt.pause(0.01)
     plt.show()
+    plt.pause(0.01)
 
     return res, ser, fig
 
@@ -266,6 +299,12 @@ def setdown(res: pd.DataFrame, ser: serial.Serial, fig: mpl.figure.Figure):
 # = Fonctions d'analyse de données =
 # ==================================
 
+def estime_d(res, N):
+    tôt, tard = res.ts[-N:-1].to_numpy(), res.ts[-N+1:].to_numpy()
+    diff = tard - tôt
+    d: float = diff.mean()
+    return d
+
 def fft(
     res: pd.DataFrame,
     N: int = 256,
@@ -292,32 +331,32 @@ def fft(
         Transformées.
     '''
     # Estimation de l'espacement, basé sur les mesures
-    d: float = (res.ts[-N+1:] - res.ts[-N:-1]).mean()
+    d: float = estime_d(res, N)
+    logging.info('d ≅ %sµs', d)
+    logging.info('f = %sMHz', 1/d)
     
     idx = res.index.size - N
+    intervalle = res.ts.to_numpy()[-1] - res.ts.to_numpy()[-N]
+    logging.info('\\Delta t = %sµs', intervalle)
     
     res.loc[idx:,'cadre'] = scipy.signal.get_window(cadre, N)
     res.loc[idx:, 'signal'] = res.A0[idx:] * res.cadre[idx:]
     
-    logging.debug('res = \\\n%r', res.tail())
-    logging.debug('res.signal = \\\n%r', res.signal[idx:])
-    logging.debug('res.signal.to_numpy() = \\\n%r', res.signal[idx:].to_numpy())
-    
     arr = res.signal[idx:].to_numpy()
-    logging.debug('arr = %r', arr)
     tran = np.abs(np.fft.rfft(arr))
-    logging.debug('tran = %r', tran)
-    logging.debug('tran.size = %r', tran.size)
     
     idx2 = res.index.size - tran.size
-    logging.debug('res.loc[idx2:, \'F2\'].size = %s', res.loc[idx2:, 'F2'].size)
-    res.loc[idx2:, 'F2'] = tran
-    res.loc[idx2:, 'fs'] = np.fft.rfftfreq(tran.size, d)
     
+    res.loc[idx2:, 'F2'] = tran
+
+    fs = np.fft.rfftfreq(N, d)
+
+    res.loc[idx2:, 'fs'] = fs
+
     return res
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     params = setup()
     
     try:
