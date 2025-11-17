@@ -1,0 +1,3 @@
+[submodule "arduinoFFT"]
+	path = deps/arduinoFFT
+	url = git@github.com:ejetzer/arduinoFFT.git
