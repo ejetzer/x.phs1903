@@ -1,9 +1,6 @@
-/src/x.phs1903.egg-info/
-/docs/_build/
 .idea
 .DS_Store
-.build
 *.egg-info
 *build*
 .drapeaux
-outils/arduino-cli
+*.zip
