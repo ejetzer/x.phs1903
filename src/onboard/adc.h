@@ -1,1 +1,1 @@
-void set_PF();
+void set_PF(unsigned char);

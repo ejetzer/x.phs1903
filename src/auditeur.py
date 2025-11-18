@@ -184,11 +184,6 @@ def prendre_mesure[R: pd.DataFrame](res: R, ser: serial.Serial) -> R:
         # Séparer les valeurs par :py:var:`SEP_VAL`
         valeurs_separees = valeurs_isolees.split(SEP_VAL)
         
-        global N_max
-        if N_max != len(valeurs_separees):
-            N_max = len(valeurs_separees)
-            logging.info('Changement de N... N=%s', N_max)
-        
         # Convertir de :py:type:`bytes` à :py:class:`numpy.float64`
         valeurs_converties = [np.float64(v) for v in valeurs_separees]
         
@@ -253,6 +248,8 @@ def plot(res: pd.DataFrame, fig: mpl.figure.Figure, N: int = N_max):
     # On change les valeurs des courbes de mesures
     fig.axes[BRUT].lines[0].set_data(ts, A0)
     fig.axes[BRUT].set_xlim(ts[0], ts[-1])
+    A0_max = 256 if A0.max() < 257 else 1024
+    fig.axes[BRUT].set_ylim(0, A0_max)
     plt.pause(DELAI_PLT) # Petite pause pour permettre l'affichage correct
     
     # Axe des fréquences, converti de MHz à Hz
@@ -263,15 +260,19 @@ def plot(res: pd.DataFrame, fig: mpl.figure.Figure, N: int = N_max):
     
     # Spectre calculé sur le Arduino
     F = res.F.to_numpy()[-N//2:]
+    F /= F.max()
     if not np.isnan(F).sum():
         fig.axes[FFT].lines[0].set_data(fs, F)
-        fig.axes[FFT].set_ylim(0, F2.max())
+    else:
+        logging.warning('Pas de FFT Arduino.')
     
     # Spectre calculé avec Python
     F2 = res.F2.to_numpy()[-N//2:]
+    F2 /= F2.max()
     if not np.isnan(F2).sum():
-        fig.axes[FFT].lines[0].set_data(fs, F2)
-        fig.axes[FFT].set_ylim(0, F2.max())
+        fig.axes[FFT].lines[1].set_data(fs, F2)
+    else:
+        logging.warning('Pas de FFT Python.')
     
     plt.pause(DELAI_PLT) # Petite pause pour permettre l'affichage correct
 
@@ -328,20 +329,21 @@ def setup(port: str = PORT, debit: int = DEBIT, delai: int = DELAI) -> tuple[pd.
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(12, 6))
     fig.suptitle('Démonstration de principe d\'un programme d\'analyse pour un oxymètre de pouls')
     
-    ax.set_title('Mesures des photodiodes')
+    ax.set_title('Mesures')
     ax.set_xlabel('Temps (s)')
     ax.set_ylabel('Unités CAN (5V / 1024 bits)')
-    ax.plot([], color='black', label='A0')
+    ax.plot([], color='black', label='A0', ls=':', marker='.')
     ax.legend()
     
     ax2.set_title('Transformées de Fourier des signaux')
     ax2.set_xlabel('Fréquence (Hz)')
-    ax2.plot([], color='black', label='FFT (Arduino)')
-    ax2.plot([], color='red', label='FFT (Python)')
+    ax2.plot([], color='black', label='FFT (Arduino)', ls=':')
+    ax2.plot([], color='red', label='FFT (Python)', ls=':')
     ax2.set_yticks([], [])
     ax2.legend()
 
-    ax.set_ylim(0, 1030)
+    ax.set_ylim(0, N_max+5)
+    ax2.set_ylim(0, 1)
     
     fig.tight_layout()
     plt.pause(0.01)
@@ -375,7 +377,10 @@ def loop(res: pd.DataFrame, ser: serial.Serial, fig: mpl.figure.Figure):
     # Calculs et analyse
     # Dans cet exemple il n'y a que la transformée de Fourier,
     # mais vous allez devoir y ajouter d'autres fonctions.
-    res = fft(res)
+    if res.ts.size >= N_max:
+        res = fft(res)
+    else:
+        logging.warning('Pas de calcul de FFT.')
     #res = SpO_2(res)
     #res = un_train_arrive(res)
     
@@ -426,8 +431,8 @@ def estime_d(res: pd.DataFrame, N: int = N_max) -> float:
     d
         L'espacement moyen entre chaque mesure
     '''
-    tôt: np.ndarray[int] = res.ts[-N:-1].to_numpy()
-    tard: np.ndarray[int] = res.ts[-N+1:].to_numpy()
+    tôt: np.ndarray[int] = res.ts.to_numpy()[-N:-1]
+    tard: np.ndarray[int] = res.ts.to_numpy()[-N+1:]
     diff: np.ndarray[int] = tard - tôt
     d: float = diff.mean()
     
@@ -460,8 +465,9 @@ def fft(
     '''
     # Estimation de l'espacement, basé sur les mesures
     d: float = estime_d(res, N)
-    logging.info('d ≅ %sµs', d)
-    logging.info('f = %sMHz', 1/d)
+    d_t: float = estime_d(res, res.index.size)
+    logging.info('d ≅ %sµs = %ss, d_t=%sµs', d, d*us, d_t)
+    logging.info('f = %sMHz = %skHz = %sHz', 1/d, 1000/d, MHz/d)
     
     idx = res.index.size - N
     
@@ -474,6 +480,7 @@ def fft(
     res.loc[idx:,'cadre'] = cadre
     
     A0 = res.A0.to_numpy()[idx:]
+    A0 = A0 - A0.mean()
     signal = A0 * cadre
     res.loc[idx:, 'signal'] = signal
     

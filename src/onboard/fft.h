@@ -37,13 +37,14 @@
   * La documentation du module indique que des valeurs de 2048 et 4096
   * causent des erreurs d'overflow, et qu'elles devraient être évitées.
   */
-#ifdef CALCULER_FFT
+/*#ifdef CALCULER_FFT
 #define N 256
 #elif defined(HAUTE_PRECISION)
 #define N 128
 #else
 #define N 1024
-#endif
+#endif*/
+#define N 256
 
 /** Type de cadre à utiliser dans le calcul de la transformée.
   * Dans l'analyse de l'échantillon d'un signal, si on n'utilise
@@ -63,13 +64,13 @@
   * et les résultats. Pour faciliter la configuration, vous pouvez
   * redefinir le type :cpp:type:`val_t`.
   */
-#if defined(HAUTE_PRECISION)
-typedef double val_t;
-#elif defined(CALCULER_FFT)
+//#if defined(HAUTE_PRECISION)
+//typedef double val_t;
 typedef float val_t;
-#else
-typedef int val_t;
-#endif
+//#elif defined(CALCULER_FFT)
+//#else
+//typedef int val_t;
+//#endif
 
 /** La fréquence et la période d'échantillonage sont constants
   * dans ce programme, donc on peut les déclarer comme tels et
@@ -86,12 +87,12 @@ typedef unsigned long int_t;
   * la fréquence :cpp:var:`F` en Hz et la période
   * :cpp:var:`T` en µs.
   */
-val_t F = 10000.0;
+val_t F = 75.0;
 
 /** La période d'échantillonage en µs, calculée une fois
   * à partir de la fréquence :c:macro:`F`.
   * :cpp:var:`T` est utilisée en comparaison avec 
-  * l'horloge interne :cpp:func:`macros`.
+  * l'horloge interne :cpp:func:`micros`.
   */
 #define muS 1000000.0
 val_t T = muS / F;
@@ -107,7 +108,7 @@ val_t T = muS / F;
   * le type :cpp:type:`double`, qui prend par contre
   * deux fois plus de mémoire.
   */
-#ifndef HAUTE_PRECISION
+/*#ifndef HAUTE_PRECISION
 #ifndef CALCULER_FFT
 unsigned char vReal[N];
 #else
@@ -115,7 +116,9 @@ val_t vReal[N];
 #endif
 #else
 val_t vReal[N];
-#endif
+#endif*/
+
+val_t vReal[N];
 
 /** Composante imaginaire de la fonction dont on veut
   * calculer la transformée de Fourier. En pratique,
@@ -128,7 +131,7 @@ val_t vReal[N];
   * le type :cpp:type:`double`, qui prend par contre
   * deux fois plus de mémoire.
   */
-#ifndef HAUTE_PRECISION
+/*#ifndef HAUTE_PRECISION
 #ifndef CALCULER_FFT
 unsigned char vImag[N];
 #else
@@ -136,15 +139,17 @@ val_t vImag[N];
 #endif
 #else
 val_t vImag[N];
-#endif
+#endif*/
+
+val_t vImag[N];
 
 int_t ts[N];
 
-#ifdef CALCULER_FFT
+//#if defined(CALCULER_FFT)
 val_t* freq;
 val_t* mag;
 
-ArduinoFFT<val_t> FFT;
+//ArduinoFFT<val_t> FFT;
 
 void fft();
-#endif
+//#endif

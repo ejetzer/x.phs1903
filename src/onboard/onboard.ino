@@ -9,12 +9,13 @@
 /** Active ou désactive la transformée de Fourier
  * Permet de modifier le programme sans avoir à touche au code.
  */
-//#define CALCULER_FFT
+#define CALCULER_FFT
 
 /** Active la réception et l'exécution de commandes
  * Permet de plus facilement contrôler l'Arduino.
  */
 //#define RECEVOIR_COMMANDES
+//#define HAUTE_PRECISION
 
 #ifdef RECEVOIR_COMMANDES
 bool prendre_mesure = false;
@@ -36,7 +37,7 @@ void setup() {
   Serial.begin(DEBIT);
   Serial.setTimeout(DELAI);
   #ifdef CALCULER_FFT
-  FFT = ArduinoFFT<val_t>(vReal, vImag, N, F);
+  //FFT = ArduinoFFT<val_t>(vReal, vImag, N, F);
   #endif
   #ifndef RECEVOIR_COMMANDES
   printParams();
