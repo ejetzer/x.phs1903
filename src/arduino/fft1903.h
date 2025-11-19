@@ -1,5 +1,9 @@
 #ifndef PHS1903FFT
-#define PHS1903_FFT
+#define PHS1903FFT
+
+#ifndef ArduinoFFT_h
+
+>>>>>>> 4a39990 (Restructuration):src/onboard/fft.h
 /** Au lieu d'utiliser l'opérateur de division,
   * utilise la multiplication.
   * Introduit potentiellement des erreurs dues
@@ -29,6 +33,8 @@
   */
 #include <arduinoFFT.h>
 
+#endif
+
 /** Le nombre d'échantillons récoltés pour faire la
   * transformée. Cette valeur doit toujours être une
   * puissance de 2.
@@ -52,7 +58,7 @@
   * vous allez devoir détecter, d'autres cadres peuvent être plus
   * pertinents.
   */
-#define cadre FFTWindow::Hann
+#define CADRE FFTWindow::Hann
 
 /** La classe :cpp:class:`ArduinoFFT` permet d'utiliser soit le type
   * :cpp:type:`float` ou le type :cpp:type:`double` pour les valeurs
@@ -65,9 +71,6 @@ typedef float val_t;
   * dans ce programme, donc on peut les déclarer comme tels et
   * permettre au compilateur de mieux optimiser le programme.
   */
-typedef const val_t cons_t;
-
-typedef unsigned long int_t;
 
 /** La fréquence d'échantillonage en Hz.
   * Idéalement un nombre qui divise 1000000
@@ -84,6 +87,7 @@ val_t F = 75.0;
   * l'horloge interne :cpp:func:`micros`.
   */
 #define muS 1000000.0
+#define mS 1000.0
 val_t T = muS / F;
 
 /** Composante réelle de la fonction dont on veut
@@ -101,10 +105,26 @@ val_t T = muS / F;
 val_t vReal[N];
 val_t vImag[N];
 int_t ts[N];
+
+/** Composante imaginaire de la fonction dont on veut
+  * calculer la transformée de Fourier. En pratique,
+  * nos mesures sont toutes positives, mais comme
+  * la transformée utilise la première moitiée de 
+  * :cpp:var:`vReal` et :cpp:var:`vImag` pour
+  * enregistrer le résultat de la transformée,
+  * il faut permettre les valeurs négatives.
+  * Pour plus de précision, vous pouvez utiliser
+  * le type :cpp:type:`double`, qui prend par contre
+  * deux fois plus de mémoire.
+  */
+
+int_t ts[N];
+
+
 val_t* freq;
 val_t* mag;
 
-ArduinoFFT<val_t> FFT;
+ArduinoFFT<val_t> FFT = ArduinoFFT<val_t>(vReal, vImag, N, F);
 
 void fft() {
   FFT.dcRemoval();                              // Enlève la composante DC
@@ -114,4 +134,3 @@ void fft() {
   FFT.majorPeak(freq, mag);                     // Enregistre le pic de fréquence
 }
 #endif
-
