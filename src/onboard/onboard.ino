@@ -1,34 +1,12 @@
-#include "fft.h"
 #include "adc.h"
-#include "print.h"
+#include "fft.h"
+#include "acq.h"
+#include "afficher.h"
+#include "cmd.h"
 
 #define DEBIT 1000000
 #define DELAI 2
 #define broche A0
-
-/** Active ou désactive la transformée de Fourier
- * Permet de modifier le programme sans avoir à touche au code.
- */
-#define CALCULER_FFT
-
-/** Active la réception et l'exécution de commandes
- * Permet de plus facilement contrôler l'Arduino.
- */
-//#define RECEVOIR_COMMANDES
-//#define HAUTE_PRECISION
-
-#ifdef RECEVOIR_COMMANDES
-bool prendre_mesure = false;
-#endif
-
-int_t i;
-
-void acq() {
-  ts[i] = micros();
-  vReal[i] = analogRead(broche);
-  vImag[i] = 0;
-  i++;
-}
 
 int_t pre_facteur = 2;
 
@@ -36,9 +14,6 @@ void setup() {
   set_PF(pre_facteur);
   Serial.begin(DEBIT);
   Serial.setTimeout(DELAI);
-  #ifdef CALCULER_FFT
-  //FFT = ArduinoFFT<val_t>(vReal, vImag, N, F);
-  #endif
   #ifndef RECEVOIR_COMMANDES
   printParams();
   #endif

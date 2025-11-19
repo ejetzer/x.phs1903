@@ -1,5 +1,5 @@
 #ifdef CALCULER_FFT
-ArduinoFFT<val_t> FFT = ArduinoFFT<val_t>(vReal, vImag, N, F);
+FFT = ArduinoFFT<val_t>(vReal, vImag, N, F);
 
 void fft() {
   FFT.dcRemoval();                              // Enlève la composante DC

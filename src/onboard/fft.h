@@ -1,3 +1,15 @@
+#ifndef FFT_INCLUS
+
+#ifndef TYPES_INCLUS
+#include "types.h"
+#endif
+
+#ifndef ACQ_INCLUS
+#include "acq.h"
+#endif
+
+#ifndef ArduinoFFT_h
+
 /** Au lieu d'utiliser l'opérateur de division,
   * utilise la multiplication.
   * Introduit potentiellement des erreurs dues
@@ -27,6 +39,8 @@
   */
 #include <arduinoFFT.h>
 
+#endif
+
 /** Le nombre d'échantillons récoltés pour faire la
   * transformée. Cette valeur doit toujours être une
   * puissance de 2.
@@ -37,14 +51,12 @@
   * La documentation du module indique que des valeurs de 2048 et 4096
   * causent des erreurs d'overflow, et qu'elles devraient être évitées.
   */
-/*#ifdef CALCULER_FFT
-#define N 256
-#elif defined(HAUTE_PRECISION)
-#define N 128
-#else
-#define N 1024
-#endif*/
-#define N 256
+
+#ifdef N
+#undef N
+#define N N_FFT
+#endif
+
 
 /** Type de cadre à utiliser dans le calcul de la transformée.
   * Dans l'analyse de l'échantillon d'un signal, si on n'utilise
@@ -57,28 +69,24 @@
   * vous allez devoir détecter, d'autres cadres peuvent être plus
   * pertinents.
   */
-#define cadre FFTWindow::Hann
+#define CADRE FFTWindow::Hann
 
 /** La classe :cpp:class:`ArduinoFFT` permet d'utiliser soit le type
   * :cpp:type:`float` ou le type :cpp:type:`double` pour les valeurs
   * et les résultats. Pour faciliter la configuration, vous pouvez
   * redefinir le type :cpp:type:`val_t`.
   */
-//#if defined(HAUTE_PRECISION)
-//typedef double val_t;
+#ifndef DEF_VAL_T
+#define DEV_VAL_T
 typedef float val_t;
-//#elif defined(CALCULER_FFT)
-//#else
-//typedef int val_t;
-//#endif
+typedef const float cons_t;
+typedef struct { chrono_t ts[N_FFT]; val_t reel[N_FFT]; val_t imag[N_FFT]; } mes_t;
+#endif
 
 /** La fréquence et la période d'échantillonage sont constants
   * dans ce programme, donc on peut les déclarer comme tels et
   * permettre au compilateur de mieux optimiser le programme.
   */
-typedef const val_t cons_t;
-
-typedef unsigned long int_t;
 
 /** La fréquence d'échantillonage en Hz.
   * Idéalement un nombre qui divise 1000000
@@ -95,6 +103,7 @@ val_t F = 75.0;
   * l'horloge interne :cpp:func:`micros`.
   */
 #define muS 1000000.0
+#define mS 1000.0
 val_t T = muS / F;
 
 /** Composante réelle de la fonction dont on veut
@@ -108,17 +117,7 @@ val_t T = muS / F;
   * le type :cpp:type:`double`, qui prend par contre
   * deux fois plus de mémoire.
   */
-/*#ifndef HAUTE_PRECISION
-#ifndef CALCULER_FFT
-unsigned char vReal[N];
-#else
-val_t vReal[N];
-#endif
-#else
-val_t vReal[N];
-#endif*/
-
-val_t vReal[N];
+mes_t val[N_FFT];
 
 /** Composante imaginaire de la fonction dont on veut
   * calculer la transformée de Fourier. En pratique,
@@ -131,25 +130,15 @@ val_t vReal[N];
   * le type :cpp:type:`double`, qui prend par contre
   * deux fois plus de mémoire.
   */
-/*#ifndef HAUTE_PRECISION
-#ifndef CALCULER_FFT
-unsigned char vImag[N];
-#else
-val_t vImag[N];
-#endif
-#else
-val_t vImag[N];
-#endif*/
-
-val_t vImag[N];
 
 int_t ts[N];
 
-//#if defined(CALCULER_FFT)
+
 val_t* freq;
 val_t* mag;
 
-//ArduinoFFT<val_t> FFT;
+ArduinoFFT<val_t> FFT;
 
 void fft();
-//#endif
+
+#endif
