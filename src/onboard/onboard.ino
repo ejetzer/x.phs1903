@@ -1,34 +1,25 @@
+#define DEBIT 1000000
+#define DELAI 2
+#define BROCHE A0
+#define N_BROCHE 1
+#define N 256
+#define RAPIDE
+
 #include "adc.h"
 #include "fft.h"
 #include "acq.h"
 #include "afficher.h"
 #include "cmd.h"
 
-#define DEBIT 1000000
-#define DELAI 2
-#define broche A0
-
-int_t pre_facteur = 2;
-
 void setup() {
-  set_PF(pre_facteur);
-  Serial.begin(DEBIT);
-  Serial.setTimeout(DELAI);
-  #ifndef RECEVOIR_COMMANDES
-  printParams();
-  #endif
+  CANInit();
+  T = 200 // us
 }
 
 void loop() {
-  #if defined(RECEVOIR_COMMANDES)
-  if (prendre_mesure && (micros() - ts[i-1] >= T)) {
-    acq();
-  }
-  #else
-  if (micros() - ts[i-1] >= T) {
-    acq();
-  }
-  #endif
+#ifndef RAPIDE
+  acq();
+#endif
   else if (i == N) {
     #if defined(RECEVOIR_COMMANDES)
     prendre_mesure = false;

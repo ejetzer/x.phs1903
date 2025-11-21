@@ -5,6 +5,7 @@ typedef static unsigned int idx_t;
 
 #ifndef Arduino_h
 typedef unsigned char byte;
+typedef unsigned char uint8_t;
 #endif
 
 #ifdef RAPIDE

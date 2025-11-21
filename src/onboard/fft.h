@@ -50,6 +50,13 @@
   *
   * La documentation du module indique que des valeurs de 2048 et 4096
   * causent des erreurs d'overflow, et qu'elles devraient être évitées.
+  *
+  * Le processeur ATmega4809 du Arduino Nano Every a
+  * 
+  * - 48Ko de mémoire flash
+  * - 6Ko de SRAM
+  * - 256o de EEPROM
+  * - 64o 
   */
 
 #ifdef N
