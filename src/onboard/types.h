@@ -1,18 +1,14 @@
 #ifndef TYPES_INCLUS
 #define TYPES_INCLUS
 
-typedef static unsigned int idx_t;
+#include <Arduino.h>
 
-#ifndef Arduino_h
-typedef unsigned char byte;
-typedef unsigned char uint8_t;
-#endif
-
-#ifdef RAPIDE
-typedef static unsigned long chrono_t;
-typedef unsigned int val_t;
-#else
-typedef static unsigned int chrono_t;
-#endif
+typedef unsigned int idx_t;
+typedef volatile unsigned int vol_idx_t;
+typedef long int val_t;
+typedef volatile long int vol_val_t;
+typedef unsigned int int_t;
+typedef volatile unsigned int vol_int_t;
+typedef float float_t;
 
 #endif

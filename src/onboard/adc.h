@@ -29,6 +29,7 @@
 
 #include <Arduino.h>
 #include <avr/interrupt.h>
+#include "types.h"
 
 // Pré-facteur optimal pour le Arduino Nano Every
 #ifndef PF_ARDNE
@@ -39,21 +40,19 @@
 #define CAN ADC0
 #endif
 
-#ifndef bit
-#define bit(n) (1 << (n))
-#define bitClear(value, n) ((value) &= ~(1UL << (n)))
-#define bitRead(value, n) (((value) & bit(n)) >> (n))
-#define bitSet(value, n) ((value) |= (1UL << (n)))
-#define bitWrite(value, n, b) ((b) == 1 ? bitSet(value, n) : bitClear(value, n))
-#define highByte(w) ((byte)(((w) >> 8) & 0xFF))
-#define lowByte(w) ((byte)((w) & 0xFF))
+#ifndef N
+#define N 1024
+#endif
+
+#ifndef N_BROCHES
+#define N_BROCHES 8
 #endif
 
 #define reinit_freq_can() (CAN.CTRLC &= ~(0x7))
 
-#define pf_puissanceRead() (CAN.CTRL0 & 0x7)
+#define pf_puissanceRead() (CAN.CTRLC & 0x7)
 #define pfRead() ((byte)(1 << pf_puissanceRead()))
-#define pf_puissanceSet(v) (CAN.CTRL0 &= (0x7 & v))
+#define pf_puissanceSet(v) (CAN.CTRLC &= (0x7 & v))
 #define canClkRead() (20e6 / pfRead())
 
 #define analogPrecisionRead() ((bitRead(CAN.CTRLA, 2)) ? 8 : 10)
@@ -75,61 +74,67 @@
 
 #define enInt()                                                                \
   (CAN.INTCTRL |= 0x1);                                                        \
-  (CPU.SREG |= 0x80)
+  sei()
+#define disInt()                                                               \
+  (CAN.INTCTRL &= 0xFE);                                                        \
+  cli()
 
 #define portPinCtrlCfg(pinCtrl, v)                                             \
   (pinCtrl &= ~(0x7));                                                         \
   (pinCtrl |= (v))
 
-#ifndef N
-#define N 1024
-#endif
+#define maj(l, v) (l[A_n][n] = v)
 
-#ifndef N_BROCHES
-#define N_BROCHES 8
-#endif
+bool calculer = false;
 
-volatile unsigned long int temps[N_BROCHES][N];
-volatile unsigned int mesures[N_BROCHES][N];
-volatile unsigned char A_n = 0;
-volatile unsigned long int n = 0;
+vol_val_t t;
+vol_val_t t0;
+vol_val_t m;
+vol_idx_t A_n = 0;
+vol_idx_t n = 0;
+vol_idx_t c = 0;
+vol_idx_t c0 = 0;
 
-const unsigned char _BROCHES[8] = {PIN_A0, PIN_A1, PIN_A2, PIN_A3,
+val_t temps[N_BROCHES];
+val_t reel[N_BROCHES][N];
+val_t imag[N_BROCHES][N];
+
+const unsigned char BROCHES[8] = {PIN_A0, PIN_A1, PIN_A2, PIN_A3,
                                    PIN_A4, PIN_A5, PIN_A6, PIN_A7};
 
-unsigned char BROCHES[N_BROCHES];
-for (unsigned char i = 0; i < N_BROCHES; i++) {
-  BROCHES[i] = _BROCHES[i];
-}
-
-const unsigned char PORTS_CTRL[8] = {
-    PORTD.PIN3CTRL, PORTD.PIN2CTRL, PORTD.PIN1CTRL, PORTD.PIN0CTRL,
-    PORTA.PIN2CTRL, PORTA.PIN2CTRL, PORTD.PIN4CTRL, PORTD.PIN5CTRL};
+//const unsigned char PORTS_CTRL[8] = {
+//    PORTD.PIN3CTRL, PORTD.PIN2CTRL, PORTD.PIN1CTRL, PORTD.PIN0CTRL,
+//    PORTA.PIN2CTRL, PORTA.PIN2CTRL, PORTD.PIN4CTRL, PORTD.PIN5CTRL};
 
 const unsigned char MUXPOS[8] = {0x3, 0x2, 0x1, 0x0,
                                  0x6, // Pas documenté?
                                  0xC, // (12) Pas documenté?
                                  0x4, 0x5};
 
-#ifndef RAPIDE
-
-unsigned long int T;
-bool enAcq = true;
-
-void acq(unsigned long int i, unsigned char a, unsigned long int *t,
-         unsigned int *m) {
-  t[a][i] = micros();
-  m[a][i] = analogRead(BROCHES[a]);
+void reglerBroche(byte broche) {
+  configInput(MUXPOS[A_n]);
+  // §29.3.1.1 du manuel du ATmega4809
+  //portPinCtrlCfg(PORTS_CTRL[A_n], 0x4);
 }
 
-void acq() {
-  static unsigned char a;
-  static unsigned long int i;
-  static unsigned long int t0;
-  static unsigned long int t = micros();
+#ifndef RAPIDE
 
-  if ((t - t0) >= T && enAcq) {
+#ifndef Pe
+// 500 µ
+#define Pe 500
+#endif
+
+#ifndef Fr
+#define Fr 1e6 / Pe
+#endif
+
+void acq() {
+  t0 = t;
+  t = micros();
+
+  if ((t - t0) >= Pe) {
     A_n++;
+    c++;
     if (A_n == N_BROCHES) {
       A_n = 0;
       n++;
@@ -139,38 +144,18 @@ void acq() {
       }
     }
 
-    temps[a][i] = micros();
-    mesures[a][i] = analogRead(BROCHES[a]);
-
-    t0 = t;
+    temps[A_n] += t - t0;
+    reel[A_n][n] = analogRead(BROCHES[A_n]);
+    imag[A_n][n] = 0;
   }
-}
-
-void CANInit(unsigned char res, unsigned char pf_puissance,
-             unsigned char free_run) {
-  // Initialisation
-  analogPrecisionSet(res);
-  freeRunSet(free_run);
-  pf_puissanceSet(pf_puissance);
-  enableAcq();
-  enInt();
 }
 
 void CANInit() {
   // Initialisation
-  analogPrecisionSet(10);
-  freeRunSet(false);
-  pf_puissanceSet(7);
-  enableAcq();
-  enInt();
+  pf_puissanceSet(PF_ARDNE);
 }
-#endif // ~RAPIDE
 
-#ifdef RAPIDE
-volatile unsigned char temps[N_BROCHES][N];
-volatile unsigned char mesures[N_BROCHES][N];
-volatile unsigned char A_n = 0;
-volatile unsigned long int n = 0;
+#else // ^ ~RAPIDE; v RAPIDE
 
 void CANInit() {
   // Initialisation
@@ -181,14 +166,19 @@ void CANInit() {
   enInt();
 }
 
-void reglerBroche(byte broche) {
-  configInput(MUXPOS[A_n]);
-  portPinCtrlCfg(PORTS_CTRL[A_n], 0x4);
+void acq() {
+  if (m != 0 && t != t0) {
+    t0 = t;
+    temps[A_n] += t - t0;
+    maj(reel, m);
+    maj(imag, 0);
+    m = 0;
+  }
 }
 
-ISR(ADC_vect) {
-  temps[A_n][n] = micros();
-  mesures[A_n][n] = CAN.RES;
+ISR(__vector_ADC_vect) {
+  t = micros();
+  m = CAN.RES;
 
   A_n++;
   if (A_n == N_BROCHES) {
@@ -197,15 +187,17 @@ ISR(ADC_vect) {
 
     if (n == N) {
       n = 0;
+      disInt();
     }
   }
 
   configInput(MUXPOS[A_n]);
-  portPinCtrlCfg(PORTS_CTRL[A_n], 0x4);
+  //portPinCtrlCfg(PORTS_CTRL[A_n], 0x4);
 
   enableAcq();
   enInt();
 }
+
 #endif // Rapide
 
-#endif
+#endif // ADC_INCLUS

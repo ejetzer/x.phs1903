@@ -1,34 +1,52 @@
 #ifndef AFFICHER_INCLUS
 #define AFFICHER_INCLUS
 
-#ifndef SERIE_INCLUS
-#include "serie.h"
+#ifndef DEBIT
+#define DEBIT 1000000
 #endif
 
-// Impression d'une seule valeur
-void afficherValeur(String nom, float val, String unit);
-void afficherValeur(String nom, int val, String unit);
-void afficherValeur(String nom, float val);
-void afficherValeur(String nom, int val);
+#ifndef DELAI
+#define DELAI 2
+#endif
 
-// Impression d'un élément d'une liste
-void afficherValeurListe(float val, int i);
-void afficherValeurListe(int val, int i);
+#include <Arduino.h>
+#include "types.h"
+#include "adc.h"
+#include "intFFT.h"
 
-// Impression d'une liste
-void afficherListe(String nom, float liste[], int n);
-void afficherListe(String nom, int liste[], int n);
-void afficherListe(float liste[], int n);
-void afficherListe(int liste[], int n);
 
-// Afficher les paramètres du programme
-void afficherParams();
+void afficherInit() {
+  Serial.begin(DEBIT);
+  Serial.setTimeout(DELAI);
+  Serial.print("N ");
+  Serial.print(N);
+  Serial.print("\tN_BROCHES ");
+  Serial.println(N_BROCHES);
+}
 
-// Raccourcis pour afficher les listes spécifiques de onboard.ino
-void afficherValeurs();
+void afficherBroche(idx_t j) {
+  val_t d = (val_t)((float_t)(temps[j]) / (float_t)(N));
+  Serial.print("d ");
+  Serial.print(d);
+  Serial.print("\tA");
+  Serial.print(j);
+  for (idx_t i=0; i < N; i++) {
+    Serial.print(" ");
+    Serial.print(reel[j][i]);
+  }
+  Serial.println();
+}
 
-# ifdef CALCULER_FFT
-void afficherFFT();
-void afficherPics();
-# endif
+void afficherFFT(idx_t j) {
+  val_t d = (val_t)((float_t)(temps[j]) / (float_t)(N));
+  Serial.print("d ");
+  Serial.print(d);
+  Serial.print("\tF");
+  Serial.print(j);
+  for (idx_t i=0; i < (N>>1); i++) {
+    Serial.print(" ");
+    Serial.print(reel[j][i]);
+  }
+  Serial.println();
+}
 #endif

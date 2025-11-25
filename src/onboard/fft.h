@@ -1,15 +1,11 @@
 #ifndef FFT_INCLUS
+#define FFT_INCLUS
 
-#ifndef TYPES_INCLUS
+#include <Arduino.h>
 #include "types.h"
-#endif
-
-#ifndef ACQ_INCLUS
-#include "acq.h"
-#endif
+#include "adc.h"
 
 #ifndef ArduinoFFT_h
-
 /** Au lieu d'utiliser l'opérateur de division,
   * utilise la multiplication.
   * Introduit potentiellement des erreurs dues
@@ -38,8 +34,9 @@
   * optimisations
   */
 #include <arduinoFFT.h>
-
 #endif
+
+template class ArduinoFFT<int>;
 
 /** Le nombre d'échantillons récoltés pour faire la
   * transformée. Cette valeur doit toujours être une
@@ -59,9 +56,12 @@
   * - 64o 
   */
 
-#ifdef N
-#undef N
-#define N N_FFT
+#ifndef N
+#define N 256
+#endif
+
+#ifndef N_BROCHES
+#define N_BROCHES 1
 #endif
 
 
@@ -76,19 +76,15 @@
   * vous allez devoir détecter, d'autres cadres peuvent être plus
   * pertinents.
   */
+#ifndef CADRE
 #define CADRE FFTWindow::Hann
+#endif
 
 /** La classe :cpp:class:`ArduinoFFT` permet d'utiliser soit le type
   * :cpp:type:`float` ou le type :cpp:type:`double` pour les valeurs
   * et les résultats. Pour faciliter la configuration, vous pouvez
   * redefinir le type :cpp:type:`val_t`.
   */
-#ifndef DEF_VAL_T
-#define DEV_VAL_T
-typedef float val_t;
-typedef const float cons_t;
-typedef struct { chrono_t ts[N_FFT]; val_t reel[N_FFT]; val_t imag[N_FFT]; } mes_t;
-#endif
 
 /** La fréquence et la période d'échantillonage sont constants
   * dans ce programme, donc on peut les déclarer comme tels et
@@ -102,50 +98,30 @@ typedef struct { chrono_t ts[N_FFT]; val_t reel[N_FFT]; val_t imag[N_FFT]; } mes
   * la fréquence :cpp:var:`F` en Hz et la période
   * :cpp:var:`T` en µs.
   */
-val_t F = 75.0;
+#ifndef Fr
+#define Fr 75.0
+#endif
 
 /** La période d'échantillonage en µs, calculée une fois
   * à partir de la fréquence :c:macro:`F`.
   * :cpp:var:`T` est utilisée en comparaison avec 
   * l'horloge interne :cpp:func:`micros`.
   */
-#define muS 1000000.0
-#define mS 1000.0
-val_t T = muS / F;
+#ifndef Pe
+#define Pe (1e6/Fr)
+#endif
 
-/** Composante réelle de la fonction dont on veut
-  * calculer la transformée de Fourier. En pratique,
-  * nos mesures sont toutes positives, mais comme
-  * la transformée utilise la première moitiée de 
-  * :cpp:var:`vReal` et :cpp:var:`vImag` pour
-  * enregistrer le résultat de la transformée,
-  * il faut permettre les valeurs négatives.
-  * Pour plus de précision, vous pouvez utiliser
-  * le type :cpp:type:`double`, qui prend par contre
-  * deux fois plus de mémoire.
-  */
-mes_t val[N_FFT];
+ArduinoFFT<val_t> (*FFT[N_BROCHES]);
 
-/** Composante imaginaire de la fonction dont on veut
-  * calculer la transformée de Fourier. En pratique,
-  * nos mesures sont toutes positives, mais comme
-  * la transformée utilise la première moitiée de 
-  * :cpp:var:`vReal` et :cpp:var:`vImag` pour
-  * enregistrer le résultat de la transformée,
-  * il faut permettre les valeurs négatives.
-  * Pour plus de précision, vous pouvez utiliser
-  * le type :cpp:type:`double`, qui prend par contre
-  * deux fois plus de mémoire.
-  */
+for (idx_t i=0; i<N_BROCHES; i++) {
+  FFT[i] = ArduinoFFT<val_t>(reel[i], imag[i], N, Fr);
+}
 
-int_t ts[N];
-
-
-val_t* freq;
-val_t* mag;
-
-ArduinoFFT<val_t> FFT;
-
-void fft();
+void fft(idx_t j) {
+  FFT[j].dcRemoval();                              // Enlève la composante DC
+  FFT[j].windowing(CADRE, FFTDirection::Forward);  // Cadrage des données
+  FFT[j].compute(FFTDirection::Forward);           // Calcul de la FFT
+  FFT[j].complexToMagnitude();                     // Converti la FFT complexe en valeurs réelles
+}
 
 #endif
