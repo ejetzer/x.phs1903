@@ -10,8 +10,8 @@
  * .. _une compilation de M. Gammon: https://www.gammon.com.au/adc
  */
 
-#ifndef XPHS1903
-#define XPHS1903
+#ifndef PHS1903ADC
+#define PHS1903ADC
 
 uint8_t clear_PF() {
 	// Régler à 256

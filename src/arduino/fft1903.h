@@ -1,9 +1,10 @@
+<<<<<<< HEAD:src/arduino/fft1903.h
 #ifndef PHS1903FFT
 #define PHS1903FFT
 
 #ifndef ArduinoFFT_h
 
->>>>>>> 4a39990 (Restructuration):src/onboard/fft.h
+#include <Arduino.h>
 /** Au lieu d'utiliser l'opérateur de division,
   * utilise la multiplication.
   * Introduit potentiellement des erreurs dues
@@ -32,8 +33,9 @@
   * optimisations
   */
 #include <arduinoFFT.h>
-
 #endif
+
+template class ArduinoFFT<int>;
 
 /** Le nombre d'échantillons récoltés pour faire la
   * transformée. Cette valeur doit toujours être une
@@ -53,6 +55,7 @@
   * - 64o 
   */
 #define N 256
+#define N_BROCHES 1
 
 /** Type de cadre à utiliser dans le calcul de la transformée.
   * Dans l'analyse de l'échantillon d'un signal, si on n'utilise
@@ -72,6 +75,7 @@
   * et les résultats. Pour faciliter la configuration, vous pouvez
   * redefinir le type :cpp:type:`val_t`.
   */
+
 typedef float val_t;
 
 /** La fréquence et la période d'échantillonage sont constants
@@ -86,16 +90,14 @@ typedef float val_t;
   * la fréquence :cpp:var:`F` en Hz et la période
   * :cpp:var:`T` en µs.
   */
-val_t F = 75.0;
+#define Fr 75.0
 
 /** La période d'échantillonage en µs, calculée une fois
   * à partir de la fréquence :c:macro:`F`.
   * :cpp:var:`T` est utilisée en comparaison avec 
   * l'horloge interne :cpp:func:`micros`.
   */
-#define muS 1000000.0
-#define mS 1000.0
-val_t T = muS / F;
+#define Pe (1e6/Fr)
 
 /** Composante réelle de la fonction dont on veut
   * calculer la transformée de Fourier. En pratique,
@@ -113,25 +115,15 @@ val_t vReal[N];
 val_t vImag[N];
 int_t ts[N];
 
-/** Composante imaginaire de la fonction dont on veut
-  * calculer la transformée de Fourier. En pratique,
-  * nos mesures sont toutes positives, mais comme
-  * la transformée utilise la première moitiée de 
-  * :cpp:var:`vReal` et :cpp:var:`vImag` pour
-  * enregistrer le résultat de la transformée,
-  * il faut permettre les valeurs négatives.
-  * Pour plus de précision, vous pouvez utiliser
-  * le type :cpp:type:`double`, qui prend par contre
-  * deux fois plus de mémoire.
-  */
+ArduinoFFT<val_t> (*FFT[N_BROCHES]);
+
+for (idx_t i=0; i<N_BROCHES; i++) {
+  FFT[i] = ArduinoFFT<val_t>(reel[i], imag[i], N, Fr);
+}
 
 int_t ts[N];
-
-
 val_t* freq;
 val_t* mag;
-
-ArduinoFFT<val_t> FFT = ArduinoFFT<val_t>(vReal, vImag, N, F);
 
 void fft() {
   FFT.dcRemoval();                              // Enlève la composante DC
