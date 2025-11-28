@@ -1,6 +1,13 @@
 <<<<<<< HEAD:src/arduino/fft1903.h
+<<<<<<< HEAD:src/arduino/fft1903.h
 #ifndef PHS1903FFT
 #define PHS1903FFT
+
+#ifdef ENTIERS
+#undef ENTIERS
+#endif
+
+#include "adc1903.h"
 
 #ifndef ArduinoFFT_h
 
@@ -34,8 +41,6 @@
   */
 #include <arduinoFFT.h>
 #endif
-
-template class ArduinoFFT<int>;
 
 /** Le nombre d'échantillons récoltés pour faire la
   * transformée. Cette valeur doit toujours être une
@@ -115,10 +120,12 @@ val_t vReal[N];
 val_t vImag[N];
 int_t ts[N];
 
-ArduinoFFT<val_t> (*FFT[N_BROCHES]);
+ArduinoFFT<float> (FFT[N_BROCHES]);
 
-for (idx_t i=0; i<N_BROCHES; i++) {
-  FFT[i] = ArduinoFFT<val_t>(reel[i], imag[i], N, Fr);
+void fftInit() {
+  for (idx_t i=0; i<N_BROCHES; i++) {
+    FFT[i] = ArduinoFFT<float>(reel[i], imag[i], N, Fr);
+  }
 }
 
 int_t ts[N];

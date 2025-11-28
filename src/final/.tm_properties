@@ -1,0 +1,5 @@
+[ *.{ino,h,c,cpp} ]
+fileType = "source.c++.arduino"
+
+[ attr.untitled ]
+fileType = 'source.c++.arduino'

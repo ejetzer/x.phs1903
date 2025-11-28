@@ -1,5 +1,5 @@
-#ifndef intFFT_INCLUS
-#define intFFT_INCLUS
+#ifndef FFT1903
+#define FFT1903
 
 #ifndef N
 #define N 256
@@ -18,6 +18,7 @@
 #endif
 
 #include <Arduino.h>
+#include "adc1903.h"
 
 #define COMPENSATION_HANN 3.7109453796
 #define carre(x) (x*x)
