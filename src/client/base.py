@@ -118,11 +118,13 @@ def prendre_mesure[R: list[list[int]]](res: R, ser: serial.Serial) -> R:
         #
         # A0    \x00    bytes([0])  bytes([1-1])
         # A1    \x01    bytes([1])  bytes([2-1])
-        ser.write(i)
+        ser.write(bytes([i-1]))
         ser.flush() # S'assurer que la commande est envoyée immédiatement.
-        mes.append(ser.readline())
-
-    mes[1:] = map(int, mes[1:])
+        while not ser.in_waiting: time.sleep(0.000000001)
+        mes.append(int(ser.readline()))
+        
+    logging.debug('mes = %s', mes)
+    #mes[1:] = map(int, mes[1:])
     for r, m in zip(res, mes):
         r.append(m)
 
@@ -331,9 +333,9 @@ def fft(
     ts: list[float] = res[0]
     d: float = np.mean(np.array(ts[1:]) - np.array(ts[:-1]))
 
+    cadre = scipy.signal.get_window(cadre, N)
     ys = []
     for sig in res[1:]:
-        cadre = scipy.signal.get_window(cadre, N)
         signal = np.array(sig[-N:]) * cadre
         ys.append(np.abs(np.fft.rfft(signal)))
     
@@ -344,6 +346,7 @@ def fft(
     return fs, *ys
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     *params, derniere_mesure = setup()
     
     try:
@@ -352,7 +355,7 @@ if __name__ == '__main__':
         #   ...
         # Techniquement, elle s'arrête quand la fenêtre du graphique est fermée,
         # ou que l'utilisateur entre ^C sur la ligne de commande.
-        while plt.get_fignums() > 0:
+        while len(plt.get_fignums()) > 0:
             if time.process_time_ns() > (derniere_mesure + ESPACEMENT):
                 *params, derniere_mesure = loop(*params)
     except KeyboardInterrupt:

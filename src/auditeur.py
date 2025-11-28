@@ -57,6 +57,9 @@ la fiabilité. Voir la documentation de :py:class:`serial <serial.Serial>` ou de
 '''
 
 DELAI: float = 0.005 # Attente en lecture
+ns2s = 1e-9  # Conversion nanosecondes -> secondes
+GHz2Hz = 1e9  # Conversion gigahertz -> hertz
+
 '''Délai maximal en secondes avant d'abandonner une tentative de lecture
 
 Certaines valeurs spéciales sont décrites dans la documentation officielle de :py:class:`serial <serial.Serial>`. Comme la fréquence de transfert d'un bit
@@ -93,7 +96,31 @@ def prendre_mesure[R: list[list[int]]](res: R, ser: serial.Serial) -> R:
     # Mesure du temps auquel la mesure est prise
     lignes: list[str] = ser.readlines()
     for l in lignes:
-        t, *v = map(float, l.split())
+        if len(l.strip()) == 0:
+            try:
+                raise ValueError('Aucun caractère reçu.')
+            except Exception:
+                logging.exception('Aucun caractère reçu.')
+            continue
+        elif l.count(b'\t') > 1:
+            try:
+                raise ValueError('Trop de tabulations ({}): {:r}'.format(l.count(b'\t'), l))
+            except Exception:
+                logging.exception('Trop de tabulations (%s): %r', l.count(b'\t'), l)
+            continue
+        
+        try:
+            w = list(map(bytes.strip, l.strip().split()))
+            if not all(map(bytes.isdigit, w)):
+                try:
+                    raise ValuError
+                except Exception:
+                    logging.exception('Certains mots ne sont pas des nombres entiers: %r', w)
+            t, *v = map(int, w)
+        except Exception:
+            logging.exception('Erreur dans la conversion en liste de nombres à virgule flottante.')
+            continue
+        
         res[0].append(t)
         for i, w in enumerate(v):
             res[i+1].append(w)
@@ -112,8 +139,20 @@ def plot(res: list[list[int]], fig: mpl.figure.Figure):
     fig
         Figure contenant les différents graphiques
     '''
-    fs, *fft_pd = fft(res) # Calculer la FFT
-    ts = res[0]
+    ts = res[0][-800:]
+    logging.info('Longueur de l\'échantillon: %s', len(ts))
+    if len(ts) == 0:
+        return
+    elif len(ts) >= 800:
+        fs, *fft_pd = fft(res) # Calculer la FFT
+        if fs.max() == 0:
+            try:
+                raise ValueError
+            except Exception:
+                logging.exception('Fréquence maximale nulle?\n%r', fs)
+    else:
+        fs = np.arange(len(ts)//2)
+        fft_pd = [np.zeros(len(ts)//2) for i in range(len(res)-1)]
     # Python permet le paquetage/dépaquetage dans les définitions de variables
     # On peut par exemple définir les mêmes variables avec les mêmes valeurs
     # de plusieurs manières différentes:
@@ -142,13 +181,17 @@ def plot(res: list[list[int]], fig: mpl.figure.Figure):
         #   d'une courbe existante.
         
         # Afficher jusqu'aux 200 derniers points
-        fig.axes[BRUT].lines[i].set_data(np.array(ts)*ns2s, pd)
-        fig.axes[BRUT].set_xlim(max(ts)*ns2s-2, max(ts)*ns2s)
+        #fig.axes[BRUT].lines[i].set_data(np.array(ts)*ns2s, pd)
+        fig.axes[BRUT].lines[i].set_data(np.array(ts), pd[-800:])
+        #fig.axes[BRUT].set_xlim(max(ts)*ns2s-2, max(ts)*ns2s)
+        fig.axes[BRUT].set_xlim(ts[0], ts[-1])
+        fig.axes[BRUT].set_ylim(0, 1025)
 
         # Afficher la transformée de Fourier
-        fig.axes[FFT].lines[i].set_data(fs*GHz2Hz, fpd)
+        fig.axes[FFT].lines[i].set_data(fs/fs.max(), fpd)
     
-    fig.axes[FFT].set_ylim(0, max(max(f) for f in fft_pd))
+    fig.axes[FFT].set_ylim(0, 1)
+    fig.axes[FFT].set_xlim(0, max(fs))
     plt.pause(1e-10) # Petite pause pour permettre l'affichage correct
 
 # ===========================
@@ -196,8 +239,8 @@ def setup(pds: int = 2, port: str = PORT, debit: int = DEBIT, delai: int = DELAI
     
     #: Créer une nouvelle figure, qui contiendra nos systèmes d'axes
     #: fig.axes pour voir la liste des axes dans la console
-    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-    fig.suptitle('Démonstration de principe d\'un programme d\'analyse pour un oxymètre de pouls')
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+    fig.suptitle('Démonstration de principe d\'un programme d\'analyse pour un vibromètre laser')
     
     ax.set_title('Mesures des photodiodes')
     ax.set_xlabel('Temps (s)')
@@ -213,11 +256,15 @@ def setup(pds: int = 2, port: str = PORT, debit: int = DEBIT, delai: int = DELAI
     ax2.set_yticks([], [])
     ax2.legend()
 
-    ax.set_ylim(0, 1030)
-    ax.set_xlim(left=-200, right=0)
-    ax2.set_ylim(bottom=0)
-    ax2.set_ylim(auto=True)
-    ax2.set_xlim(left=0, right=50)
+    #ax.set_ylim(0, 1030)
+    #ax.set_xlim(left=-200, right=0)
+    #ax2.set_ylim(bottom=0)
+    #ax2.set_ylim(auto=True)
+    #ax2.set_xlim(left=0, right=50)
+    #ax.set_xlim(auto=True)
+    #ax.set_ylim(auto=True)
+    #ax2.set_xlim(auto=True)
+    #ax2.set_ylim(auto=True)
     
     fig.tight_layout()
     plt.pause(0.01)
@@ -246,6 +293,7 @@ def loop(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
     derniere_mesure: int
     '''
     # Lecture des valeurs de chaque photodiode
+    logging.info('Prise de mesure %s', len(res[0])//800)
     res = prendre_mesure(res, ser)
     
     # Mise à jour du graphique
@@ -275,10 +323,11 @@ def setdown(res: list[list[int]], ser: serial.Serial, fig: mpl.figure.Figure):
 
 def fft(
     res: list[list[int]],
-    N_max: int = 1700,
+    N_max: int = 800,
     cadre: str = 'hann'
 ) -> tuple[np.array, ...]:
-    '''Retourne la transformée de Fourier des données contenues dans :py:data:`res`. C'est une bonne idée de personnaliser cette fonction selon
+    '''Retourne la transformée de Fourier des données contenues dans :py:data:`res`. 
+    C'est une bonne idée de personnaliser cette fonction selon
     vos besoins. Pour bien comprendre ce que fait la fonction, vous devriez
     consulter :py:func:`scipy.signal.get_window`, :py:func:`numpy.fft.rfft` et
     :py:func:`numpy.fft.rfftfreq`. Pour les mathématiques derrière, consultez
@@ -302,22 +351,25 @@ def fft(
     
     # Estimation de l'espacement, basé sur les mesures
     ts: list[float] = res[0]
-    d: float = np.mean(np.array(ts[1:]) - np.array(ts[:-1]))
+    d: float = np.mean(np.array(ts[-799:]) - np.array(ts[-800:-1]))
+    logging.info('Espacement entre les mesures: %sµs', d)
+    logging.info('Fréquence correspondabte: %skHz', (1e3/d))
 
+    cadre = scipy.signal.get_window(cadre, len(res[1][-N:]))
     ys = []
     for sig in res[1:]:
-        cadre = scipy.signal.get_window(cadre, N)
-        signal = np.array(sig[-N:]) * cadre
+        signal = np.array(sig[-N:])*cadre
         ys.append(np.abs(np.fft.rfft(signal)))
     
-    fs = np.fft.rfftfreq(signal.size, d=d)
+    fs = np.arange(ys[0].size) * d #np.fft.rfftfreq(signal.size, d=d)
 
     # Équivalent à
     # return fs, ys[0], ys[1], ...
     return fs, *ys
 
 if __name__ == '__main__':
-    *params, derniere_mesure = setup()
+    logging.basicConfig(level=logging.INFO)
+    *params, derniere_mesure = setup(pds=1)
     
     try:
         # Cette boucle est infinie à toutes fins pratiques, càd équivalente à

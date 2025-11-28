@@ -30,15 +30,17 @@ void set_PF(unsigned char);
 // Augmentez la valeur de N_broches et ajoutez des valeurs
 // aux listes en conséquence.
 #define N_broches 1 // Nombre de broches
-#define M_mesures 1700 // Nombre de mesures
-const unsigned char broche[N_broches] = {A1}; // Liste pour les broches de lecture
-unsigned char mesure[N_broches+1][M_mesures]; // Liste pour les lectures analogiques
+#define M_mesures 800 // Nombre de mesures
+const unsigned char broche[N_broches] = {A0}; // Liste pour les broches de lecture
+unsigned long int ts[M_mesures];
+unsigned int mesure[N_broches][M_mesures]; // Liste pour les lectures analogiques
 
 // Initialisation du port série à 115200 bits par seconde et un timeout de DELAI
 void setup() {
 	// Initialisation du port série
 	Serial.begin(DEBIT);
 	Serial.setTimeout(DELAI);
+	Serial.flush();
 	Serial.println();
 	
 	set_PF(2);
@@ -48,9 +50,9 @@ unsigned int j = 0;
 
 void loop() {
 	// Lecture des données des ports de conversion analogiques
-	mesure[0][j] = micros();
+	ts[j] = micros();
 	for (unsigned char i=0; i < N_broches; i++) {
-		mesure[i+1][j] = analogRead(broche[i]);
+		mesure[i][j] = analogRead(broche[i]);
 	}
 	
 	j++;
@@ -61,8 +63,8 @@ void loop() {
 	if ( j == M_mesures ) {
 		// Envoyer toutes les données récoltées d'un coup
 		for (int m=0; m<M_mesures; m++) {
-			Serial.print(mesure[0][m]);
-			for (byte n=1; n<=N_broches; n++) {
+			Serial.print(ts[m]);
+			for (byte n=0; n<N_broches; n++) {
 				Serial.print("\t");
 				Serial.print(mesure[n][m]);
 			}

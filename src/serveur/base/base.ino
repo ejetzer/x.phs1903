@@ -36,7 +36,7 @@
 const int N_broches = 2;
 
 /** Liste pour les broches de lecture */
-const int broche[N_broches] = {A0, A2};
+const int broche[N_broches] = {A0, A1};
 
 /** Liste pour les lectures analogiques */
 int mesure[N_broches] = {0, 0};
@@ -66,7 +66,7 @@ void loop() {
 		int cmd = Serial.read(); // Lire 1 octet
 		
 		if ( cmd < N_broches ) {
-			Serial.println(mesure[cmd]);
+			Serial.println(mesure[cmd], DEC);
 		}
 	}
 }
