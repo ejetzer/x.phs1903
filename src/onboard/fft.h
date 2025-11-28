@@ -1,8 +1,11 @@
 #ifndef FFT_INCLUS
+#ifndef intFFT_INCLUS
 #define FFT_INCLUS
 
-#include <Arduino.h>
-#include "types.h"
+#ifdef ENTIERS
+#undef ENTIERS
+#endif
+
 #include "adc.h"
 
 #ifndef ArduinoFFT_h
@@ -35,8 +38,6 @@
   */
 #include <arduinoFFT.h>
 #endif
-
-template class ArduinoFFT<int>;
 
 /** Le nombre d'échantillons récoltés pour faire la
   * transformée. Cette valeur doit toujours être une
@@ -111,10 +112,12 @@ template class ArduinoFFT<int>;
 #define Pe (1e6/Fr)
 #endif
 
-ArduinoFFT<val_t> (*FFT[N_BROCHES]);
+ArduinoFFT<float> (FFT[N_BROCHES]);
 
-for (idx_t i=0; i<N_BROCHES; i++) {
-  FFT[i] = ArduinoFFT<val_t>(reel[i], imag[i], N, Fr);
+void fftInit() {
+  for (idx_t i=0; i<N_BROCHES; i++) {
+    FFT[i] = ArduinoFFT<float>(reel[i], imag[i], N, Fr);
+  }
 }
 
 void fft(idx_t j) {
@@ -124,4 +127,5 @@ void fft(idx_t j) {
   FFT[j].complexToMagnitude();                     // Converti la FFT complexe en valeurs réelles
 }
 
+#endif
 #endif

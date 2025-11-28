@@ -1,10 +1,6 @@
 #ifndef CMD_INCLUS
 #define CMD_INCLUS
 
-#include <Arduino.h>
-#include "types.h"
-#include "adc.h"
-#include "intFFT.h"
 #include "afficher.h"
 
 #ifndef N_BROCHES

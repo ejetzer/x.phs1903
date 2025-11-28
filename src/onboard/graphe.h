@@ -1,10 +1,6 @@
 #ifndef PLOT_INCLUS
 #define PLOT_INCLUS
 
-#include <Arduino.h>
-#include "types.h"
-#include "adc.h"
-#include "intFFT.h"
 #include "afficher.h"
 
 void dessiner() {

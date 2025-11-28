@@ -9,10 +9,13 @@
 #define DELAI 2
 #endif
 
-#include <Arduino.h>
-#include "types.h"
-#include "adc.h"
+#if !defined(intFFT_INCLUS) && !defined(FFT_INCLUS)
+#ifdef ENTIERS
 #include "intFFT.h"
+#else
+#include "fft.h"
+#endif
+#endif
 
 
 void afficherInit() {

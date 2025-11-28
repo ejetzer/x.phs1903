@@ -1,4 +1,5 @@
 #ifndef intFFT_INCLUS
+#ifndef FFT_INCLUS
 #define intFFT_INCLUS
 
 #ifndef N
@@ -17,8 +18,6 @@
 #define T (1e6 / F)
 #endif
 
-#include <Arduino.h>
-#include "types.h"
 #include "adc.h"
 
 #define COMPENSATION_HANN 3.7109453796
@@ -128,4 +127,5 @@ void fft(idx_t j) {
   abs(j);
 }
 
+#endif
 #endif

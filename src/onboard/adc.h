@@ -27,9 +27,8 @@
 
  */
 
-#include <Arduino.h>
-#include <avr/interrupt.h>
 #include "types.h"
+#include <avr/interrupt.h>
 
 // Pré-facteur optimal pour le Arduino Nano Every
 #ifndef PF_ARDNE
@@ -117,11 +116,11 @@ void reglerBroche(byte broche) {
   //portPinCtrlCfg(PORTS_CTRL[A_n], 0x4);
 }
 
-#ifndef RAPIDE
+#if !defined(RAPIDE)
 
 #ifndef Pe
 // 500 µ
-#define Pe 500
+#define Pe 1e3
 #endif
 
 #ifndef Fr
@@ -146,7 +145,9 @@ void acq() {
 
     temps[A_n] += t - t0;
     reel[A_n][n] = analogRead(BROCHES[A_n]);
+    #if defined(FFT_INCLUS) || defined(intFFT_INCLUS)
     imag[A_n][n] = 0;
+    #endif
   }
 }
 
