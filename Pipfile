@@ -13,10 +13,16 @@ numpy = "*"
 scipy = "*"
 pandas = "*"
 
+[build]
+twine = "*"
+build = "*"
+setuptools = "*"
+
 [docs]
 sphinx = "*"
 hawkmoth = "*"
 libclang = "*"
+sphinx-readme = "*"
 
 [tests]
 

@@ -1,0 +1,40 @@
+# https://packaging.python.org/en/latest/
+
+[project]
+name = "x.phs1903"
+version = "2.0.0"
+authors = [
+  {name = "Émile Jetzer", email = "emile.jetzer@polymtl.ca"},
+  {name = "Jacques Massicotte", email = "jacques-2.massicotte@polymtl.ca"},
+]
+license = "GPLv3"
+license-files = ["LICENSE"]
+readme = ["README*", "LISEZ-MOI*"]
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 2 - Pre-Alpha",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Intended Audience :: Education",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: French",
+  "Programming Language :: C++",
+  "Programming Language :: C",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Education",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Software Development :: Embedded Systems",
+]
+
+[build-system]
+requires = ["setuptools", "twine"]
+build-backend = "steuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["x.phs1903*"]
+exclude = ["arduino"]
