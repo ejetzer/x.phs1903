@@ -3,3 +3,18 @@ windowTitle = "$TM_DISPLAYNAME — PHS1903"
 
 [ *.{ino,h,c,cpp} ]
 fileType = "source.c++.arduino"
+
+[ Pipfile ]
+fileType = "source.toml"
+
+[ Pipfile.lock ]
+fileType = "source.json"
+
+[ CITATION* ]
+fileType = "source.yaml"
+
+[ LICENSE* ]
+fileType = "text.html.markdown"
+
+[ {README,LISEZ-MOI}* ]
+fileType = "text.restructuredtext"

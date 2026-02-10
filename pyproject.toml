@@ -2,14 +2,16 @@
 
 [project]
 name = "x.phs1903"
-requires-python = ">=3.14"
+requires-python = "~=3.14"
 dynamic = ["version", "dependencies"]
 authors = [
   {name = "Émile Jetzer", email = "emile.jetzer@polymtl.ca"},
   {name = "Jacques Massicotte", email = "jacques-2.massicotte@polymtl.ca"},
 ]
+
 license-files = ["LICENSE.rst"]
 readme = "README.rst"
+license = "GPLv3"
 classifiers = [
   # How mature is this project? Common values are
   #   3 - Alpha

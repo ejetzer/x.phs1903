@@ -31,8 +31,9 @@ extensions = [
     'sphinx.ext.intersphinx',
     #    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
-    'hawkmoth',  # https://github.com/jnikula/hawkmoth
+    'hawkmoth', # https://github.com/jnikula/hawkmoth
     'hawkmoth.ext.napoleon',
+    'sphinx_readme' # https://sphinx-readme.readthedocs.io/en/latest/index.html
 ]
 
 templates_path = ['_templates']
