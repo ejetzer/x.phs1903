@@ -36,5 +36,5 @@ build-backend = "steuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["x.phs1903*"]
+include = ["xphs1903*"]
 exclude = ["arduino"]
