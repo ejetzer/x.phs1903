@@ -1,2 +1,5 @@
 projectDirectory = "$CWD"
 windowTitle = "$TM_DISPLAYNAME — PHS1903"
+
+[ *.{ino,h,c,cpp} ]
+fileType = "source.c++.arduino"
