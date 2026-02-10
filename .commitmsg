@@ -1,0 +1,32 @@
+# Titre: Résumé, à l'impératif, en case de titre sans point à la fin
+# Pas plus de 50 caractères  ### C'est là:   >|
+# Préfixer le titre de façon appropriée:
+# 
+# - ajout:<titre> pour un ajout de fonctionalité
+# - struc:<titre> pour une modification purement structurelle
+# - docum:<titre> pour une modification touchant uniquement la documentation
+# - repar:<titre> pour une correction de bogue
+
+# Au moins une ligne vide entre le titre et le corps
+
+# Corps: Expliquer le *quoi* et le *pourquoi*. Éviter le *comment*.
+#        Faire référence aux questions, séances de cours, projets, etc.
+# Limiter les lignes à 72 caractères, soit là:                    >|
+
+# À la fin: inclure une section Co-authored-by.
+# Placer au moins une ligne vide avant. Format: 
+# Co-authored-by: prénom nom <prenom.nom@polymtl.ca>
+#
+# Pour plus d'infos vvvv
+# How to Write a Git Commit Message:
+# https://chris.beams.io/posts/git-commit/
+#
+# 1. Séparer le titre du corps avec une ligne vide
+# 2. Limiter le titre à 50 caractères
+# 3. Mettre le titre en case de titre
+# 4. Ne pas terminer le titre par un point
+# 5. Utiliser l'impératif dans le titre
+# 6. Limiter la largeur du corps à 72 caractères
+# 7. Utiliser le corps pour expliquer le *quoi* et *pourquoi* plutôt que le
+#    *comment*
+

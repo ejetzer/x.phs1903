@@ -1,0 +1,13 @@
+[core]
+editor = vim
+pager = less
+excludesfile = .gitignore
+
+[commit]
+template = .commitmsg
+
+[help]
+autocorrect = true
+
+[color]
+ui = true
