@@ -4,3 +4,5 @@
 *build*
 .drapeaux
 *.zip
+_build/
+.DS_Store
