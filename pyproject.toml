@@ -2,14 +2,14 @@
 
 [project]
 name = "x.phs1903"
-version = "2.0.0"
+requires-python = ">=3.14"
+dynamic = ["version", "dependencies"]
 authors = [
   {name = "Émile Jetzer", email = "emile.jetzer@polymtl.ca"},
   {name = "Jacques Massicotte", email = "jacques-2.massicotte@polymtl.ca"},
 ]
-license = "GPLv3"
 license-files = ["LICENSE"]
-readme = ["README*", "LISEZ-MOI*"]
+readme = "README.rst"
 classifiers = [
   # How mature is this project? Common values are
   #   3 - Alpha
@@ -30,9 +30,15 @@ classifiers = [
   "Topic :: Software Development :: Embedded Systems",
 ]
 
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.urls]
+Repository = "https://www.github.com/ejetzer/x.phs1903"
+
 [build-system]
-requires = ["setuptools", "twine", "clang"]
-build-backend = "steuptools.build_meta"
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8", "twine", "clang", "build"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]

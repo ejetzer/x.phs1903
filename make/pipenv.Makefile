@@ -17,5 +17,5 @@ drapeau_pipenv = $(DIR_DRAPEAUX)/pipenv
 pipenv: $(drapeau_pipenv)
 
 $(drapeau_pipenv): pip $(DIR_DRAPEAUX)
-	$(pip) install --user pipenv
+	$(pip) install pipenv
 	$(touch) $@
