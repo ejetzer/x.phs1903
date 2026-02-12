@@ -155,9 +155,19 @@ tousdocs: alldocs
 
 ## Compiler la documentation au format PDF
 pdfdocs:
+	$(MAKE) -C $(dir_docs) latexpdf
 
 ## Compiler la documentation au format HTML
 htmldocs:
+	$(MAKE) -C $(dir_docs) singlehtml
+	
+## Compiler la documentation au format TeXinfo
+texdocs:
+	$(MAKE) -C $(dir_docs) texinfo
+	
+## Compiler la documentation au format man
+mandocs:
+	$(MAKE) -C $(dir_docs) man
 
 ## Publier le module Python et l'archive Arduino
 publish publier:

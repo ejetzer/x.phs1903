@@ -31,7 +31,7 @@ classifiers = [
 ]
 
 [build-system]
-requires = ["setuptools", "twine"]
+requires = ["setuptools", "twine", "clang"]
 build-backend = "steuptools.build_meta"
 
 [tool.setuptools.packages.find]

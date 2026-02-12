@@ -12,6 +12,7 @@ matplotlib = "*"
 numpy = "*"
 scipy = "*"
 pandas = "*"
+clang = "*"
 
 [build]
 twine = "*"
@@ -30,6 +31,7 @@ sphinx-readme = "*"
 debug = "python -m pdb -c continue"
 docs = "make -C ./docs singlehtml"
 pdf = "make -C ./docs latexpdf"
+man = "make -C ./docs man"
 
 [dev-packages]
 
