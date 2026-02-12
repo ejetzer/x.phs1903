@@ -19,20 +19,5 @@ twine = "*"
 build = "*"
 setuptools = "*"
 
-[docs]
-sphinx = "*"
-hawkmoth = "*"
-libclang = "*"
-sphinx-readme = "*"
-
-[tests]
-
 [scripts]
 debug = "python -m pdb -c continue"
-docs = "make -C ./docs singlehtml"
-pdf = "make -C ./docs latexpdf"
-man = "make -C ./docs man"
-
-[dev-packages]
-
-[dev]

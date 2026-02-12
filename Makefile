@@ -34,7 +34,8 @@ BUILD = .build
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ##  
 
-DIR_DRAPEAUX = .flagfiles # Pour les fichiers d'état
+# Pour les fichiers d'état
+DIR_DRAPEAUX = .drapeaux
 
 dir_source_python = $(SOURCE)/x.phs1903
 dir_source_arduino = $(SOURCE)/arduino
@@ -68,16 +69,7 @@ readthedocs = .readthedocs.yaml
 # Tests automatisés
 dir_tests = tests
 
-# Programmes utilitaires
-dir_outils ?= dev
-python_version ?= 3.14
-python ?= /usr/local/bin/python3.14
-pip ?= $(python) -m pip
-pipenv ?= $(python) -m pipenv
-arduino-cli ?= $(dir_outils)/arduino-cli
-arduino-cli_url = https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh
-curl ?= /usr/bin/curl
-tar ?= /usr/bin/tar
+include make/utilities.Makefile
 
 # Raccourcis pratiques
 dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)
@@ -85,10 +77,10 @@ dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)
 # Les répertoires d'installation ne faisant pas partie du répertoire
 # git doivent pouvoir être créés sur le vif
 $(dirs):
-	mkdir -p $@
+	$(mkdir) -p $@
 
 .PHONY: aide help all tout install installer arduino python develop alldocs\
-	pdfdocs htmldocs publish publier build batir
+	pdfdocs htmldocs publish publier build batir cleaN
 
 ## INSTALLATION
 ##  
@@ -98,18 +90,10 @@ $(dirs):
 ## commande Arduino.
 ##  
 
-## COMMANDES
-##  
-## Afficher ce message d'aide
-help:
-	@awk '/^## / \
-		        { if (c) {print c}; c=substr($$0, 4); next } \
-		         c && /(^[[:alpha:]][[:alnum:]_-]+:)/ \
-		        {print $$1, "\t", c; c=0} \
-		         END { print c }' $(MAKEFILE_LIST)
-
-## Raccourci francophone pour l'aide
-aide: help
+include make/help.Makefile
+	
+init: Pipfile.lock $(MAKE)
+	$(MAKE) -C $(dir_docs) init
 
 ## Tout compiler et installer, puis rouler les tests. Un peu excessif.
 all: install alldocs tests
@@ -117,8 +101,12 @@ all: install alldocs tests
 ## Raccourci francophone pour all
 tout: all
 
+clean:
+	-$(rm) -rf $(BUILD)/* $(DIR_DRAPEAUX)/*
+	$(MAKE) -C $(dir_docs) clean
+
 ## Installer tous les modules et la documentation
-install: arduino python 
+install: arduino python alldocs
 
 ## Raccourci francophone pour install
 installer: install
@@ -138,13 +126,14 @@ $(arduino_package): $(arduino_fichiers) $(arduino_fichiers_source)
 	$(tar) -r -u -f $@/src $(arduino_fichiers_source)
 
 $(arduino_fichiers):
+	$(touch) $@
 
 ## Compiler et installer le module Python
-python: $(dir_source_python) $(pyproject) $(pip)
-	$(pip) install --user .
+python: $(dir_source_python) $(pyproject) pipenv
+	$(pipenv) install --user .
 
 ## Créer un environnement virtuel pour le développement des modules
-develop: $(python) $(pipenv) $(arduino-cli)
+develop: $(python) pipenv $(arduino-cli)
 	$(pipenv) --python $(python_version)
 
 ## Compiler la documentation sous tous les formats
@@ -175,16 +164,7 @@ publish publier:
 $(python):
 	@[[ -x $(python) ]] || echo "Vous devez installer Python $(python_version)."
 
-pip: $(python) $(DIR_DRAPEAUX)/pip
-
-$(DIR_DRAPEAUX)/pip: $(python) $(DIR_DRAPEAUX)
-	$(python) -m ensurepip
-	touch $(DIR_DRAPEAUX)/pip
-
-pipenv: $(DIR_DRAPEAUX)/pipenv
-
-$(DIR_DRAPEAUX)/pipenv: pip $(DIR_DRAPEAUX)
-	$(pip) install pipenv
+include make/pipenv.Makefile
 
 $(arduino-cli): $(dir_outils) $(curl)
 	$(curl) -fsSL $(arduino-cli_url) | BINDIR=$(dir_outils) $(SHELL)
