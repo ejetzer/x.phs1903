@@ -83,44 +83,6 @@ tar ?= /usr/bin/tar
 # Raccourcis pratiques
 dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)
 
-<<<<<<< HEAD
-build: .build/xphs1903.zip
-
-help:
-	@echo "Fichier de compilation de module Arduino"
-
-.build:
-	mkdir -p $@
-
-.build/arduino: .build
-	mkdir -p $@
-
-.build/arduino/src .build/arduino/examples: .build/arduino
-	mkdir -p $@
-
-.build/arduino/src/xphs1903.h: .build/arduino/src/%: src/arduino/% .build/arduino/src
-	cp $< $@
-	
-.build/arduino/examples/freq_adc .build/arduino/examples/annonceur: .build/arduino/examples/%: tests/% .build/arduino/examples
-	cp -r $< $@
-
-.build/arduino/arduino.yaml .build/arduino/keywords.txt .build/arduino/library.properties: .build/arduino/%: % .build
-	cp $< $@
-
-clean:
-	-rm -rf .build/arduino
-
-wipe:
-	-rm -rf .build/arduino
-	-rm -rf .build/xphs1903.zip
-
-.build/xphs1903.zip: .build/arduino/src/xphs1903.h .build/arduino/examples/freq_adc .build/arduino/examples/annonceur .build/arduino/arduino.yaml .build/arduino/keywords.txt .build/arduino/library.properties
-	cp -r .build/arduino/ .build/xphs1903/
-	[[ -e $@ ]] && tar -uf $@ -C .build/ xphs1903/ || tar -cf $@ -C .build/ xphs1903/
-	rm -rf .build/xphs1903/
-
-aide help:
-
 # Les répertoires d'installation ne faisant pas partie du répertoire
 # git doivent pouvoir être créés sur le vif
 $(dirs):
@@ -194,9 +156,19 @@ tousdocs: alldocs
 
 ## Compiler la documentation au format PDF
 pdfdocs:
+	$(MAKE) -C $(dir_docs) latexpdf
 
 ## Compiler la documentation au format HTML
 htmldocs:
+	$(MAKE) -C $(dir_docs) singlehtml
+	
+## Compiler la documentation au format TeXinfo
+texdocs:
+	$(MAKE) -C $(dir_docs) texinfo
+	
+## Compiler la documentation au format man
+mandocs:
+	$(MAKE) -C $(dir_docs) man
 
 ## Publier le module Python et l'archive Arduino
 publish publier:
