@@ -8,3 +8,5 @@ _build/
 .DS_Store
 .drapeaux
 .build/
+build
+*.egg-info
