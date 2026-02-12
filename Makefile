@@ -51,8 +51,8 @@ dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)\
 
 include make/help.Makefile
 
-.PHONY: aide help all tout install installer arduino python develop alldocs\
-	pdfdocs htmldocs publish publier build batir clean
+.PHONY: help all install arduino python develop alldocs\
+	pdfdocs htmldocs publish build clean
 
 # Les répertoires d'installation ne faisant pas partie du répertoire
 # git doivent pouvoir être créés sur le vif
@@ -70,9 +70,6 @@ init: Pipfile.lock $(MAKE)
 ## Tout compiler et installer, puis rouler les tests. Un peu excessif.
 all: install alldocs tests
 
-## Raccourci francophone pour all
-tout: all
-
 clean:
 	-$(rm) -rf $(BUILD)/* $(DIR_DRAPEAUX)/*
 	$(MAKE) -C $(dir_docs) clean
@@ -80,18 +77,12 @@ clean:
 ## Installer tous les modules et la documentation
 install: arduino python alldocs
 
-## Raccourci francophone pour install
-installer: install
-
 ## Compiler tous les modules et la documentation
-build: $(arduino_package) $(BUILD) alldocs
-
-## Raccourci francophone pour build
-batir: build
+build: develop $(arduino_package) $(BUILD) alldocs
 
 ## Créer un environnement virtuel pour le développement des modules
 develop: pipenv $(arduino-cli)
 
 ## Publier le module Python et l'archive Arduino
-publish publier:
+publish: build
 
