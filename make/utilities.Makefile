@@ -1,5 +1,5 @@
 # Programmes utilitaires
-dir_outils ?= dev
+dir_outils ?= outils
 python_version ?= 3.14
 python ?= /usr/local/bin/python3.14
 pip ?= $(python) -m pip
@@ -12,3 +12,20 @@ touch ?= /usr/bin/touch
 mkdir ?= /bin/mkdir
 awk ?= /usr/bin/awk
 rm ?= /bin/rm
+cp ?= /bin/cp
+
+outils_externes = $(curl) $(tar) $(touch) $(mkdir) $(awk) $(rm) $(cp) $(python)
+
+# ---
+
+$(dir_outils): $(mkdir)
+	$(mkdir) -p $@
+
+include make/pipenv.Makefile
+
+$(arduino-cli): $(dir_outils) $(curl)
+	$(curl) -fsSL $(arduino-cli_url) | BINDIR=$(dir_outils) $(SHELL)
+
+$(outils_externes):
+	@[[ -x $@ ]] || echo "Installez l'outil $(shell basename $@)."
+

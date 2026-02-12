@@ -37,51 +37,9 @@ ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Pour les fichiers d'état
 DIR_DRAPEAUX = .drapeaux
 
-# Code source
-dir_source_python = $(SOURCE)/xphs1903
-dir_source_arduino = $(SOURCE)/arduino
-
-# Développement
-pipfile = Pipfile
-pipfile_lock = Pipfile.lock
-prerequis = requirements.txt
-
-# Installation de modules
-arduino_proprietes = library.properties
-
-# Configuration de module Arduino
-arduino_exemples = examples
-arduino_extras = extras
-arduino_build = $(BUILD)
-arduino_package = $(arduino_build)/$(NAME).zip
-arduino_fichiers = $(arduino_proprietes) $(arduino_extras) $(arduino_exemples)
-arduino_fichiers_source = $(wildcard $(dir_source_arduino)/*)
-
-# Configuration de module Python
-pyproject = pyproject.toml
-
-# Documentation
-dir_docs = docs
-docs_prerequis = $(dir_docs)/requirements.txt
-dir_docs_source = $(dir_docs)/source
-dir_docs_build = $(dir_docs)/_build
-readthedocs = .readthedocs.yaml
-
-# Tests automatisés
-dir_tests = tests
-
-include make/utilities.Makefile
-
 # Raccourcis pratiques
-dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)
-
-# Les répertoires d'installation ne faisant pas partie du répertoire
-# git doivent pouvoir être créés sur le vif
-$(dirs):
-	$(mkdir) -p $@
-
-.PHONY: aide help all tout install installer arduino python develop alldocs\
-	pdfdocs htmldocs publish publier build batir cleaN
+dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)\
+	$(arduino_prebuild) $(arduino_prebuild)/src
 
 ## INSTALLATION
 ##  
@@ -92,6 +50,19 @@ $(dirs):
 ##  
 
 include make/help.Makefile
+
+.PHONY: aide help all tout install installer arduino python develop alldocs\
+	pdfdocs htmldocs publish publier build batir clean
+
+# Les répertoires d'installation ne faisant pas partie du répertoire
+# git doivent pouvoir être créés sur le vif
+$(dirs):
+	$(mkdir) -p $@
+
+include make/arduino.Makefile
+include make/python.Makefile
+include make/docs.Makefile
+include make/utilities.Makefile
 	
 init: Pipfile.lock $(MAKE)
 	$(MAKE) -C $(dir_docs) init
@@ -118,57 +89,9 @@ build: $(arduino_package) $(BUILD) alldocs
 ## Raccourci francophone pour build
 batir: build
 
-## Compiler et installer le module Arduino
-arduino: $(arduino_package)
-	$(arduino-cli) lib install --zip-path $<
-
-$(arduino_package): $(arduino_fichiers) $(arduino_fichiers_source)
-	$(tar) -r -u -f $@ $(arduino_fichiers)
-	$(tar) -r -u -f $@/src $(arduino_fichiers_source)
-
-$(arduino_fichiers):
-	$(touch) $@
-
-## Compiler et installer le module Python
-python: $(dir_source_python) $(pyproject) pipenv
-	$(pipenv) install --user .
-
 ## Créer un environnement virtuel pour le développement des modules
-develop: $(python) pipenv $(arduino-cli)
-	$(pipenv) --python $(python_version)
-
-## Compiler la documentation sous tous les formats
-alldocs: pdfdocs htmldocs
-
-## Raccourci francophone pour alldocs
-tousdocs: alldocs
-
-## Compiler la documentation au format PDF
-pdfdocs:
-	$(MAKE) -C $(dir_docs) latexpdf
-
-## Compiler la documentation au format HTML
-htmldocs:
-	$(MAKE) -C $(dir_docs) singlehtml
-	
-## Compiler la documentation au format TeXinfo
-texdocs:
-	$(MAKE) -C $(dir_docs) texinfo
-	
-## Compiler la documentation au format man
-mandocs:
-	$(MAKE) -C $(dir_docs) man
+develop: pipenv $(arduino-cli)
 
 ## Publier le module Python et l'archive Arduino
 publish publier:
 
-$(python):
-	@[[ -x $(python) ]] || echo "Vous devez installer Python $(python_version)."
-
-include make/pipenv.Makefile
-
-$(arduino-cli): $(dir_outils) $(curl)
-	$(curl) -fsSL $(arduino-cli_url) | BINDIR=$(dir_outils) $(SHELL)
-
-$(curl):
-	@[[ -x $(curl) ]] || echo "Installez l'outil curl."
