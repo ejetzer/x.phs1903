@@ -10,3 +10,4 @@ _build/
 .build/
 build
 *.egg-info
+outils/

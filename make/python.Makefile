@@ -13,7 +13,7 @@ python_wheel = $(BUILD)/wheel
 
 ## Compiler et installer le module Python
 python: $(dir_source_python) $(pyproject) pipenv
-	$(pipenv) install --user .
+	$(pipenv) install .
 
 $(python_build): $(dir_source_python) $(pyproject)
 	$(pipenv) run python -m build --sdist --outdir=$@
