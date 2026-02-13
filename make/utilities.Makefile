@@ -18,11 +18,6 @@ outils_externes = $(curl) $(tar) $(touch) $(mkdir) $(awk) $(rm) $(cp) $(python)
 
 # ---
 
-$(dir_outils): $(mkdir)
-	$(mkdir) -p $@
-
-include make/pipenv.Makefile
-
 $(arduino-cli): $(dir_outils) $(curl)
 	$(curl) -fsSL $(arduino-cli_url) | BINDIR=$(dir_outils) $(SHELL)
 

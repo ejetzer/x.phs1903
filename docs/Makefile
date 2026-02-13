@@ -4,6 +4,7 @@
 DIR_DRAPEAUX = .drapeaux
 
 include ../make/utilities.Makefile
+include ../make/pipenv.Makefile
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.

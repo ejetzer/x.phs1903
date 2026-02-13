@@ -13,6 +13,7 @@ numpy = "*"
 scipy = "*"
 pandas = "*"
 clang = "*"
+"x.phs1903" = {file = "."}
 
 [build]
 twine = "*"
@@ -21,3 +22,5 @@ setuptools = "*"
 
 [scripts]
 debug = "python -m pdb -c continue"
+
+[dev-packages]

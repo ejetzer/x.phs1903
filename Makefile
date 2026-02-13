@@ -37,6 +37,9 @@ ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Pour les fichiers d'état
 DIR_DRAPEAUX = .drapeaux
 
+include make/utilities.Makefile
+include make/pipenv.Makefile
+
 # Raccourcis pratiques
 dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)\
 	$(arduino_prebuild) $(arduino_prebuild)/src
@@ -62,8 +65,8 @@ $(dirs):
 include make/arduino.Makefile
 include make/python.Makefile
 include make/docs.Makefile
-include make/utilities.Makefile
-	
+include make/tests.Makefile
+
 init: Pipfile.lock $(MAKE)
 	$(MAKE) -C $(dir_docs) init
 
@@ -78,11 +81,13 @@ clean:
 install: arduino python alldocs
 
 ## Compiler tous les modules et la documentation
-build: develop $(arduino_package) $(BUILD) alldocs
+build: develop $(arduino_package) $(python_build) $(python_wheel) alldocs
 
 ## Créer un environnement virtuel pour le développement des modules
 develop: pipenv $(arduino-cli)
 
 ## Publier le module Python et l'archive Arduino
+twine = $(pipenv) run python -m twine
 publish: build
+	$(twine) upload $(python_build)/* $(python_wheel)/*
 
