@@ -82,3 +82,8 @@ language = 'fr'
 
 html_theme = 'classic'
 html_static_path = ['_static']
+
+# Options pour la sortie LaTeX
+latex_additional_files = [
+    'latexmkrc',
+]
