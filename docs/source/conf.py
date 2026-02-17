@@ -24,15 +24,9 @@ from hawkmoth.util import readthedocs
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'x.phs1903'
-<<<<<<< HEAD
-author = 'Émile Jetzer & Jacques Massicotte'
-copyright = '%Y ' + author
-release = '1.3.0'
-=======
 author = 'Émile Jetzer & Jacques Massicotte, Polytechnique Montréal'
 project_copyright = '%Y ' + author
-release = '2.0.0'
->>>>>>> 309794b (struc:dépoussiérage et formatage avec ruff)
+release = '2.0.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -63,10 +57,6 @@ autodoc_typehints = 'both'
 autodoc_typehints_description_target = 'all'
 autodoc_typehints_format = 'short'
 autodoc_inherit_docstrings = True
-<<<<<<< HEAD
-
-=======
->>>>>>> 309794b (struc:dépoussiérage et formatage avec ruff)
 
 sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
 
@@ -108,11 +98,8 @@ language = 'fr'
 
 html_theme = 'classic'
 html_static_path = ['_static']
-<<<<<<< HEAD
 
 # Options pour la sortie LaTeX
 latex_additional_files = [
     'latexmkrc',
 ]
-=======
->>>>>>> 309794b (struc:dépoussiérage et formatage avec ruff)
