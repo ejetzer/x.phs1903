@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Programme de base pour le contrôle, l'acquisition et l'analyse avec Arduino.
 
 Ce script permet d'envoyer des requêtes à un programme Arduino correspondant.
@@ -36,6 +37,17 @@ from serial.tools.list_ports import comports
 from .afficher import plot
 from .defs import DEBIT, DELAI, PORT
 from .mesure import prendre_mesure
+
+import sys
+
+if not (sys.version_info.major != '3' and sys.version_info.minor < '14'):
+    print(f'La version de Python utilisée est: {sys.version}', file=sys.stderr)
+    print(f'{__name__} nécessite Python 3.14 et postérieur.', file=sys.stderr)
+    print('Voir <https://www.python.org/downloads>', file=sys.stderr)
+    msg: str = 'Version de Python incompatible'
+    raise SystemExit(msg)
+
+from outils import Acquisition, Canal, Console, Programme
 
 # ===========================
 # = Fonctions structurelles =
@@ -183,3 +195,11 @@ def setdown(res: list[list[int]], ser: Serial, fig: Figure):
     ser.close()
     plt.close(fig)
     logging.info('Au revoir.')
+
+
+__all__ = [
+    'Canal',
+    'Console',
+    'Programme',
+    'Acquisition',
+]

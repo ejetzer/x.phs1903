@@ -15,10 +15,11 @@ pandas = "3.0.1"
 matplotlib = "3.10.8"
 "x.phs1903" = {file = ".", editable = true}
 
-[dev]
+[dev-packages]
 twine = "*"
 build = "*"
 ruff = "*"
+setuptools = "*"
 
 [docs]
 alabaster = "1.0.0"
@@ -42,8 +43,3 @@ debug = "python -m pdb -c continue src/xphs1903/demos"
 run = "python -m xphs1903"
 demo = "python -m xphs1903.demos"
 docs = "make -C ./docs singlehtml latexpdf man"
-
-[build]
-twine = "*"
-build = "*"
-setuptools = "*"

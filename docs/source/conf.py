@@ -1,7 +1,16 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+# Copyright (C) 2025 Émile Jetzer, Polytechnique Montréal
+# autodoc: <https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html>
+"""
+Fichier de configuration pour le constructeur documentaire Sphinx.
+
+Pour la liste complète des valeurs de configurations incluses, voir la
+documentation: <https://www.sphinx-doc.org/en/master/usage/configuration.html>
+"""
+
+import sys
+from pathlib import Path
+
+from clang.cindex import Config
 
 import sys
 import os
@@ -15,9 +24,15 @@ from hawkmoth.util import readthedocs
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'x.phs1903'
+<<<<<<< HEAD
 author = 'Émile Jetzer & Jacques Massicotte'
 copyright = '%Y ' + author
 release = '1.3.0'
+=======
+author = 'Émile Jetzer & Jacques Massicotte, Polytechnique Montréal'
+project_copyright = '%Y ' + author
+release = '2.0.0'
+>>>>>>> 309794b (struc:dépoussiérage et formatage avec ruff)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -31,10 +46,12 @@ extensions = [
     'sphinx.ext.intersphinx',
     #    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
-    'hawkmoth', # https://github.com/jnikula/hawkmoth
+    'hawkmoth',  # https://github.com/jnikula/hawkmoth
     'hawkmoth.ext.napoleon',
-#    'sphinx_readme' # https://sphinx-readme.readthedocs.io/en/latest/index.html
 ]
+
+# Autres extensions:
+# 'sphinx_readme' <https://sphinx-readme.readthedocs.io/en/latest/index.html>
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -46,7 +63,10 @@ autodoc_typehints = 'both'
 autodoc_typehints_description_target = 'all'
 autodoc_typehints_format = 'short'
 autodoc_inherit_docstrings = True
+<<<<<<< HEAD
 
+=======
+>>>>>>> 309794b (struc:dépoussiérage et formatage avec ruff)
 
 sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
 
@@ -64,7 +84,7 @@ readthedocs.clang_setup()
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
     'arduinocard': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
-    'gammon': ('https://www.gammon.com.au/%s', '%s')
+    'gammon': ('https://www.gammon.com.au/%s', '%s'),
 }
 
 extlinks_detect_hardcoded_links = True
@@ -88,8 +108,11 @@ language = 'fr'
 
 html_theme = 'classic'
 html_static_path = ['_static']
+<<<<<<< HEAD
 
 # Options pour la sortie LaTeX
 latex_additional_files = [
     'latexmkrc',
 ]
+=======
+>>>>>>> 309794b (struc:dépoussiérage et formatage avec ruff)
