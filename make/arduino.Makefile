@@ -23,6 +23,9 @@ $(arduino_package): $(arduino_prebuild_fichiers) $(arduino_prebuild_fichiers_sou
 $(arduino_prebuild_fichiers): $(arduino_prebuild)/%: % $(arduino_prebuild)
 	$(cp) -r $< $@
 
+$(arduino_prebuild) $(arduino_prebuild)/src:
+	$(mkdir) -p $@
+
 $(arduino_prebuild_fichiers_source): $(arduino_prebuild)/src/%: $(dir_source_arduino)/% $(arduino_prebuild)/src
 	$(cp) -r $< $@
 

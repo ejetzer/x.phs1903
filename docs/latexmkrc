@@ -1,0 +1,14 @@
+# https://mg.readthedocs.io/latexmk.html
+
+@default_files = ("xphs1903");
+
+$aux_dir = '.';
+$out_dir = '.';
+
+$pdf_mode = 4; # LuaLaTeX
+$recorder = 1;
+
+$force_mode = 1;
+$silent = 1;
+
+$use_make_for_missing_files = 1;
