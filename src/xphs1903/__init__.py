@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """Programme de base pour le contrôle, l'acquisition et l'analyse avec Arduino.
 
 Ce script permet d'envoyer des requêtes à un programme Arduino correspondant.
