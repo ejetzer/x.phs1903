@@ -3,19 +3,26 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Code de base pour PHS1903
+Module d'assistance pour PHS1903
 ...........................................................
 
-Ces fichiers sont fournis par l'équipe technique du cours PHS1903 à l'automne
-2025, pour faciliter le développement rapide de prototypes de projets
-utilisant des micro-contrôleurs. Consultez vos chargés de cours et techniciens
-pour des détails, si cette documentation n'est pas suffisante.
+Ce module est fourni par l'équipe technique du cours PHS1903 de Polytechnique
+Montréal. La première version a été développée et testée à l'automne 2025.
+La deuxième version est en cours de développement.
+
+Pendant la session de cours, vous pouvez consulter directement vos chargés de 
+projet et techniciens pour obtenir de l'aide avec ce module. En dehors de la
+session, soumettez un signalement de bogue via Github.
 
 .. toctree::
 	:maxdepth: 4
 	
-	arch
-	py/index
-	cpp/index
+  ../../README
+  quickstart
+  install
+  usage
+  develop
+  contrib
+  exemples
 	glos
 

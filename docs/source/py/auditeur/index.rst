@@ -1,5 +1,0 @@
-Auditeur
-===============================
-
-.. automodule:: auditeur
-	:members:
