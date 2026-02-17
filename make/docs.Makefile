@@ -13,7 +13,7 @@ tousdocs: alldocs
 
 ## Compiler la documentation au format PDF
 pdfdocs:
-	$(MAKE) -C $(dir_docs) latexpdf
+	-$(MAKE) -C $(dir_docs) latexpdf
 
 ## Compiler la documentation au format HTML
 htmldocs:
