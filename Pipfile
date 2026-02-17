@@ -13,7 +13,8 @@ numpy = "*"
 scipy = "*"
 pandas = "*"
 clang = "*"
-"x.phs1903" = {file = "."}
+"xphs1903B" = {file = "."}
+ruff = "*"
 
 [build]
 twine = "*"
