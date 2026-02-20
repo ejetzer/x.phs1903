@@ -1,0 +1,130 @@
+# https://packaging.python.org/en/latest/
+
+[project]
+name = "x.phs1903"
+requires-python = ">=3.14"
+dynamic = ["version", "dependencies"]
+authors = [
+  {name = "Émile Jetzer", email = "emile.jetzer@polymtl.ca"},
+  {name = "Jacques Massicotte", email = "jacques-2.massicotte@polymtl.ca"},
+]
+license-files = ["LICENSE"]
+readme = "README.rst"
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Education",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: French",
+  "Programming Language :: C++",
+  "Programming Language :: C",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Education",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Software Development :: Embedded Systems",
+]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.urls]
+Repository = "https://www.github.com/ejetzer/x.phs1903"
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8", "twine", "clang", "build"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["xphs1903"]
+exclude = ["arduino"]
+
+[tool.ruff]
+line-length = 79
+indent-width = 4
+respect-gitignore = true
+fix = true
+preview = true
+show-fixes = true
+
+[tool.ruff.lint]
+extend-select = [
+  "E",
+  "W",
+  "D",
+  "N",
+  "PD",
+  "DOC",
+  "UP",
+  "PL",
+  "TRY",
+  "NPY",
+  "PTH",
+  "ARG",
+  "TC",
+  "LOG",
+  "G",
+  "ANN",
+  "B",
+  "ICN",
+  "C4",
+  "EM",
+  "FURB",
+  "ERA",
+  "YTT",
+  "S",
+  "FBT",
+  "A",
+  "COM",
+  "CPY",
+  "PIE",
+  "RSE",
+  "RET",
+  "I",
+  "PERF",
+  "F",
+]
+extend-ignore = [
+  "PLC2401",
+  "COM812",
+]
+fixable = [
+  "W",
+  "C",
+  "E",
+  "UP",
+  "PLE",
+  "PLC",
+  "PLW",
+  "DOC",
+  "D",
+  "DOC",
+  "RUF",
+  "I001",
+]
+extend-safe-fixes = [
+  "W293",
+  "E111",
+  "D100",
+  "CPY001",
+  "E201",
+  "E203",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/source/conf.py" = ["F401"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+indent-style = "space"
+quote-style = "single"
+preview = true

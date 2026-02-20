@@ -9,13 +9,13 @@ il suffit d'entrer, en ligne de commande:
 
 .. code-block:: console
 
-    $ python3 base.py
+    $ python3.14 base.py
 
 sur toute variante Linux/UNIX/BSD/MacOS, et la commande équivalente
 
 .. code-block:: console
 
-    $ py -3 base.py
+    $ py -3.14 base.py
 
 sur Windows. Vous pouvez aussi exécuter votre programme directement dans 
 votre IDE pendant le développement, si vous utilisez par exemple:

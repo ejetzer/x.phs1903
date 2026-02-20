@@ -22,15 +22,15 @@
 // Un débit plus lent interfère avec les mesures
 // et un débit plus rapide fait chauffer le micro-contrôleur
 #define DEBIT 1000000 // baud (≅bit/s)
-#define DELAI 2 // µs Le temps d'attente en lecture, compter 20µs/octet
+#define DELAI 2 // µs Le temps d'attente en lecture, compter 20µs/octet à 115200
 
 // Si vous voulez mesurer les valeurs de plus de diodes,
 // Augmentez la valeur de N_broches et ajoutez des valeurs
 // aux listes en conséquence.
 #define N_broches 2 // Nombre de broches
-#define M_mesures 1700 // Nombre de mesures
-const uint8_t broche[N_broches] = {A0, A1}; // Liste pour les broches de lecture
-uint8_t mesure[N_broches+1][M_mesures]; // Liste pour les lectures analogiques
+#define M_mesures 400 // Nombre de mesures
+const uint8_t broche[N_broches] = {A1, A2}; // Liste pour les broches de lecture
+uint32_t mesure[N_broches+1][M_mesures]; // Liste pour les lectures analogiques
 
 // Initialisation du port série à 115200 bits par seconde et un timeout de DELAI
 void setup() {
@@ -39,7 +39,7 @@ void setup() {
 	Serial.setTimeout(DELAI);
 	Serial.println();
 	
-	set_PF(4);
+	set_PF(2);
 }
 
 uint16_t j = 0;
@@ -51,26 +51,22 @@ void loop() {
 		mesure[i+1][j] = analogRead(broche[i]);
 	}
 	
+	j++;
+
 	// Serial.available retourne le nombre d'octets (max. 64o) disponibles
 	// dans le tampon du micro-contrôleur. Si la fonction retourne 0,
 	// le bloc conditionnel sera ignoré.
-	if ( Serial.available() > 0 ) {
-		// cmd contient une instruction d'1 octet envoyé par un programme 
-		// client via la communication série.
-		Serial.read(); // Lire 1 octet
-		
+	if ( j == M_mesures ) {
 		// Envoyer toutes les données récoltées d'un coup
-		for (int n=0; n<=N_broches; n++) {
-			Serial.print(n);
-			for (int m=0; m<M_mesures; m++) {
-				Serial.print(F("\t"));
+		for (int m=0; m<M_mesures; m++) {
+			Serial.print(mesure[0][m]);
+			for (int n=1; n<=N_broches; n++) {
+				Serial.print("\t");
 				Serial.print(mesure[n][m]);
 			}
 			Serial.println();
 		}
+		j = 0;
 	}
-	
-	j++;
-	j %= M_mesures;
 }
 

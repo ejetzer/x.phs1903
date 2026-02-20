@@ -1,0 +1,35 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: x.phs1903
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Émile
+    family-names: Jetzer
+    name-suffix: tech.
+    email: emile.jetzer@polymtl.ca
+    affiliation: Polytechnique Montréal
+    orcid: 'https://orcid.org/0009-0001-4576-4480'
+  - given-names: Jacques
+    family-names: Massicotte
+    name-suffix: tech.
+    email: jacques-2.massicotte@polymtl.ca
+    affiliation: Polytechnique Montréal
+  - name: Polytechnique Montréal
+    address: 2500 ch de Polytechnique
+    city: Montréal
+    post-code: H3T 1J4
+    region: Québec
+    tel: 514-340-4711
+    website: 'https://polymtl.ca'
+repository-code: 'https://github.com/ejetzer/x.phs1903'
+keywords:
+  - python
+  - arduino
+  - phs1903
+  - polymtl
+license: GPL-3.0-or-later

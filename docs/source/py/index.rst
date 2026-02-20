@@ -17,4 +17,4 @@ Programme Python
 	fonc
 	main
 
-.. automodule:: base
+.. automodule:: auditeur

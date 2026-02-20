@@ -7,21 +7,23 @@ name = "pypi"
 python_version = "3.14"
 
 [packages]
-pyserial = "*"
-matplotlib = "*"
-numpy = "*"
-scipy = "*"
-pandas = "*"
-
-[docs]
-sphinx = "*"
-zot4rst = "*"
-
-[tests]
+pyserial = "3.5"
+numpy = "2.4.2"
+scipy = "1.17.0"
+pillow = "12.1.1"
+pandas = "3.0.1"
+sphinx = "9.1.0"
+matplotlib = "3.10.8"
+twine = "*"
+clang = "*"
+build = "*"
+ruff = "*"
+"x.phs1903" = {file = ".", editable = true}
 
 [scripts]
-debug = "python -m pdb -c continue src/base.py"
-run = "python src/base.py"
+debug = "python -m pdb -c continue src/client_base.py"
+run = "python src/client_base.py"
+test = "python tests/auditeur_simple.py"
 docs = "make -C ./docs html"
 pdfdocs = "make -C ./docs latexpdf"
 

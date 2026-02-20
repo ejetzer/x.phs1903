@@ -17,11 +17,11 @@ release = '1.0.1'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-#    'sphinx.ext.apidoc',
+    #    'sphinx.ext.apidoc',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
-#    'sphinx.ext.linkcode',
+    #    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
 ]
 
@@ -30,17 +30,12 @@ exclude_patterns = []
 
 autosectionlabel_prefix_document = True
 
-apidoc_modules = [
-    {
-        'path': '../../src/',
-        'destination': '../source/'
-     }
-]
+apidoc_modules = [{'path': '../../src/', 'destination': '../source/'}]
 
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
     'arduino-card': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
-    'gammon': ('https://www.gammon.com.au/', '%s')
+    'gammon': ('https://www.gammon.com.au/', '%s'),
 }
 
 extlinks_detect_hardcoded_links = True
@@ -54,7 +49,7 @@ intersphinx_mapping = {
     'serial': ('https://pyserial.readthedocs.io/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None),
     'pipenv': ('https://pipenv.pypa.io/en/latest/', None),
-    'conda': ('https://docs.conda.io/projects/conda/en/stable/', None)
+    'conda': ('https://docs.conda.io/projects/conda/en/stable/', None),
 }
 
 language = 'fr'

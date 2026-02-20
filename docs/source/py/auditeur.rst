@@ -28,9 +28,9 @@ Pour faciliter la lecture du code, les arguments sont toujours dans l'ordre
 
 Les autres arguments n'ont pas d'ordre particulier.
 
-.. autofunction:: base.prendre_mesure
+.. autofunction:: auditeur.prendre_mesure
 
-	:py:func:`prendre_mesure <base.prendre_mesure>` demande
+	:py:func:`prendre_mesure <auditeur.prendre_mesure>` demande
 	(avec :py:meth:`serial.Serial.write`) de nouvelles données au micro-contrôleur,
 	puis lit les valeurs envoyées (avec :py:meth:`serial.Serial.readline`). C'est
 	ce qu'on appelle une architecture :term:`serveur-client`, où le client, notre
@@ -43,7 +43,7 @@ Les autres arguments n'ont pas d'ordre particulier.
 	Notez que l'architecture serveur-client offre un meilleur contrôle via le
 	programme client, par exemple pour allumer ou éteindre des DÉLs sur demande.
 
-.. autofunction:: base.plot
+.. autofunction:: auditeur.plot
 
 .. _analyse:
 
@@ -51,7 +51,7 @@ Les autres arguments n'ont pas d'ordre particulier.
 Analyse de données
 --------------------------------
 
-.. autofunction:: base.fft
+.. autofunction:: auditeur.fft
 
 .. _structure:
 
@@ -59,18 +59,18 @@ Analyse de données
 Structure du programme
 -------------------------------
 
-1. :py:func:`setup <base.setup>`, appelée au début du programme pour configurer les différents objets.
+1. :py:func:`setup <auditeur.setup>`, appelée au début du programme pour configurer les différents objets.
    Équivalent à setup dans un programme Arduino.
-2. :py:func:`loop <base.loop>`, appelée à répétition, contient l'essentiel du programme.
+2. :py:func:`loop <auditeur.loop>`, appelée à répétition, contient l'essentiel du programme.
    Équivalent à loop dans un programme Arduino.
-3. :py:func:`setdown <base.setdown>`, appelée à la fin pour correctement fermer les objets.
+3. :py:func:`setdown <auditeur.setdown>`, appelée à la fin pour correctement fermer les objets.
    setdown n'a pas d'équivalent Arduino.
 
-.. autofunction:: base.setup
+.. autofunction:: auditeur.setup
 
-.. autofunction:: base.loop
+.. autofunction:: auditeur.loop
 
-.. autofunction:: base.setdown
+.. autofunction:: auditeur.setdown
 
 Les trois fonctions sont appelées dans une
 :ref:`structure de capture d'erreur <try>`:
@@ -89,12 +89,12 @@ Les trois fonctions sont appelées dans une
 Cette structure de programme est similaire à celle d'un
 programme :arduino:`programme Arduino <#structure>`:
 
-#. Une fonction :py:func:`setup <base.setup>`
+#. Une fonction :py:func:`setup <auditeur.setup>`
    (:arduino:`setup <structure/sketch/setup/>`) invoquée au début du programme,
-#. Une fonction :py:func:`loop <base.loop>`
+#. Une fonction :py:func:`loop <auditeur.loop>`
    (:arduino:`loop <structure/sketch/loop/>`) exécutée à répétition.
 
-Notre programme Python a aussi une fonction :py:func:`setdown <base.setdown>`
+Notre programme Python a aussi une fonction :py:func:`setdown <auditeur.setdown>`
 qui est exécutée à la fin du programme. Cette fonction n'a pas d'équivalent
 dans un programme Arduino: un programme Python est généralement démarré,
 utilisé puis quitté, alors qu'un micro-contrôleur est généralement initialisé
@@ -109,6 +109,6 @@ La structure conditionnelle
 
 règle la demande de mesures provenant du micro-contrôleur, et limite
 l'exécution de la boucle: elle ne s'exécute qu'au
-:py:const:`ESPACEMENT <base.ESPACEMENT>` ns.
+:py:const:`ESPACEMENT <auditeur.ESPACEMENT>` ns.
 Sans une structure équivalente, on se retrouve à noyer la ligne de
 communication série.

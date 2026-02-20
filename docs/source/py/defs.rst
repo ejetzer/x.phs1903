@@ -10,7 +10,7 @@ Python permet de préciser le type d'une variable dans le code,
 selon la syntaxe ``<nom>: <type> = <valeur>``. Dans les définitions ci-dessous,
 vous verrez des définitions de la forme:
 
-.. literalinclude:: ../../../src/base.py
+.. literalinclude:: ../../../src/auditeur.py
 	:language: python
 	:lines: 37,45,59
 
@@ -23,22 +23,15 @@ Vous pouvez en apprendre plus dans la documentation officielle.
 Constantes
 -------------------------
 
-.. autodata:: base.PORT
+.. autodata:: auditeur.PORT
 
-.. autodata:: base.DEBIT
+.. autodata:: auditeur.DEBIT
 
-.. autodata:: base.DELAI
+.. autodata:: auditeur.DELAI
 
-.. autodata:: base.ESPACEMENT
+.. autodata:: auditeur.ESPACEMENT
 
-.. autodata:: base.BRUT
+.. autodata:: auditeur.BRUT
 	:no-index:
 
-.. autodata:: base.FFT
-
-Facteurs de conversion
----------------------------
-
-.. autodata:: base.ns2s
-
-.. autodata:: base.GHz2Hz
+.. autodata:: auditeur.FFT

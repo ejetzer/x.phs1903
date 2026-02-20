@@ -125,7 +125,6 @@ void setup() {
 	Serial.begin(115200);
 	Serial.println();
 	set_PF();
-	analogReadResolution(16);
 }
 
 const int ITERATIONS = 1000;
