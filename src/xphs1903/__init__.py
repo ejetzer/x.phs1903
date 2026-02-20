@@ -168,6 +168,6 @@ def setdown(res: list[list[int]], ser: Serial, fig: Figure):
     fig
         Figure, à fermer via pyplot
     """
-    del res[:]
+    del res
     ser.close()
     plt.close(fig)
