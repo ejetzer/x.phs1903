@@ -8,7 +8,7 @@ authors = [
   {name = "Émile Jetzer", email = "emile.jetzer@polymtl.ca"},
   {name = "Jacques Massicotte", email = "jacques-2.massicotte@polymtl.ca"},
 ]
-license-files = ["LICENSE"]
+license-files = ["LICENSE.rst"]
 readme = "README.rst"
 classifiers = [
   # How mature is this project? Common values are
@@ -29,8 +29,14 @@ classifiers = [
   "Topic :: Software Development :: Embedded Systems",
 ]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
+
+[project.scripts]
+phs1903_auditeur = "phs1903:main"
 
 [project.urls]
 Repository = "https://www.github.com/ejetzer/x.phs1903"

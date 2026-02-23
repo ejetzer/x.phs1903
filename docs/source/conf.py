@@ -3,13 +3,20 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import sys
+import os
+import os.path
+
+from pathlib import Path
+from clang.cindex import Config
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'x.phs1903'
-copyright = '2025, Émile Jetzer & Jacques Massicotte'
 author = 'Émile Jetzer & Jacques Massicotte'
-release = '1.0.1'
+copyright = '%Y ' + author
+release = '1.2.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -23,18 +30,31 @@ extensions = [
     'sphinx.ext.intersphinx',
     #    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
+    'hawkmoth',  # https://github.com/jnikula/hawkmoth
+    'hawkmoth.ext.napoleon',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
+# Configuration d'autodoc
+autoclass_content = 'both'
+autodoc_class_signature = 'mixed'
+autodoc_typehints = 'both'
+autodoc_typehints_description_target = 'all'
+autodoc_typehints_format = 'short'
+autodoc_inherit_docstrings = True
+
 autosectionlabel_prefix_document = True
 
 apidoc_modules = [{'path': '../../src/', 'destination': '../source/'}]
 
+hawkmoth_root = os.path.abspath('../..')
+hawkmoth_clang = ['-DA0=23', '-DA1=22', '-DA2=21']
+
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
-    'arduino-card': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
+    'arduinocard': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
     'gammon': ('https://www.gammon.com.au/', '%s'),
 }
 
@@ -65,3 +85,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
+
+# Options pour la sortie LaTeX
+latex_additional_files = [
+    'latexmkrc',
+]

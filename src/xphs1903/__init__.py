@@ -76,8 +76,7 @@ def setup(
     #: ne pas créer un unique object commun répété plusieurs fois dans la liste.
     #: Voir https://stackoverflow.com/q/366422 pour ce genre de problèmes.
     res: DataFrame = DataFrame(
-        columns=['t'] + [f'A{i + 1}' for i in range(pds)],
-        dtype='Float64'
+        columns=['t'] + [f'A{i + 1}' for i in range(pds)], dtype='Float64'
     )
     logging.debug('res =\n%s', res)
 
@@ -85,7 +84,9 @@ def setup(
         ser = Serial(port, baudrate=debit, timeout=delai)
         ser.read()
     except SerialException:
-        logging.error('Une erreur de communication série s\'est produite, on réessait.')
+        logging.error(
+            "Une erreur de communication série s'est produite, on réessait."
+        )
         possibles = comports()
         for i, p in enumerate(possibles):
             print(f'[{i}]\t{p.device}\t{p.name}')

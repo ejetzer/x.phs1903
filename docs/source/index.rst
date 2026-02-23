@@ -3,14 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Code de base pour PHS1903
-...........................................................
+###########################
+ Code de base pour PHS1903
+###########################
+
+.. include:: ../../README.rst
 
 .. toctree::
-	:maxdepth: 4
+	:maxdepth: 2
 	:caption: Table des matières
 
 	self
-	py/index
-	cpp/index
+	python
+	arduino
+	license
 	glos

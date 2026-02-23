@@ -1,28 +1,38 @@
-// Test de précision des préfacteurs du CAN
-// Basé sur https://www.gammon.com.au/adc
-// Adapté pour l'Arduino Nano Every (ABX00028)
-// et le processeur ATMega4809
-// Les particularités du processeur proviennent de
-// la :download:`fiche de données techniques <../../../refs/ATMega4809.pdf>`.
-// Par Émile Jetzer
+/**
+ * Test de précision des préfacteurs du CAN
+ * Basé sur https://www.gammon.com.au/adc
+ * Adapté pour l'Arduino Nano Every (ABX00028)
+ * et le processeur ATMega4809
+ * Les particularités du processeur proviennent de
+ * la :download:`fiche de données techniques <../../../refs/ATMega4809.pdf>`.
+ * Par Émile Jetzer
+ *
+ * Le CAN du ATMega4809 a besoin d'une fréquence
+ * d'horloge entre 50kHz et 1.5MHz pour une
+ * résolution maximale.
+ *
+ * Connexions
+ * ------------
+ * 
+ * Ce module assume les connexions suivantes::
+ *		
+ *		               A0(4) -- rail+ -- 5V(12)
+ *		               A1(5)          -- 3V3(2)
+ *		rail- -- R2 -- A2(6) -- R1    -- 5V(12)
+ *		               A3(7) -- rail- -- GND(15)
+ *		
+ *		R1 = R2 = 2kΩ
+ */
 
-// Le CAN du ATMega4809 a besoin d'une fréquence
-// d'horloge entre 50kHz et 1.5MHz pour une
-// résolution maximale.
-
-// Connections
-// ------------
-//
-//                A0(4) -- rail+ -- 5V(12)
-//                A1(5)          -- 3V3(2)
-// rail- -- R2 -- A2(6) -- R1    -- 5V(12)
-//                A3(7) -- rail- -- GND(15)
-//
-// R1 = R2 = 2kΩ
 #include <xphs1903.h>
 
 const int ports[4] = {A0, A1, A2, A3};
 
+/**
+ * Affiche l'état actuel des registres contrôlant
+ * le CAN. Le format est le même que celui utilisé 
+ * par la documentation du processeur.
+ */
 void show_adc0() {
 	Serial.print("ADC0    ");
 	for (int i=7; i>=0; i--) {
@@ -107,6 +117,21 @@ const int port_bas = 0;
 const int port_haut = 3;
 int puissance_courante = 0;
 
+/**
+ * À chaque itération, régler le pré-facteur et prendre une série
+ * de mesures sur chacune des 4 broches configurées. Le but est
+ * d'évaluer le pré-facteur minimum pouvant être utilisé en
+ * obtenant une précision et exactitude de mesure satisfaisante.
+ * Trop vite, on ne remplit pas les 10 bits du CAN, et trop lent,
+ * on perd du temps et on introduit potentiellement des artefacts
+ * d'alias.
+ *
+ * Ce programme est destiné à être utilisé comme un démonstrateur
+ * ou comme un instrument de mesure, mais jamais comme un produit.
+ * Utilisez le pour trouver la configuration adéquate pour votre
+ * application, puis démarrez un nouveau projet dans lequel vous
+ * pourrez importer le module :file:`xphs1903.h`.
+ */
 void loop() {
 	// Régler les préfacteurs
 	set_PF(puissance_courante);

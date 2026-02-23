@@ -1,7 +1,8 @@
 .commitmsg
 .gitignore
 CITATION.cff
-LICENSE.txt
+LICENSE.rst
+Makefile
 Pipfile
 Pipfile.lock
 README.rst
@@ -16,6 +17,7 @@ docs/make.bat
 docs/source/conf.py
 docs/source/glos.rst
 docs/source/index.rst
+src/arduino/xphs1903.h
 src/x.phs1903.egg-info/PKG-INFO
 src/x.phs1903.egg-info/SOURCES.txt
 src/x.phs1903.egg-info/dependency_links.txt
@@ -28,4 +30,5 @@ src/xphs1903/analyse.py
 src/xphs1903/defs.py
 src/xphs1903/mesure.py
 tests/demo.py
+tests/annonceur/annonceur.ino
 tests/freq_adc/freq_adc.ino

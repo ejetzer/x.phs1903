@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7fc668e53fcb58f1200909398436b189e3727e360a88ad32883b714e1d16f35d"
+            "sha256": "4fe37738bf1f2d8b76c5b88c0158690bfaa4190f2df632cdce4ccaeb6e9f9cdf"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -326,6 +326,15 @@
             "markers": "python_version >= '3.10'",
             "version": "==4.61.1"
         },
+        "hawkmoth": {
+            "hashes": [
+                "sha256:2af3cad13f5e9a7961a88f6eda6c7ca8f534e1f1303c486dbba50b936827c28f",
+                "sha256:bb65c16da7857ee5ec2f2bf3dd05626dc040b44b4662615afab6323769159f10"
+            ],
+            "index": "pypi",
+            "markers": "python_version ~= '3.9'",
+            "version": "==0.22.0"
+        },
         "id": {
             "hashes": [
                 "sha256:d0732d624fb46fd4e7bc4e5152f00214450953b9e772c182c1c22964def1a069",
@@ -496,6 +505,22 @@
             ],
             "markers": "python_version >= '3.10'",
             "version": "==1.4.9"
+        },
+        "libclang": {
+            "hashes": [
+                "sha256:0b2e143f0fac830156feb56f9231ff8338c20aecfe72b4ffe96f19e5a1dbb69a",
+                "sha256:3f0e1f49f04d3cd198985fea0511576b0aee16f9ff0e0f0cad7f9c57ec3c20e8",
+                "sha256:4dd2d3b82fab35e2bf9ca717d7b63ac990a3519c7e312f19fa8e86dcc712f7fb",
+                "sha256:54dda940a4a0491a9d1532bf071ea3ef26e6dbaf03b5000ed94dd7174e8f9592",
+                "sha256:69f8eb8f65c279e765ffd28aaa7e9e364c776c17618af8bff22a8df58677ff4f",
+                "sha256:6f14c3f194704e5d09769108f03185fce7acaf1d1ae4bbb2f30a72c2400cb7c5",
+                "sha256:83ce5045d101b669ac38e6da8e58765f12da2d3aafb3b9b98d88b286a60964d8",
+                "sha256:a1214966d08d73d971287fc3ead8dfaf82eb07fb197680d8b3859dbbbbf78250",
+                "sha256:c533091d8a3bbf7460a00cb6c1a71da93bffe148f172c7d03b1c31fbf8aa2a0b",
+                "sha256:cf4a99b05376513717ab5d82a0db832c56ccea4fd61a69dbb7bccf2dfb207dbe"
+            ],
+            "index": "pypi",
+            "version": "==18.1.1"
         },
         "markdown-it-py": {
             "hashes": [

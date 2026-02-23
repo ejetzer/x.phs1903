@@ -19,6 +19,8 @@ clang = "*"
 build = "*"
 ruff = "*"
 "x.phs1903" = {file = ".", editable = true}
+libclang = "*"
+hawkmoth = "*"
 
 [scripts]
 debug = "python -m pdb -c continue tests/demo.py"

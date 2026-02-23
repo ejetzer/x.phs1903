@@ -68,7 +68,7 @@ def plot(res: DataFrame, fig: Figure) -> None:
 
 
 def tab(res: DataFrame, fig: Figure) -> DataFrame:
-    logging.critical('%s.tab n\'est pas implémenté.', __name__)
+    logging.critical("%s.tab n'est pas implémenté.", __name__)
     raise NotImplementedError
 
 
