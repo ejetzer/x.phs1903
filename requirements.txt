@@ -53,4 +53,3 @@ sphinxcontrib-qthelp==2.0.0; python_version >= '3.9'
 sphinxcontrib-serializinghtml==2.0.0; python_version >= '3.9'
 twine==6.2.0; python_version >= '3.9'
 urllib3==2.6.3; python_version >= '3.9'
--e .
