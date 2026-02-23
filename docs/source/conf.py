@@ -9,6 +9,7 @@ import os.path
 
 from pathlib import Path
 from clang.cindex import Config
+from hawkmoth.util import readthedocs
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -51,6 +52,7 @@ apidoc_modules = [{'path': '../../src/', 'destination': '../source/'}]
 
 hawkmoth_root = os.path.abspath('../..')
 hawkmoth_clang = ['-DA0=23', '-DA1=22', '-DA2=21']
+readthedocs.clang_setup()
 
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
