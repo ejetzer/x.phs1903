@@ -17,7 +17,7 @@ from hawkmoth.util import readthedocs
 project = 'x.phs1903'
 author = 'Émile Jetzer & Jacques Massicotte'
 copyright = '%Y ' + author
-release = '1.2.1'
+release = '1.2.3'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
