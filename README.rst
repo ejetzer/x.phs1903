@@ -9,7 +9,9 @@ d'exemples d'utilisation de ces fichiers.
 Documentation
 --------------
 
-La documentation est hébergée sur Read The Docs.
+La documentation est hébergée sur `Read The Docs`_.
+
+.. _`Read The Docs`: https://xphs1903.readthedocs.io/fr/v1/
 
 -------------
 Installation
