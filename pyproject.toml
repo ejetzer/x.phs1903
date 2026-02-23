@@ -44,6 +44,8 @@ demo1903 = "phs1903:main"
 
 [project.urls]
 Repository = "https://www.github.com/ejetzer/x.phs1903"
+Documentation = "https://xphs1903.readthedocs.io/fr/"
+PyPI = "https://pypi.org/project/x.phs1903/"
 
 [build-system]
 requires = ["setuptools>=80", "setuptools-scm[simple]>=8", "twine", "clang", "build"]
