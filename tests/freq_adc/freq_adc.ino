@@ -19,35 +19,9 @@
 //                A3(7) -- rail- -- GND(15)
 //
 // R1 = R2 = 2kΩ
+#include <xphs1903.h>
 
-const int PRESC[3] = {bit(0), bit(1), bit(2)};
-const int PF_null = ~( PRESC[0] | PRESC[1] | PRESC[2] ); // 0b11100000
 const int ports[4] = {A0, A1, A2, A3};
-
-int clear_PF() {
-	// Régler à 256
-	ADC0.CTRLC &= PF_null;
-
-	return ADC0.CTRLC;
-}
-
-int set_PF() {
-	set_PF(7);
-}
-
-int set_PF(int pf_pow) {
-	clear_PF();
-	
-	int unites = pf_pow % 8 / 1;
-	int deuxaines = pf_pow % 4 / 2;
-	int quatraines = pf_pow % 1 / 4;
-	
-	ADC0.CTRLC |= PRESC[0] * (pf_pow % 8);
-	ADC0.CTRLC |= PRESC[1] * ( (pf_pow % 4) / 2 );
-	ADC0.CTRLC |= PRESC[2] * ( pf_pow / 4 );
-	
-	return ADC0.CTRLC;
-}
 
 void show_adc0() {
 	Serial.print("ADC0    ");
@@ -163,9 +137,9 @@ void loop() {
 	unsigned long temps_debut_placebo = micros();
 	for (int i = 0; i < ITERATIONS; i++) {
 		for (int quel_port = port_bas; quel_port <= port_haut; quel_port++) {
-			int p = ports[quel_port];
+			//int p = ports[quel_port];
 			//int resultat = 10;
-			int j = quel_port - port_bas;
+			//int j = quel_port - port_bas;
 			//totaux[j+port_haut] += 10;
 		}
 	}

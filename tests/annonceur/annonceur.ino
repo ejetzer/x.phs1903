@@ -21,6 +21,8 @@
 // Paramètres de la communication série.
 // Un débit plus lent interfère avec les mesures
 // et un débit plus rapide fait chauffer le micro-contrôleur
+#include <xphs1903.h>
+
 #define DEBIT 1000000 // baud (≅bit/s)
 #define DELAI 2 // µs Le temps d'attente en lecture, compter 20µs/octet à 115200
 

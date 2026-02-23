@@ -37,6 +37,6 @@ def prendre_mesure[R: DataFrame](res: R, ser: Serial) -> R:
             i: int
             w: float
             for i, w in enumerate(map(float, l.split())):
-                res.iloc[n, i + 1] = w
+                res.loc[n, res.columns[i]] = w
 
     return res

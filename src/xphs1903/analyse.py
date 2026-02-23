@@ -38,10 +38,10 @@ def fft(
     ys
         Transformées.
     """
-    N: int = min(len(res.index), N_max)  # Nombre de valeurs à considérer
+    N: int = min(res.index.size, N_max)  # Nombre de valeurs à considérer
 
     # Estimation de l'espacement, basé sur les mesures
-    ts: Series = res.t
+    ts: Series = res.t.to_numpy()
     # noinspection PyTypeChecker
     d: float = mean(ts[1:] - ts[:-1])
 
@@ -49,7 +49,7 @@ def fft(
     cadre = get_window(nom_cadre, N)
     signal = zeros(N)
     for sigcol in res.columns[1:]:
-        sig = res[sigcol]
+        sig = res[sigcol].to_numpy()
         if len(sig) < N:
             logging.error('Données mal acquises...:\n\tsig = %r', sig)
         else:

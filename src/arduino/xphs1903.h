@@ -8,10 +8,26 @@
 // Le CAN du ATMega4809 a besoin d'une fréquence
 // d'horloge entre 50kHz et 1.5MHz pour une
 // résolution maximale.
+#ifndef XPHS1903
+#define XPHS1903
 
-void set_PF(uint8_t pf_pow) {
+int clear_PF() {
+	// Régler à 256
+	ADC0.CTRLC &= ~( bit(0) | bit(1) | bit(2) ); // 0b11100000
+
+	return ADC0.CTRLC;
+}
+
+int set_PF(uint8_t pf_pow) {
 	ADC0.CTRLC &= ~( bit(0) | bit(1) | bit(2) ); // 0b11100000
 	ADC0.CTRLC |= bit(0) * (pf_pow % 8);
 	ADC0.CTRLC |= bit(1) * ( (pf_pow % 4) / 2 );
 	ADC0.CTRLC |= bit(2) * ( pf_pow / 4 );
+	
+	return ADC0.CTRLC;
 }
+
+int set_PF() {
+	return set_PF(7);
+}
+#endif

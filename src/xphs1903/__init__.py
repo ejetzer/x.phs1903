@@ -71,17 +71,21 @@ def setup(
     """
     # Initialisation des paramètres importants
 
+    logging.info('Initialisation...')
     #: On utilise une expression de liste plutôt que la multiplication pour
     #: ne pas créer un unique object commun répété plusieurs fois dans la liste.
     #: Voir https://stackoverflow.com/q/366422 pour ce genre de problèmes.
     res: DataFrame = DataFrame(
-        columns=['t'] + [f'A{i + 1}' for i in range(pds)]
+        columns=['t'] + [f'A{i + 1}' for i in range(pds)],
+        dtype='Float64'
     )
+    logging.debug('res =\n%s', res)
 
     try:
         ser = Serial(port, baudrate=debit, timeout=delai)
         ser.read()
     except SerialException:
+        logging.error('Une erreur de communication série s\'est produite, on réessait.')
         possibles = comports()
         for i, p in enumerate(possibles):
             print(f'[{i}]\t{p.device}\t{p.name}')
@@ -89,6 +93,7 @@ def setup(
         port = possibles[i].device
         ser = Serial(port, baudrate=debit, timeout=delai)
         ser.read()
+    logging.info('Connexion complétée à %r', ser)
 
     #: Paramètres des graphiques
     #: Affichage interactif, pour pouvoir suivre l'acquisition en direct
@@ -119,8 +124,9 @@ def setup(
     ax2.set_ylim(bottom=0)
 
     fig.tight_layout()
-    plt.pause(0.01)
+    plt.pause(1)
     plt.show()
+    logging.debug('fig = %r', fig)
 
     return res, ser, fig
 
@@ -147,6 +153,7 @@ def loop(
     fig: matplotlib.figure.Figure
     derniere_mesure: int
     """
+    logging.info('Itération #%s', res.index.size)
     # Lecture des valeurs de chaque photodiode
     res = prendre_mesure(res, ser)
 
@@ -168,6 +175,8 @@ def setdown(res: list[list[int]], ser: Serial, fig: Figure):
     fig
         Figure, à fermer via pyplot
     """
+    logging.info('On ferme tout...')
     del res
     ser.close()
     plt.close(fig)
+    logging.info('Au revoir.')

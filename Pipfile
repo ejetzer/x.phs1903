@@ -21,10 +21,9 @@ ruff = "*"
 "x.phs1903" = {file = ".", editable = true}
 
 [scripts]
-debug = "python -m pdb -c continue src/client_base.py"
-run = "python src/client_base.py"
-test = "python tests/auditeur_simple.py"
-docs = "make -C ./docs html"
-pdfdocs = "make -C ./docs latexpdf"
+debug = "python -m pdb -c continue tests/demo.py"
+run = "python -m xphs1903"
+demo = "python tests/demo.py"
+docs = "make -C ./docs singlehtml"
 
 [dev-packages]

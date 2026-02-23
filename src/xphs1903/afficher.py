@@ -22,8 +22,10 @@ def plot(res: DataFrame, fig: Figure) -> None:
     fig
         Figure contenant les différents graphiques
     """
+    logging.info('Dans la fonction plot(res=%r, fig=%r)', res, fig)
     fs, *fft_pd = fft(res)  # Calculer la FFT
-    ts = res[0]
+    ts = res.t.to_numpy()
+    logging.debug('ts = %s', ts)
     # Python permet le paquetage/dépaquetage dans les définitions de variables
     # On peut par exemple définir les mêmes variables avec les mêmes valeurs
     # de plusieurs manières différentes:
@@ -39,7 +41,8 @@ def plot(res: DataFrame, fig: Figure) -> None:
     # i: int = <index des éléments>
     # pd: list[float] = <données de la broche/photodiode i>
     # fpd: list[float] = <transformée de pd>
-    for i, (pd, fpd) in enumerate(zip(res.iloc[:, 1:], fft_pd)):
+    for i, (pd, fpd) in enumerate(zip(res.columns[1:], fft_pd)):
+        logging.debug('i=%s, pd=%r, fpd=%r', i, pd, fpd)
         # fig est la figure passée en argument
         # fig.axes est la liste des axes contenus dans la figure
         # fig.axes[0] est l'axe qu'on utilise pour les données brutes
@@ -52,7 +55,7 @@ def plot(res: DataFrame, fig: Figure) -> None:
         #   d'une courbe existante.
 
         # Afficher jusqu'aux 200 derniers points
-        fig.axes[BRUT].lines[i].set_data(ts, pd)
+        fig.axes[BRUT].lines[i].set_data(ts, res[pd].to_numpy())
         fig.axes[BRUT].set_xlim(left=0, right=max(ts))
 
         # Afficher la transformée de Fourier
@@ -61,10 +64,11 @@ def plot(res: DataFrame, fig: Figure) -> None:
         fig.axes[FFT].set_ylim(top=max(fpd))
 
     # fig.axes[FFT].set_ylim(0, max(max(f) for f in fft_pd))
-    plt.pause(1e-10)  # Petite pause pour permettre l'affichage correct
+    plt.pause(1**-64)  # Petite pause pour permettre l'affichage correct
 
 
 def tab(res: DataFrame, fig: Figure) -> DataFrame:
+    logging.critical('%s.tab n\'est pas implémenté.', __name__)
     raise NotImplementedError
 
 
