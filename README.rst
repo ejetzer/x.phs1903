@@ -151,11 +151,13 @@ Si vous utilisez ce projet dans un contexte académique, référéz vous au fich
 `CITATION.cff <CITATION.cff>` pour le format à utiliser. Vous pouvez l'importer
 directement dans Zotero.
 
+------------
 Références
-===========
+------------
 
+---------------
 État du projet
-===============
+---------------
 
 Ce projet est en développement actif en préparation à la session d'automne
 2026. La version 2 sera finalisée pendant l'été 2026, et vous ne devriez pas
