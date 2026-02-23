@@ -35,8 +35,12 @@ include-package-data = true
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 
+[tool.setuptools_scm]
+normalize = true
+version_scheme = "only-version"
+
 [project.scripts]
-phs1903_auditeur = "phs1903:main"
+demo1903 = "phs1903:main"
 
 [project.urls]
 Repository = "https://www.github.com/ejetzer/x.phs1903"
