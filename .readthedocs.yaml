@@ -5,6 +5,8 @@ build:
     python: "3.14"
     # You can also specify other tool versions:
     # nodejs: "16"
+  apt_packages:
+	  - libclang-14-dev
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
