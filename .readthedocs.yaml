@@ -6,7 +6,7 @@ build:
     # You can also specify other tool versions:
     # nodejs: "16"
   apt_packages:
-  - libclang-21-dev
+  - libclang-dev
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
