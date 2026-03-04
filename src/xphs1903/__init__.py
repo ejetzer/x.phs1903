@@ -19,6 +19,8 @@ réfèreront souvent à des ressources externes. SVP référez-vous à ces
 ressources avant de venir poser vos questions à un technicien.
 """
 
+__version__ = '1.2.3+1'
+
 from logging import getLogger
 
 logging = getLogger(__name__)

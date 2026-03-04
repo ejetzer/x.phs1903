@@ -5,3 +5,5 @@
 .build
 *.egg-info
 *build*
+.drapeaux
+outils/arduino-cli
