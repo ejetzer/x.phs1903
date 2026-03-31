@@ -11,7 +11,6 @@ authors = [
 
 license-files = ["LICENSE.rst"]
 readme = "README.rst"
-license = "GPLv3"
 classifiers = [
   # How mature is this project? Common values are
   #   3 - Alpha
