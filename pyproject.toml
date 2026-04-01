@@ -4,13 +4,29 @@
 name = "x.phs1903"
 requires-python = "~=3.14"
 dynamic = ["version", "dependencies"]
+description = "Modules et exemples Python et C++ pour PHS1903 à Polytechnique Montréal"
 authors = [
   {name = "Émile Jetzer", email = "emile.jetzer@polymtl.ca"},
   {name = "Jacques Massicotte", email = "jacques-2.massicotte@polymtl.ca"},
 ]
-
+maintainers = [
+	{name = "Émile Jetzer", email = "emile.jetzer@polymtl.ca" },
+]
+license = "GPL-3.0-or-later"
 license-files = ["LICENSE.rst"]
-readme = "README.rst"
+readme = {file = "README.rst", content-type = "text/x-rst"}
+keywords = [
+	"phs1903",
+	"polytechnique",
+	"montreal",
+	"montréal",
+	"polymtl",
+	"conception",
+	"cours",
+	"arduino",
+	"serial",
+	"pyplot",
+]
 classifiers = [
   # How mature is this project? Common values are
   #   3 - Alpha
@@ -34,7 +50,7 @@ classifiers = [
 include-package-data = true
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = {file = [".build/requirements.txt"]}
 
 [tool.setuptools_scm]
 normalize = true
@@ -44,6 +60,7 @@ version_scheme = "only-version"
 demo1903 = "phs1903:main"
 
 [project.urls]
+HomePage = "https://www.github.com/ejetzer/x.phs1903"
 Repository = "https://www.github.com/ejetzer/x.phs1903"
 Documentation = "https://xphs1903.readthedocs.io/fr/"
 PyPI = "https://pypi.org/project/x.phs1903/"

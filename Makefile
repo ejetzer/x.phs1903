@@ -31,6 +31,7 @@ SHELL = /bin/sh
 SOURCE = src
 README = README.rst
 BUILD = .build
+CONFIG = cfg
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ##  
 

@@ -1,6 +1,5 @@
 import sys
 import threading
-
 from logging import getLogger
 
 from pandas import DataFrame
@@ -10,44 +9,39 @@ logging = getLogger(__name__)
 
 
 class FilLectureOctets(threading.Thread):
-
     def __init__(self, res: DataFrame, ser: Serial):
         self.res = res
         self.ser = ser
-        super().__init__(
-            name=f'lectureoctets-{ser.device}',
-            daemon=True
-        )
+        super().__init__(name=f'lectureoctets-{ser.device}', daemon=True)
         self.start()
 
     def run(self):
         while True:
             lire_octets(self.res, self.ser)
-  
+
+
 def lire_octets[R: DataFrame](res: R, ser: Serial) -> (R, Serial):
     bloc: bytearray = bytearray(len(res.columns) * 255)
     ser.readinto(bloc)
-    
+
     for i, b in enumerate(bloc):
         r, c = divmod(i, len(res.columns))
         res.loc[r, c] = int.from_bytes(b, byteorder=sys.byteorder)
-    
-    return res, ser 
+
+    return res, ser
+
 
 class FilPriseMesure(threading.Thread):
-
     def __init__(self, res: DataFrame, ser: Serial):
         self.res = res
         self.ser = ser
-        super().__init__(
-            name=f'prisemesure-{ser.device}',
-            daemon=True
-        )
+        super().__init__(name=f'prisemesure-{ser.device}', daemon=True)
         self.start()
 
     def run(self):
         while True:
-            prendre_mesure(self.res, self.ser) 
+            prendre_mesure(self.res, self.ser)
+
 
 def prendre_mesure[R: DataFrame](res: R, ser: Serial) -> (R, Serial):
     """Prise d'une mesure

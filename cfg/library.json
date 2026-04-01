@@ -1,0 +1,25 @@
+{
+  "name": "xphs1903",
+  "description": "Faciliter le développement de systèmes d'acquisition dans le cours PHS1903 à Polytechnique Montréal.",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/ejetzer/x.phs1903.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Émile Jetzer",
+      "email": "emile.jetzer@polymtl.ca",
+      "maintainer": true
+    },
+    {
+      "name": "Jacques Massicotte",
+      "email": "jacques-2.massicotte@polymtl.ca"
+    },
+  ],
+  "version": "2.0.1",
+  "frameworks": ["arduino","mbed","espidf","arduinoFFT"],
+  "platforms": "avr",
+  "headers": ["adc1903.h", "fft1903.h", "xphs1903.h"]
+}

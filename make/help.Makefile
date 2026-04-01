@@ -7,6 +7,3 @@ help:
 		         c && /(^[[:alpha:]][[:alnum:]_-]+:)/ \
 		        {print $$1, "\t", c; c=0} \
 		         END { print c }' $(MAKEFILE_LIST)
-
-## Raccourci francophone pour l'aide
-aide: help

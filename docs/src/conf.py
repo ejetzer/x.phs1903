@@ -7,16 +7,11 @@ Pour la liste complète des valeurs de configurations incluses, voir la
 documentation: <https://www.sphinx-doc.org/en/master/usage/configuration.html>
 """
 
-import sys
-from pathlib import Path
-
-from clang.cindex import Config
-
-import sys
 import os
 import os.path
-
+import sys
 from pathlib import Path
+
 from clang.cindex import Config
 from hawkmoth.util import readthedocs
 

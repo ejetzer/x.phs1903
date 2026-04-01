@@ -26,6 +26,8 @@ from logging import getLogger
 logging = getLogger(__name__)
 
 # Voir :doc:`deps` pour les détails
+import sys
+
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from pandas import DataFrame
@@ -36,8 +38,6 @@ from serial.tools.list_ports import comports
 from .afficher import plot
 from .defs import DEBIT, DELAI, PORT
 from .mesure import prendre_mesure
-
-import sys
 
 if not (sys.version_info.major != '3' and sys.version_info.minor < '14'):
     print(f'La version de Python utilisée est: {sys.version}', file=sys.stderr)
@@ -197,8 +197,8 @@ def setdown(res: list[list[int]], ser: Serial, fig: Figure):
 
 
 __all__ = [
+    'Acquisition',
     'Canal',
     'Console',
     'Programme',
-    'Acquisition',
 ]

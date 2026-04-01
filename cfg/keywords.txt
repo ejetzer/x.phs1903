@@ -1,0 +1,31 @@
+#######################################
+# Syntax Coloring Map For xphs1903
+#######################################
+
+#######################################
+# Datatypes	(KEYWORD1)
+#######################################
+
+uint8_t	KEYWORD1
+val_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+set_PF	KEYWORD2
+fftInit	KEYWORD2
+fft	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+ADC0	LITERAL1
+PHS1903ADC	LITERAL1
+
+N	LITERAL1
+N_BROCHES	LITERAL1
+CADRE	LITERAL1
+Fr	LITERAL1
+Pe	LITERAL1

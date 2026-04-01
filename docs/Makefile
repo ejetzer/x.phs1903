@@ -1,7 +1,7 @@
 # Minimal makefile for Sphinx documentation
 #
 
-DIR_DRAPEAUX = .drapeaux
+DIR_DRAPEAUX = ../.drapeaux
 
 include ../make/utilities.Makefile
 include ../make/pipenv.Makefile
@@ -10,8 +10,8 @@ include ../make/pipenv.Makefile
 # from the environment for the first two.
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
-SOURCEDIR     = source
-BUILDDIR      = _build
+SOURCEDIR     = src
+BUILDDIR      = ../.build
 
 # Put it first so that "make" without argument is like "make help".
 help:

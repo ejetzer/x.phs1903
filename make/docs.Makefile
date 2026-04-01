@@ -6,7 +6,7 @@ dir_docs_build = $(dir_docs)/_build
 readthedocs = .readthedocs.yaml
 
 ## Compiler la documentation sous tous les formats
-alldocs: pdfdocs htmldocs
+alldocs: pdfdocs htmldocs texdocs mandocs
 
 ## Raccourci francophone pour alldocs
 tousdocs: alldocs

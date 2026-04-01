@@ -1,3 +1,7 @@
+# Ce Pipfile n'est utilisé que pour le développement du module
+# Il ne devrait pas être invoqué directement, mais plutôt
+# via make.
+
 [[source]]
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -32,10 +36,6 @@ jinja2 = "3.1.6"
 keyring = "25.7.0"
 kiwisolver = "1.4.9"
 sphinx = "9.1.0"
-"x.phs1903" = {editable = true, path = "."}
 
-[scripts]
-debug = "python -m pdb -c continue src/xphs1903/demos"
-run = "python -m xphs1903"
-demo = "python -m xphs1903.demos"
-docs = "make -C ./docs singlehtml latexpdf man"
+[dev-packages]
+"x.phs1903" = {editable = true, path = "."}

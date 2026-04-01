@@ -120,11 +120,11 @@ val_t vReal[N];
 val_t vImag[N];
 int_t ts[N];
 
-ArduinoFFT<float> (FFT[N_BROCHES]);
+ArduinoFFT<val_t> (FFT[N_BROCHES]);
 
 void fftInit() {
   for (idx_t i=0; i<N_BROCHES; i++) {
-    FFT[i] = ArduinoFFT<float>(reel[i], imag[i], N, Fr);
+    FFT[i] = ArduinoFFT<val_t>(reel[i], imag[i], N, Fr);
   }
 }
 

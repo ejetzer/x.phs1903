@@ -1,8 +1,7 @@
+import sys
 from logging import getLogger
 
 from matplotlib import pyplot as plt
-
-import sys
 
 if not (sys.version_info.major != '3' and sys.version_info.minor < '14'):
     print(f'La version de Python utilisée est: {sys.version}', file=sys.stderr)
