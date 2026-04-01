@@ -70,6 +70,7 @@ include make/tests.Makefile
 
 init: Pipfile.lock $(MAKE)
 	$(MAKE) -C $(dir_docs) init
+	$(git) config commit.template $(CONFIG)/commitmsg
 
 ## Tout compiler et installer, puis rouler les tests. Un peu excessif.
 all: install alldocs tests
