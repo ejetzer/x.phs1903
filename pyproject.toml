@@ -57,7 +57,7 @@ normalize = true
 version_scheme = "only-version"
 
 [project.scripts]
-demo1903 = "phs1903:main"
+demo1903 = "phs1903.demos:main"
 
 [project.urls]
 HomePage = "https://www.github.com/ejetzer/x.phs1903"
