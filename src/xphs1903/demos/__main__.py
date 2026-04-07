@@ -4,7 +4,9 @@
 from argparse import ArgumentParser
 from logging import getLogger
 from pathlib import Path
+
 import pygit
+
 import xphs1903
 
 logging = getLogger(__name__)

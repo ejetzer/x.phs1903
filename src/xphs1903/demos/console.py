@@ -3,9 +3,10 @@
 
 import logging
 import sys
-from serial.tools.list_ports import comports
-from serial import Serial
 from typing import TYPE_CHECKING
+
+from serial import Serial
+from serial.tools.list_ports import comports
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -155,7 +156,7 @@ class Console:
 class Programme(Console):
     """Série de commandes à exécuter."""
 
-    def __init__(self, port: str, *cmds: str, loop: bool=False) -> None:
+    def __init__(self, port: str, *cmds: str, loop: bool = False) -> None:
         """Série de commandes à exécuter."""
         super(self).__init__(port)
         self.cmds = list(cmds)
