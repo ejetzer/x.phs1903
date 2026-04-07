@@ -1,12 +1,18 @@
+# Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
+"""Programmes d'exemples."""
+
 from argparse import ArgumentParser
 from logging import getLogger
 from pathlib import Path
-
+import pygit
 import xphs1903
 
-__version__ = '0.1.0'
-
 logging = getLogger(__name__)
+
+repo_path = (pathlib.Path(__file__) / '..' / '..' / '..' / '.git').resolve()
+repo = pygit.Repository(repo_path)
+reference = repo.describe(dirty_suffix='+')
+__version__ = reference
 
 lecteur = ArgumentParser(
     prog='xphs1903.demos',
@@ -191,4 +197,4 @@ if args.script is not None:
     module = importlib.util.module_from_spec(spec)
     sys.modules[args.script] = module
     spec.loader.exec_module(module)
-    getattr(module, 'main')()
+    module.main()

@@ -1,16 +1,22 @@
+# Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
+"""Fonctions d'affichage graphique et tabulaire."""
+
 from logging import getLogger
+from typing import TYPE_CHECKING
+
+from matplotlib import pyplot as plt
 
 from .analyse import fft
 from .defs import BRUT, FFT
 
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
+    from pandas import DataFrame
+
 logging = getLogger(__name__)
 
-from matplotlib import pyplot as plt
-from matplotlib.figure import Figure
-from pandas import DataFrame
 
-
-def plot(res: DataFrame, fig: Figure) -> None:
+def plot(res: DataFrame, fig: Figure) -> (DataFrame, Figure):
     """Mise à jour du graphique avec de nouvelles données.
 
     Met les graphiques contenus dans fig à jour avec les données de res.
@@ -30,18 +36,22 @@ def plot(res: DataFrame, fig: Figure) -> None:
     # On peut par exemple définir les mêmes variables avec les mêmes valeurs
     # de plusieurs manières différentes:
     #
+    # ```
     # a = 1                             a, b = 1, 2
     # b = 2
+    # ```
     #
     # Dans la boucle for qui suit, on utilise les fonctions
     # zip_ et enumerate_. zip_ permet d'itérer sur les valeurs de plusieurs
     # listes simultanément, et enumerate_ permet d'itérer sur les valeurs
     # et l'index d'une liste. Dans la boucle, on a donc:
     #
+    # ```
     # i: int = <index des éléments>
     # pd: list[float] = <données de la broche/photodiode i>
     # fpd: list[float] = <transformée de pd>
-    for i, (pd, fpd) in enumerate(zip(res.columns[1:], fft_pd)):
+    # ```
+    for i, (pd, fpd) in enumerate(zip(res.columns[1:], fft_pd, strict=True)):
         logging.debug('i=%s, pd=%r, fpd=%r', i, pd, fpd)
         # fig est la figure passée en argument
         # fig.axes est la liste des axes contenus dans la figure
@@ -65,6 +75,8 @@ def plot(res: DataFrame, fig: Figure) -> None:
 
     # fig.axes[FFT].set_ylim(0, max(max(f) for f in fft_pd))
     plt.pause(1**-64)  # Petite pause pour permettre l'affichage correct
+
+    return res, fig
 
 
 def tab(res: DataFrame, fig: Figure) -> DataFrame:

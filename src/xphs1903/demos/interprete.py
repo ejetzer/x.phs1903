@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
+"""Exemple d'interprète de commandes."""
+
 from logging import getLogger
 
 from matplotlib import pyplot as plt
@@ -12,11 +15,14 @@ def main() -> None:
     params = setup()
 
     try:
-        # Cette boucle est infinie à toutes fins pratiques, càd équivalente à
+        # Cette boucle est infinie à toutes fins pratiques, càd équivalente
+        # à:
+        # ```
         # while True:
         #   ...
-        # Techniquement, elle s'arrête quand la fenêtre du graphique est fermée,
-        # ou que l'utilisateur entre ^C sur la ligne de commande.
+        # ```
+        # Techniquement, elle s'arrête quand la fenêtre du graphique est
+        # fermée, ou que l'utilisateur entre ^C sur la ligne de commande.
         while len(plt.get_fignums()) > 0:
             params = loop(*params)
     except KeyboardInterrupt:
@@ -29,8 +35,8 @@ def main() -> None:
         # Procédures de fin
         # Ce bloc est toujours exécuté, peu importe la raison de l'arrêt
         # du programme.
-        # eg: libérer le port série pour qu'il puisse être utilisé par d'autres
-        # programmes.
+        # eg: libérer le port série pour qu'il puisse être utilisé par
+        # d'autres programmes.
         logging.info('Fin.')
         setdown(*params)
 

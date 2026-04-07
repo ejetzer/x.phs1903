@@ -62,7 +62,7 @@ autosectionlabel_prefix_document = True
 
 apidoc_modules = [{'path': '../../src/', 'destination': '../source/'}]
 
-hawkmoth_root = os.path.abspath('../..')
+hawkmoth_root = Path('../..').resolve()
 hawkmoth_clang = ['-DA0=23', '-DA1=22', '-DA2=21']
 readthedocs.clang_setup()
 

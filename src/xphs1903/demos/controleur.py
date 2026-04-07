@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
+"""Exemple de contrôle de micro-contrôleur."""
+
 from logging import getLogger
 
 from matplotlib import pyplot as plt
@@ -12,11 +15,14 @@ def main() -> None:
     params = setup()
 
     try:
-        # Cette boucle est infinie à toutes fins pratiques, càd équivalente à
+        # Cette boucle est infinie à toutes fins pratiques, càd équivalente
+        # à
+        # ```
         # while True:
         #   ...
-        # Techniquement, elle s'arrête quand la fenêtre du graphique est fermée,
-        # ou que l'utilisateur entre ^C sur la ligne de commande.
+        # ```
+        # Techniquement, elle s'arrête quand la fenêtre du graphique est
+        # fermée, ou que l'utilisateur entre ^C sur la ligne de commande.
         while len(plt.get_fignums()) > 0:
             params = loop(*params)
     except KeyboardInterrupt:

@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
+""" """
+
 import sys
 from logging import getLogger
 
@@ -15,14 +18,17 @@ from . import loop, setdown, setup
 logging = getLogger(__name__)
 
 
-def main():
+def main() -> None:
+    """Exécution simple de la boucle par défaut."""
     params = setup()
 
     try:
-        # Cette boucle est infinie à toutes fins pratiques, càd équivalente à
+        # Cette boucle est infinie à toutes fins pratiques, càd équivalente
+        # à
         # while True:
         #   ...
-        # Techniquement, elle s'arrête quand la fenêtre du graphique est fermée,
+        # Techniquement, elle s'arrête quand la fenêtre du graphique est
+        # fermée,
         # ou que l'utilisateur entre ^C sur la ligne de commande.
         while len(plt.get_fignums()) > 0:
             params = loop(*params)
@@ -36,8 +42,8 @@ def main():
         # Procédures de fin
         # Ce bloc est toujours exécuté, peu importe la raison de l'arrêt
         # du programme.
-        # eg: libérer le port série pour qu'il puisse être utilisé par d'autres
-        # programmes.
+        # eg: libérer le port série pour qu'il puisse être utilisé par
+        # d'autres programmes.
         logging.info('Fin.')
         setdown(*params)
 

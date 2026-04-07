@@ -1,9 +1,15 @@
+# Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
+"""Fonctions d'analyse de données."""
+
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from numpy import array, mean, zeros
 from numpy.fft import rfft, rfftfreq
-from pandas import DataFrame, Series
 from scipy.signal import get_window
+
+if TYPE_CHECKING:
+    from pandas import DataFrame, Series
 
 logging = getLogger(__name__)
 
