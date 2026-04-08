@@ -13,7 +13,7 @@ jobs:
           uses: actions/checkout@v4
 
         - name: installer zsh
-          run: apt-get install zsh
+          run: sudo apt-get install -y zsh
 
         - name: Tout compiler
           run: make github-build
