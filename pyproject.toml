@@ -48,6 +48,7 @@ classifiers = [
 
 [tool.setuptools]
 include-package-data = true
+packages = ["xphs1903", "xphs1903.demos", "xphs1903.outils", "xphs1903.projets"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = [".build/requirements.txt"]}
@@ -71,7 +72,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["xphs1903"]
+include = ["xphs1903*"]
 exclude = ["arduino"]
 
 [tool.ruff]

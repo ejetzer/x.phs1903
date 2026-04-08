@@ -1,11 +1,12 @@
 SHELL = /usr/bin/zsh
-GITHUB_BUILD = .github/builds
+GITHUB_BUILD = .build
 
 $(GITHUB_BUILD):
 	mkdir -p $@
 
 github-build: $(GITHUB_BUILD)
 	# Build wheel & source distribution
+	pipenv requirements --exclude-index --no-lock|sed 's/==/~=/g' > $(GITHUB_BUILD)/requirements.txt
 	pipenv run python -m build --wheel --sdist --outdir=$(GITHUB_BUILD)
 	# Build Arduino package
 	mkdir -p $(GITHUB_BUILD)/$(NAME)/src

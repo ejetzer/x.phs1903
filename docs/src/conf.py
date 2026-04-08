@@ -28,7 +28,7 @@ try:
     import pygit2 as pygit
     repo = pygit.Repository(repo_path)
     reference = repo.describe(dirty_suffix='+')
-except ImportError, GitError:
+except ImportError, pygit.GitError:
     import subprocess
     reference = subprocess.run(['git', 'describe', '--always'], capture_output=True).stdout.decode('utf-8')
 finally:
