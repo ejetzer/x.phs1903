@@ -7,8 +7,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
+
+	steps:
 		- name: checkout repo
 		  uses: actions/checkout@v4
+
 		- name: Tout compiler
       	  run: make build
