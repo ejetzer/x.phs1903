@@ -12,7 +12,8 @@ jobs:
         - name: checkout repo
           uses: actions/checkout@v4
 
+        - name: installer zsh
+          run: apt-get install zsh
+
         - name: Tout compiler
-          with:
-            apt: zsh
           run: make github-build
