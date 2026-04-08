@@ -27,11 +27,14 @@ jobs:
         - name: installer libclang
           run: sudo apt-get install -y libclang-14-dev
         
+        - name: installer TeXlive
+          run: sudo apt-get install -y texlive-full
+        
         - name: installer pipenv
           run: python3.14 -m pip install pipenv
         
         - name: installer le venv
           run: pipenv install
 
-        - name: Tout compiler
+        - name: tout compiler
           run: make github-build
