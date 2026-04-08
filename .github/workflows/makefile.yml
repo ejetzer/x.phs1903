@@ -11,12 +11,15 @@ jobs:
     steps:
         - name: checkout repo
           uses: actions/checkout@v4
+        
+        - name: mettre apt à jour
+          run: sudo apt-get update -y
 
         - name: installer zsh
           run: sudo apt-get install -y zsh
         
         - name: installer python
-          run: sudo apt-get install -y python3.14
+          run: sudo apt-get install -y python3.14-full
         
         - name: installer pipenv
           run: python3.14 -m pip install pipenv
