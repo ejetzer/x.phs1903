@@ -12,6 +12,9 @@ jobs:
         - name: checkout repo
           uses: actions/checkout@v4
         
+        - name: ajouter deadsnake
+          run: sudo add-apt-repository ppa:deadsnakes/ppa
+        
         - name: mettre apt à jour
           run: sudo apt-get update -y
 
@@ -19,7 +22,7 @@ jobs:
           run: sudo apt-get install -y zsh
         
         - name: installer python
-          run: sudo apt-get install -y python3.14-full
+          run: sudo apt-get install -y python3.14
         
         - name: installer pipenv
           run: python3.14 -m pip install pipenv
