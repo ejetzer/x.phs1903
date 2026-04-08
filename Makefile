@@ -25,18 +25,18 @@ VARS_OLD := $(.VARIABLES) # Pour ne pas documenter les variables d'environnement
 ## par Émile Jetzer & Jacques Massicotte. Pour plus d'informations,
 ## lisez le document README.rst.
 NAME = xphs1903
-VERSION = 2.0.1
+VERSION = $(shell git describe --always)
 AUTHOR = "Émile Jetzer" "Jacques Massicotte"
-SHELL = /bin/sh
-SOURCE = src
-README = README.rst
-BUILD = .build
-CONFIG = cfg
+SHELL = /bin/zsh
+SOURCE ?= src
+README ?= README.rst
+BUILD ?= .build
+CONFIG ?= cfg
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ##  
 
 # Pour les fichiers d'état
-DIR_DRAPEAUX = .drapeaux
+DIR_DRAPEAUX ?= .drapeaux
 
 include make/utilities.Makefile
 include make/pipenv.Makefile
@@ -83,7 +83,7 @@ clean:
 install: arduino python alldocs
 
 ## Compiler tous les modules et la documentation
-build: develop $(arduino_package) $(python_build) $(python_wheel) alldocs
+build: develop $(arduino_package) $(python_build) $(python_wheel) alldocs $(demos)
 
 ## Créer un environnement virtuel pour le développement des modules
 develop: pipenv $(arduino-cli)
@@ -93,3 +93,4 @@ twine = $(pipenv) run python -m twine
 publish: build
 	$(twine) upload $(python_build)/* $(python_wheel)/*
 
+include make/github.Makefile

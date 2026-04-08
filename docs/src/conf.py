@@ -69,8 +69,25 @@ apidoc_modules = [{'path': '../../src/', 'destination': '../src/'}]
 
 hawkmoth_root = Path('../..').resolve()
 hawkmoth_clang = ['-DA0=23', '-DA1=22', '-DA2=21']
-Config.set_library_file('../.venv/lib/python3.14/site-packages/clang/native/libclang.dylib')
-readthedocs.clang_setup()
+
+dev_clang = Path('../.venv/lib/python3.14/site-packages/clang/native/libclang.dylib')
+clang_file_set = False
+
+if dev_clang.exists():
+    Config.set_library_file(str(dev_clang))
+    print(f'Using {dev_clang}')
+    clang_file_set = True
+else:
+    any_clang = Path('.').rglob('libclang.*')
+    for cl in any_clang:
+        if cl.exists():
+            Config.set_library_file(str(cl))
+            print(f'Using {cl}')
+            clang_file_set = True
+            break
+            
+if not clang_file_set:
+    readthedocs.clang_setup()
 
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
