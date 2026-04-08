@@ -5,36 +5,105 @@ on:
     branches: [ "main" ]
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: ajouter deadsnake
+        run: sudo add-apt-repository ppa:deadsnakes/ppa
+      
+      - name: mettre apt à jour
+        run: sudo apt-get update -y
+
+      - name: installer zsh
+        run: sudo apt-get install -y zsh
+      
+      - name: installer python
+        run: sudo apt-get install -y python3.14
+      
+      - name: installer libclang
+        run: sudo apt-get install -y libclang-14-dev
+      
+      - name: installer TeXlive
+        run: sudo apt-get install -y texlive-full
+      
+      - name: installer pipenv
+        run: python3.14 -m pip install pipenv
+
   build:
     runs-on: ubuntu-latest
+    needs:
+      - setup
 
     steps:
         - name: checkout repo
           uses: actions/checkout@v4
-        
-        - name: ajouter deadsnake
-          run: sudo add-apt-repository ppa:deadsnakes/ppa
-        
-        - name: mettre apt à jour
-          run: sudo apt-get update -y
 
-        - name: installer zsh
-          run: sudo apt-get install -y zsh
-        
-        - name: installer python
-          run: sudo apt-get install -y python3.14
-        
-        - name: installer libclang
-          run: sudo apt-get install -y libclang-14-dev
-        
-        - name: installer TeXlive
-          run: sudo apt-get install -y texlive-full
-        
-        - name: installer pipenv
-          run: python3.14 -m pip install pipenv
-        
         - name: installer le venv
           run: pipenv install
+        
+        - name: assembler sdist python
+          run: pipenv run build --sdist .build
+        
+        - name: assembler wheel python
+          run: pipenv run build --wheel .build
 
-        - name: tout compiler
-          run: make github-build
+        - name: assembler module arduino
+          run: make -C .github arduino
+        
+        - name: compiler doc html
+          run: pipenv run sphinx-build -M singlehtml docs/src .build
+        
+        - name: assembler doc LaTeX
+          run: pipenv run sphinx-build -M latex docs/src .build
+        
+        - name: compiler doc LaTeX
+          run: make -C .github pdf
+        
+        - name: assembler les exemples python
+          run: tar -cf .build/python-demo.zip src/xphs1903/demos
+        
+        - name: assembler les exemples arduino
+          run: tar -c -s /src\/arduino\/examples// -f .build/arduino-demo.zip src/arduino/examples/*
+        
+        - name: charger le module arduino
+          uses: actions/upload-artifact@v4
+          with:
+            name: main-build
+            path: .build/xphs1903.zip
+        
+        - name: charger la distribution source
+          uses: action/upload-artifact@v4
+          with:
+            name: main-build
+            path: .build/x_phs1903-*.tar.gz
+          
+        - name: charger la distribution wheel
+          uses: action/upload-artifact@v4
+          with:
+            name: main-build
+            path: .build/x_phs1903-*.whl
+        
+        - name: charger les exemples python
+          uses: action/upload-artifact@v4
+          with:
+            name: main-build
+            path: .build/python-demo.zip
+        
+        - name: charger les exemples arduino
+          uses: action/upload-artifact@v4
+          with:
+            name: main-build
+            path: .build/arduino-demo.zip
+        
+        - name: charger la documentation html
+          uses: action/upload-artifact@v4
+          with:
+            name: main-build
+            path: .build/singlehtml
+        
+        - name: charger la documentation pdf
+          uses: action/upload-artifact@v4
+          with:
+            name: main-build
+            path: .build/pdf/xphs1903.pdf

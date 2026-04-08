@@ -93,4 +93,7 @@ twine = $(pipenv) run python -m twine
 publish: build
 	$(twine) upload $(python_build)/* $(python_wheel)/*
 
-include make/github.Makefile
+include make/demos.Makefile
+
+github-build:
+	$(MAKE) -C .github/ build
