@@ -24,6 +24,9 @@ jobs:
         - name: installer python
           run: sudo apt-get install -y python3.14
         
+        - name: installer libclang
+          run: sudo apt-get install -y libclang-14-dev
+        
         - name: installer pipenv
           run: python3.14 -m pip install pipenv
         
