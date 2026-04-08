@@ -5,7 +5,7 @@
 .. sectionauthor::
 	par Olivier Hugot, Benjamin Jean et Sandrine Rambaud
 	sur la base des travaux de Philippe Verdy
-	et des membres de la liste « trad-gnu » de l’April*
+	et des membres de la liste « trad-gnu » de l’April*
 
 .. warning::
 	Avertissement important au sujet de cette traduction française
@@ -28,7 +28,7 @@
 	seule version anglaise authentique.
 	
 	La FSF vous recommande fortement de ne pas utiliser cette traduction en
-	tant que termes officiels pour vos propres programmes ; veuillez plutôt
+	tant que termes officiels pour vos propres programmes ; veuillez plutôt
 	utiliser la version anglaise authentique telle que publiée par la FSF.
 	Si vous choisissez de transmettre cette traduction en même temps qu’un
 	Programme sous licence GNU GPL, cela ne vous dispense pas de
@@ -72,7 +72,7 @@ Version 3, du 29 juin 2007
 Copyright © 2007 Free Software Foundation, Inc. &lt;<https://fsf.org/>&gt;
 
 Chacun est autorisé à copier et distribuer des copies conformes de ce
-document de licence *[NdT : il s’agit du document original en anglais]*,
+document de licence *[NdT : il s’agit du document original en anglais]*,
 mais toute modification en est proscrite.
 
 Préambule
@@ -87,7 +87,7 @@ créations. Par opposition, la GNU General Public License a pour but de
 garantir votre liberté de partager et modifier toutes les versions d’un
 programme – afin d’assurer qu’il demeurera libre pour tous ses
 utilisateurs. Nous, la Free Software Foundation, utilisons la GNU
-General Public License pour la plupart de nos logiciels ; elle
+General Public License pour la plupart de nos logiciels ; elle
 s’applique aussi à toute autre création divulguée de cette façon par ses
 auteurs. Vous pouvez également l’appliquer à vos programmes.
 
@@ -103,7 +103,7 @@ tout ceci.
 Pour protéger vos droits, nous avons besoin d’empêcher que d’autres vous
 en privent ou vous demandent d'abandonner ces droits. En conséquence, vous
 avez certains devoirs si vous distribuez des exemplaires du logiciel ou
-si vous le modifiez : devoirs de respecter la liberté des autres.
+si vous le modifiez : devoirs de respecter la liberté des autres.
 
 Par exemple, si vous distribuez des exemplaires d’un tel programme, que
 ce soit à titre gratuit ou onéreux, vous devez transférer aux
@@ -113,7 +113,7 @@ vous devez leur montrer ces stipulations afin qu’ils connaissent leurs
 droits.
 
 Les développeurs qui utilisent la GNU GPL protègent vos droits en deux
-étapes : (1) ils revendiquent leurs droits d’auteur sur le logiciel, et
+étapes : (1) ils revendiquent leurs droits d’auteur sur le logiciel, et
 (2) vous offrent cette Licence qui vous donne la permission légale de le
 copier, le distribuer et/ou le modifier.
 
@@ -141,7 +141,7 @@ liberté des utilisateurs.
 Enfin, chaque programme est constamment menacé par les brevets
 logiciels. Les États ne devraient pas autoriser les brevets à
 restreindre le développement et l’utilisation des logiciels sur des
-ordinateurs à usage général ; mais au sein de ceux qui l’autorisent,
+ordinateurs à usage général ; mais au sein de ceux qui l’autorisent,
 nous souhaitons éviter le danger particulier que les brevets appliqués à
 un programme libre puissent le rendre en réalité propriétaire. Pour
 empêcher ceci, la GPL assure que les brevets ne puissent être utilisés
@@ -156,28 +156,28 @@ STIPULATIONS
 0. Définitions
 ...............
 
-« Cette Licence » se réfère à la version 3 de la Licence Publique
+« Cette Licence » se réfère à la version 3 de la Licence Publique
 Générale GNU.
 
-« Droit d’Auteur » signifie aussi toute législation similaire à celle du
+« Droit d’Auteur » signifie aussi toute législation similaire à celle du
 droit d’auteur qui s’applique à d’autres types de créations, tels que
 ceux sur les topographies de semi-conducteurs.
 
-« Le Programme » se réfère à toute création protégeable par le droit
+« Le Programme » se réfère à toute création protégeable par le droit
 d’auteur licenciée aux termes de cette Licence. Chaque licencié est
-désigné par « vous ». Les « Licenciés » et les « destinataires » peuvent
+désigné par « vous ». Les « Licenciés » et les « destinataires » peuvent
 être des personnes physiques ou morales.
 
-« Modifier » une création signifie copier ou adapter tout ou partie de
+« Modifier » une création signifie copier ou adapter tout ou partie de
 la création d’une façon nécessitant l’autorisation du titulaire du Droit
 d’Auteur, en dehors de la réalisation d’une copie conforme. La création
-résultante est appelée une « version modifiée » de la précédente
-création, ou une création « basée sur » la précédente création.
+résultante est appelée une « version modifiée » de la précédente
+création, ou une création « basée sur » la précédente création.
 
-Une « création régie » désigne soit le Programme non modifié, soit une
+Une « création régie » désigne soit le Programme non modifié, soit une
 création basée sur le Programme.
 
-« Propager » une création désigne faire quoi que ce soit avec celle-ci
+« Propager » une création désigne faire quoi que ce soit avec celle-ci
 qui, sans autorisation, vous rendrait directement ou secondairement
 responsable du fait de la violation d’une disposition de la loi sur le
 droit d’auteur applicable, à l’exception de son exécution sur un
@@ -186,13 +186,13 @@ inclut la copie, la distribution (avec ou sans modification), la mise à
 disposition du public et dans certains pays d’autres activités
 également.
 
-« Transmettre » une création désigne tout type de propagation qui permet
+« Transmettre » une création désigne tout type de propagation qui permet
 à d’autres parties de réaliser ou recevoir des exemplaires. La simple
 interaction avec un utilisateur via un réseau informatique, sans
 transfert d’un exemplaire, n’est pas une transmission.
 
-Une interface utilisateur interactive affiche des « Mentions Légales
-Appropriées » dans la mesure où elle inclut un dispositif pratique et
+Une interface utilisateur interactive affiche des « Mentions Légales
+Appropriées » dans la mesure où elle inclut un dispositif pratique et
 visible de façon proéminente qui (1) affiche une mention de droit
 d’auteur appropriée et (2) indique à l’utilisateur qu’il n’y a aucune
 garantie portant sur la création (sauf si des garanties sont accordées),
@@ -204,30 +204,30 @@ proéminent dans la liste remplit ce critère.
 1. Code source
 ................
 
-Le « code source » d’une création désigne la forme de la création
-préférée pour faire des modifications sur celle-ci. Le « Code objet »
+Le « code source » d’une création désigne la forme de la création
+préférée pour faire des modifications sur celle-ci. Le « Code objet »
 désigne toute forme de la création qui n’est pas le code source.
 
-Une « Interface Standard » désigne une interface qui est soit une norme
+Une « Interface Standard » désigne une interface qui est soit une norme
 officielle définie par un organisme de normalisation reconnu soit, dans
 le cas d’interfaces spécifiées pour un langage de programmation
 particulier, une interface largement utilisée parmi les développeurs
 travaillant dans ce langage.
 
-Les « Bibliothèques Système » d’une création exécutable incluent tout ce
+Les « Bibliothèques Système » d’une création exécutable incluent tout ce
 qui, en dehors de la création dans son ensemble, (a) est compris dans la
 forme usuelle de distribution d’un Composant Majeur mais ne fait pas
 partie de ce Composant Majeur et (b) sert seulement à permettre
 l’utilisation de la création avec ce Composant Majeur ou à implémenter
 une Interface Standard pour laquelle une mise en œuvre est disponible au
-public sous forme de code source. Un « Composant Majeur » désigne, dans
+public sous forme de code source. Un « Composant Majeur » désigne, dans
 ce contexte, un composant majeur essentiel (noyau, gestionnaire de
 fenêtres, etc.) du système d’exploitation propre (le cas échéant) sur
 lequel la création exécutable fonctionne, ou un compilateur utilisé pour
 produire la création, ou un interpréteur de code objet utilisé pour
 l’exécuter.
 
-La « Source Correspondante » d’une création sous forme de code objet
+La « Source Correspondante » d’une création sous forme de code objet
 désigne tout le code source nécessaire pour générer, installer et (pour
 une création exécutable) exécuter le code objet et modifier la création,
 y compris les scripts pour contrôler ces activités. Cependant, cela
@@ -277,7 +277,7 @@ dehors de leurs relations avec vous, toute copie de vos éléments soumis
 au droit d’auteur.
 
 La transmission dans toutes autres circonstances n’est permise que selon
-les conditions stipulées ci-dessous. Sous-licencier n’est pas autorisé ;
+les conditions stipulées ci-dessous. Sous-licencier n’est pas autorisé ;
 l’article 10 le rend inutile.
 
 3. Protéger les droits des utilisateurs contre les lois anticontournement
@@ -304,10 +304,10 @@ ceux de tiers d’interdire le contournement de mesures techniques.
 Vous pouvez transmettre des exemplaires conformes du code source du
 Programme tel que vous le recevez, sur tout support, pourvu que vous
 apposiez scrupuleusement et de façon appropriée sur chaque exemplaire
-une notice de Droit d’Auteur appropriée ; conserviez intactes toutes les
+une notice de Droit d’Auteur appropriée ; conserviez intactes toutes les
 mentions établissant que cette Licence et tous les termes non permissifs
-ajoutés conformément à l’article 7 s’appliquent à ce code ; conserviez
-intactes toutes les mentions d’absence de toute garantie ; et donniez à
+ajoutés conformément à l’article 7 s’appliquent à ce code ; conserviez
+intactes toutes les mentions d’absence de toute garantie ; et donniez à
 tous les destinataires un exemplaire de cette Licence avec le Programme.
 
 Vous pouvez percevoir un prix quelconque ou aucun prix pour chacun des
@@ -320,14 +320,14 @@ ou la protection d’une garantie à titre onéreux.
 Vous pouvez transmettre une création basée sur le Programme, ou les
 modifications pour la produire à partir du Programme, sous la forme de
 code source selon les termes de l’article 4, dès lors que vous
-remplissez également toutes ces conditions :
+remplissez également toutes ces conditions :
 
 a) La création doit comporter des mentions proéminentes indiquant que
 	vous l’avez modifiée, et donnant une date correspondante.
 b) La création doit comporter des mentions proéminentes indiquant
 	qu’elle est publiée sous cette Licence et tous les termes ajoutés
 	conformément à l’article 7. Cette obligation modifie l’obligation de
-	l’article 4 de « conserver intactes toutes les mentions ».
+	l’article 4 de « conserver intactes toutes les mentions ».
 c) Vous devez licencier la création entière, dans son ensemble, aux
 	termes de cette Licence à toute personne qui entre en possession
 	d’un exemplaire. Cette Licence s’appliquera en conséquence, en même
@@ -338,7 +338,7 @@ c) Vous devez licencier la création entière, dans son ensemble, aux
 	autre façon, mais elle n’invalide pas une telle autorisation si vous
 	l’avez reçue séparément.
 d) Si la création a des interfaces utilisateurs interactives, chacune
-	doit afficher les Mentions Légales Appropriées ; cependant si le
+	doit afficher les Mentions Légales Appropriées ; cependant si le
 	Programme a des interfaces interactives qui n’affichent pas de
 	Mentions Légales Appropriées, votre création n’a pas besoin de leur
 	faire afficher.
@@ -347,7 +347,7 @@ Une compilation d’une création régie avec d’autres créations séparées e
 indépendantes, qui ne sont pas par leur nature des extensions de la
 création régie, et qui ne sont pas combinées avec elle de sorte à former
 un programme plus large, dans ou sur un volume d’un support de stockage
-ou de distribution, est appelé un « agrégat » si la compilation et son
+ou de distribution, est appelé un « agrégat » si la compilation et son
 droit d’auteur en résultant ne sont pas utilisés pour limiter l’accès ou
 les droits des utilisateurs de la compilation au-delà de ce que
 permettent les créations individuelles. L’inclusion d’une création régie
@@ -360,7 +360,7 @@ parties de l’agrégat.
 Vous pouvez transmettre une création régie sous forme de code objet
 suivant les termes des articles 4 et 5, à condition que vous
 transmettiez également la Source Correspondante lisible par une machine
-selon les termes de cette Licence, d’une de ces façons :
+selon les termes de cette Licence, d’une de ces façons :
 
 a) Transmettre le code objet au sein, ou incorporé dans, un produit
     physique (y compris un support de distribution physique), accompagné
@@ -407,13 +407,13 @@ Source Correspondante en tant que Bibliothèque Système, n’a pas besoin
 d’être inclus dans la transmission de la création sous forme de code
 objet.
 
-Un « Produit Utilisateur » est soit (1) un « produit de consommation »,
+Un « Produit Utilisateur » est soit (1) un « produit de consommation »,
 ce qui désigne tout bien personnel corporel qui est normalement utilisé
 à des fins personnelles, familiales ou domestiques, soit (2) toute chose
 conçue ou vendue pour incorporation dans un foyer. En cas de doute sur
 le fait de déterminer si un produit est un produit de consommation,
 cette qualification l’emportera. Pour un produit spécifique reçu par un
-utilisateur donné, « normalement utilisé » renvoie à un usage typique ou
+utilisateur donné, « normalement utilisé » renvoie à un usage typique ou
 commun de cette catégorie de produits, indépendamment du statut de
 l’utilisateur donné ou de la façon dont l’utilisateur donné utilise
 effectivement, souhaite utiliser ou dont il est attendu qu’il utilise le
@@ -422,7 +422,7 @@ fait que ce produit soit substantiellement à usage commercial,
 industriel ou professionnel, à moins que de tels usages représentent le
 seul mode significatif d’utilisation du produit.
 
-Les « Informations d’Installation » d’un Produit Utilisateur désignent
+Les « Informations d’Installation » d’un Produit Utilisateur désignent
 toutes les méthodes, procédures, clés d’autorisation ou autres
 informations requises pour installer et exécuter des versions modifiées
 d’une création régie dans ce Produit Utilisateur à partir d’une version
@@ -462,7 +462,7 @@ ou mot de passe spécial pour la décompression, la lecture ou la copie.
 7. Termes additionnels
 ........................
 
-Les « Permissions additionnelles » désignent des termes qui complètent
+Les « Permissions additionnelles » désignent des termes qui complètent
 les termes de cette Licence en stipulant des exceptions à l’une ou
 plusieurs de ses conditions. Les permissions additionnelles qui sont
 applicables à l’entier Programme doivent être traitées comme si elles
@@ -485,23 +485,23 @@ des droits d’auteur ou des permissions adéquates pour ce faire.
 Nonobstant toute autre clause de cette Licence, pour une contribution
 que vous ajoutez à une création régie, vous pouvez (si vous y êtes
 autorisé par les titulaires des droits d’auteur sur cette contribution)
-compléter les termes de cette Licence avec des termes :
+compléter les termes de cette Licence avec des termes :
 
 a) déclinant toute garantie ou limitant la responsabilité différemment
-    des termes des articles 15 et 16 de cette Licence ; ou
+    des termes des articles 15 et 16 de cette Licence ; ou
 b) exigeant le maintien de mentions légales spécifiées ou de mentions
     d’attribution de paternité spécifiées raisonnables au sein de cette
     contribution ou dans les Mentions Légales Appropriées affichées par
-    les créations la contenant ; ou
+    les créations la contenant ; ou
 c) interdisant une indication erronée de l’origine de cette
     contribution, ou exigeant que les versions modifiées de cette
     contribution soient marquées de façon raisonnable comme étant
-    différent de la version originale ; ou
+    différent de la version originale ; ou
 d) limitant l’usage à des fins publicitaires des noms des concédants ou
-    des auteurs de la contribution ; ou
+    des auteurs de la contribution ; ou
 e) refusant d’accorder des droits aux termes du droit des marques pour
     l’utilisation de noms commerciaux, marques commerciales ou marques
-    de services ; ou
+    de services ; ou
 f) exigeant l’indemnisation des concédants et des auteurs de cette
     contribution par quiconque transmettant la contribution (ou des
     versions modifiées de celle-ci) avec des acceptations contractuelles
@@ -510,7 +510,7 @@ f) exigeant l’indemnisation des concédants et des auteurs de cette
     directement à ces concédants et auteurs.
 
 Tous autres termes additionnels non permissifs sont considérés comme des
-« restrictions supplémentaires » au sens de l’article 10. Si le
+« restrictions supplémentaires » au sens de l’article 10. Si le
 Programme tel que vous l’avez reçu, ou toute partie de celui-ci,
 contient une mention indiquant qu’il est régi par cette Licence
 accompagnée d’une stipulation qui est une restriction supplémentaire,
@@ -528,7 +528,7 @@ une mention indiquant où trouver les termes applicables.
 
 Les termes additionnels, permissifs ou non permissifs, peuvent être
 spécifiés sous la forme d’une licence écrite séparément, ou spécifiés
-comme des exceptions ; les exigences ci-dessus s’appliquent dans chacun
+comme des exceptions ; les exigences ci-dessus s’appliquent dans chacun
 de ces cas.
 
 8. Résiliation
@@ -585,7 +585,7 @@ originaires, pour exécuter, modifier et propager cette création, selon
 les termes de cette Licence. Vous n’êtes pas responsable d’assurer la
 mise en conformité par d’assurer du respect de des tiers.
 
-Une « opération entre entités » est une opération transférant le
+Une « opération entre entités » est une opération transférant le
 contrôle d’une organisation, ou de l’essentiel de ses actifs, ou
 scindant une organisation ou fusionnant des organisations. Si la
 propagation d’une création régie résulte d’une opération entre entités,
@@ -600,7 +600,7 @@ Vous ne pouvez pas imposer de restriction supplémentaire à l’exercice
 des droits accordés ou revendiqués au titre de cette Licence. Par
 exemple, vous ne pouvez pas imposer de frais de licence, redevance, ni
 d’autre contrepartie financière nécessaire à l’exercice des droits
-accordés par cette Licence ; et vous ne pouvez engager une quelconque
+accordés par cette Licence ; et vous ne pouvez engager une quelconque
 instance judiciaire (y compris une demande connexe ou reconventionnelle
 dans un procès) en alléguant qu’une quelconque revendication de brevet
 est contrefaite par la réalisation, l’utilisation, la vente, l’offre de
@@ -610,12 +610,12 @@ celui-ci.
 11. Brevets
 .............
 
-Un « contributeur » est un titulaire de droits qui autorise par cette
+Un « contributeur » est un titulaire de droits qui autorise par cette
 Licence l’utilisation du Programme ou d’une création sur laquelle le
-Programme est basé. La création ainsi licenciée est appelée la « version
-contributive » du contributeur.
+Programme est basé. La création ainsi licenciée est appelée la « version
+contributive » du contributeur.
 
-Les « revendications essentielles de brevet » du contributeur sont
+Les « revendications essentielles de brevet » du contributeur sont
 toutes les revendications de brevets détenus ou contrôlés par le
 contributeur, qu’elles soient déjà acquises ou qu’elles soient acquises
 subséquemment, qui pourraient être enfreintes par un quelconque mode,
@@ -623,7 +623,7 @@ permis par cette Licence, de réalisation, d’utilisation ou de vente de
 sa version contributive, mais n’incluent pas les revendications qui
 seraient contrefaites seulement comme conséquence d’une modification
 ultérieure de la version contributive. Pour les besoins de cette
-définition, le « contrôle » inclut le droit de concéder des
+définition, le « contrôle » inclut le droit de concéder des
 sous-licences de brevets d’une manière qui soit en accord avec les
 obligations de cette Licence.
 
@@ -633,11 +633,11 @@ contributeur pour réaliser, utiliser, vendre, commercialiser, importer
 et par ailleurs pour exécuter, modifier et propager les contenus de sa
 version contributive.
 
-Dans les trois paragraphes suivants, une « licence de brevet » désigne
+Dans les trois paragraphes suivants, une « licence de brevet » désigne
 tout accord ou engagement exprès, quelle que soit sa dénomination, de ne
 pas se prévaloir d’un brevet (comme une permission expresse d’exercer un
 brevet ou un accord de ne pas poursuivre pour violation de brevet).
-« Accorder » une telle licence de brevet à une partie signifie conclure
+« Accorder » une telle licence de brevet à une partie signifie conclure
 un tel accord ou engagement de ne pas se prévaloir d’un brevet contre la
 partie.
 
@@ -651,7 +651,7 @@ vos dispositions pour vous priver vous-même du bénéfice de la licence de
 brevet pour cette création spécifique, soit (3) prendre vos
 dispositions, d’une manière cohérente avec les obligations de cette
 Licence, pour étendre la licence de brevet aux destinataires
-subséquents. « En sachant qu’elle repose » signifie que vous avez
+subséquents. « En sachant qu’elle repose » signifie que vous avez
 effectivement connaissance que, en l’absence de la licence de brevet,
 votre transmission de la création régie dans un pays, ou l’utilisation
 de la création régie par votre destinataire dans ce pays, violerait un
@@ -667,7 +667,7 @@ la licence de brevet que vous accordée est automatiquement étendue à
 tous les destinataires de la création régie et des créations basées sur
 celle-ci.
 
-Une licence de brevet est « discriminatoire » si elle n’inclut pas dans
+Une licence de brevet est « discriminatoire » si elle n’inclut pas dans
 son étendue, prohibe l’exercice de, ou est conditionné au non exercice
 d’un ou plusieurs des droits qui sont spécifiquement accordés aux termes
 de cette Licence. Vous ne pouvez pas transmettre une création régie si
@@ -728,7 +728,7 @@ préoccupations.
 
 Chaque version reçoit un numéro de version propre. Si le Programme
 indique qu’il est soumis à une version particulière de la GNU General
-Public License « ou toute version ultérieure » *(or any later version)*
+Public License « ou toute version ultérieure » *(or any later version)*
 à celle-ci, vous avez la possibilité d’appliquer les stipulations soit
 de cette version numérotée, soit de n’importe quelle version publiée
 ultérieurement par la Free Software Foundation. Si le Programme
@@ -753,7 +753,7 @@ supplémentaire pour tout auteur ou titulaire de droit d’auteur.
 IL N’Y A AUCUNE GARANTIE POUR LE PROGRAMME, DANS LES LIMITES PERMISES
 PAR LA LOI APPLICABLE. À MOINS QUE CELA NE SOIT ÉTABLI DIFFÉREMMENT PAR
 ÉCRIT, LES TITULAIRES DE DROITS ET/OU LES AUTRES PARTIES FOURNISSENT LE
-PROGRAMME « EN L’ÉTAT » SANS GARANTIE D’AUCUNE SORTE, QU’ELLE SOIT
+PROGRAMME « EN L’ÉTAT » SANS GARANTIE D’AUCUNE SORTE, QU’ELLE SOIT
 EXPRIMÉE OU TACITE, CECI COMPRENANT, DE MANIÈRE NON EXHAUSTIVE, LES
 GARANTIES TACITES DE COMMERCIALISATION ET D’ADÉQUATION À UN OBJECTIF
 PARTICULIER. VOUS ASSUMEZ LE RISQUE ENTIER CONCERNANT LA QUALITÉ ET LES
@@ -801,24 +801,24 @@ et modifier conformément à ces stipulations.
 Pour ce faire, joignez les mentions suivantes au programme. Il est plus
 sûr de les joindre au début de chacun des fichiers sources afin
 d’affirmer de la façon la plus effective possible l’exclusion de
-garantie ; et chaque fichier devrait comporter au moins la ligne
-« copyright » et un lien vers la mention complète :
+garantie ; et chaque fichier devrait comporter au moins la ligne
+« copyright » et un lien vers la mention complète :
 
 	<`une ligne donnant le nom du programme et une brève idée de ce qu’il fait.`>
 	Copyright (C) <`année`> <`nom de l’auteur`>
 	
-	Ce programme est un logiciel libre ; vous pouvez le redistribuer ou le
+	Ce programme est un logiciel libre ; vous pouvez le redistribuer ou le
 	modifier suivant les termes de la GNU General Public License telle que
 	publiée par la Free Software Foundation, soit la version 3 de la
 	Licence, soit (à votre gré) toute version ultérieure.
 	
 	Ce programme est distribué dans l’espoir qu’il sera utile, mais SANS
-	AUCUNE GARANTIE : sans même la garantie implicite de
+	AUCUNE GARANTIE : sans même la garantie implicite de
 	COMMERCIALISABILITÉ ni d’ADÉQUATION À UN OBJECTIF PARTICULIER.
 	Consultez la GNU General Public License pour plus de détails.
 	
 	Vous devriez avoir reçu une copie de la GNU General Public License
-	avec ce programme ; si ce n’est pas le cas, consultez :
+	avec ce programme ; si ce n’est pas le cas, consultez :
 	<https://www.gnu.org/licenses/>.
 
 Ajoutez également les informations permettant de vous contacter par
@@ -826,25 +826,25 @@ courrier électronique ou postal.
 
 Si le programme produit une interaction sur un terminal, faites-lui
 afficher une courte notice comme celle-ci lors de son démarrage en mode
-interactif :
+interactif :
 
 	<`programme`> Copyright (C) <`année`>
 	<`nom de l'auteur`>
 	
-	Ce programme vient SANS ABSOLUMENT AUCUNE GARANTIE ; taper “affiche g”
+	Ce programme vient SANS ABSOLUMENT AUCUNE GARANTIE ; taper “affiche g”
 	pour les détails. Ceci est un logiciel libre et vous êtes invité à le
-	redistribuer suivant certaines conditions ; taper “affiche c” pour les
+	redistribuer suivant certaines conditions ; taper “affiche c” pour les
 	détails.
 
 Les commandes hypothétiques “affiche g” et “affiche c” devraient
 afficher les parties appropriées de la GNU General Public license. Bien
-sûr, les commandes de votre programme pourraient être différentes ; pour
-une interface graphique, vous pourriez utiliser une « boîte “À
-propos” ».
+sûr, les commandes de votre programme pourraient être différentes ; pour
+une interface graphique, vous pourriez utiliser une « boîte “À
+propos” ».
 
 Vous devriez également obtenir de votre employeur (si vous travaillez en
 tant que programmeur) ou de votre école, le cas échéant, un acte de
-« renonciation aux droits d’auteur » pour ce programme, si nécessaire.
+« renonciation aux droits d’auteur » pour ce programme, si nécessaire.
 Pour plus d’informations à ce sujet, et pour comprendre comment
 appliquer et respecter la GNU GPL, consultez
 &lt;<https://www.gnu.org/licenses/>&gt;.
@@ -870,7 +870,7 @@ License v1.3, Licence Art Libre 1.3 et Creative Commons Attribution
 Share Alike 4.0 International.
 
 Condition ajoutée par la Free Software Foundation, qui détient les droits
-sur l'original :   
+sur l'original :   
 *“You may publish this translation, modified or unmodified, only under
 the terms at &lt;https://www.gnu.org/licenses/translations.en.html&gt;.”*   
 (Vous ne pouvez publier cette traduction, avec ou sans modification, que

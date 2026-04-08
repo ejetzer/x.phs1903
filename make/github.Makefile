@@ -15,4 +15,6 @@ github-build: $(GITHUB_BUILD)
 	cp -r $(dir_config_arduino)/keywords.txt $(dir_config_arduino)/library.* $(GITHUB_BUILD)/$(NAME)/
 	cd $(GITHUB_BUILD) && (([[ -e $(NAME).zip ]] && $(tar) -u -f $(NAME).zip $(NAME)/*) || $(tar) -c -f $(NAME).zip $(NAME)/*)
 	# Build documentation as pdf
-	@pipenv run sphinx-build -M latexpdf docs/src "$(GITHUB_BUILD)" $(SPHINXOPTS) $(O)
+	@pipenv run sphinx-build -M latex docs/src "$(GITHUB_BUILD)" $(SPHINXOPTS) $(O)
+	cp -r $(GITHUB_BUILD)/latex $(GITHUB_BUILD)/latexpdf
+	cd $(GITHUB_BUILD)/latexpdf && latexmk $(NAME).tex

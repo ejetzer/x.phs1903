@@ -9,15 +9,12 @@ $pdf_mode = 4; # LuaLaTeX
 $recorder = 1;
 
 $force_mode = 1;
-$silent = 1;
+$silent = 0;
 
 $use_make_for_missing_files = 1;
 
 # Tiré du fichier généré par défaut
-$latex = 'latex ' . $ENV{'LATEXOPTS'} . ' %O %S';
-$pdflatex = 'pdflatex ' . $ENV{'LATEXOPTS'} . ' %O %S';
 $lualatex = 'lualatex ' . $ENV{'LATEXOPTS'} . ' %O %S';
-$xelatex = 'xelatex --no-pdf ' . $ENV{'LATEXOPTS'} . ' %O %S';
 $makeindex = 'makeindex -s python.ist %O -o %D %S';
 add_cus_dep( "glo", "gls", 0, "makeglo" );
 sub makeglo {
