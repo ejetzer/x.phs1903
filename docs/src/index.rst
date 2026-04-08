@@ -18,7 +18,7 @@ projet et techniciens pour obtenir de l'aide avec ce module. En dehors de la
 session, soumettez un signalement de bogue via Github.
 
 .. toctree::
-	:maxdepth: 2
+	:maxdepth: 3
 	:caption: Table des matières
 
 	self
@@ -28,5 +28,8 @@ session, soumettez un signalement de bogue via Github.
 	develop
 	contrib
 	exemples
+	python
+	arduino
 	glos
+	license
 

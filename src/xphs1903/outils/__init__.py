@@ -4,14 +4,6 @@
 
 import sys
 
-if not (sys.version_info.major != '3' and sys.version_info.minor < '14'):
-    print(f'La version de Python utilisée est: {sys.version}', file=sys.stderr)
-    print(f'{__name__} nécessite Python 3.14 et postérieur.', file=sys.stderr)
-    print('Voir <https://www.python.org/downloads>', file=sys.stderr)
-    msg: str = 'Version de Python incompatible'
-    raise SystemExit(msg)
-
-import console, graphe
 from .console import Canal, Console, Programme
 from .graphe import Acquisition
 import logging
