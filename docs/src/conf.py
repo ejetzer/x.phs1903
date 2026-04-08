@@ -24,9 +24,15 @@ author = 'Émile Jetzer & Jacques Massicotte, Polytechnique Montréal'
 project_copyright = '%Y ' + author
 
 repo_path = (Path(__file__) / '..' / '..' / '..' / '.git').resolve()
-repo = pygit.Repository(repo_path)
-reference = repo.describe(dirty_suffix='+')
-release = reference.lstrip('v')
+try:
+    import pygit2 as pygit
+    repo = pygit.Repository(repo_path)
+    reference = repo.describe(dirty_suffix='+')
+except ImportError, GitError:
+    import subprocess
+    reference = subprocess.run(['git', 'describe', '--always'], capture_output=True).stdout.decode('utf-8')
+finally:
+    release = reference.lstrip('v')
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
