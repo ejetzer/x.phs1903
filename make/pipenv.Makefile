@@ -1,8 +1,8 @@
 # Développement
 pipfile = Pipfile
 pipfile_lock = Pipfile.lock
-prerequis = .build/requirements.txt
-venv = .venv
+prerequis ?= .build/requirements.txt
+venv ?= .venv
 
 $(pipfile_lock): $(pipfile) pipenv
 	$(pipenv) verify

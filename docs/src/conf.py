@@ -14,6 +14,7 @@ from pathlib import Path
 
 from clang.cindex import Config
 from hawkmoth.util import readthedocs
+import pygit2 as pygit
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -21,7 +22,11 @@ from hawkmoth.util import readthedocs
 project = 'x.phs1903'
 author = 'Émile Jetzer & Jacques Massicotte, Polytechnique Montréal'
 project_copyright = '%Y ' + author
-release = '2.0.1'
+
+repo_path = (Path(__file__) / '..' / '..' / '..' / '.git').resolve()
+repo = pygit.Repository(repo_path)
+reference = repo.describe(dirty_suffix='+')
+release = reference.lstrip('v')
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -60,10 +65,11 @@ hawkmoth_clang = ['-DA0=23', '-DA1=22', '-DA2=21']
 
 autosectionlabel_prefix_document = True
 
-apidoc_modules = [{'path': '../../src/', 'destination': '../source/'}]
+apidoc_modules = [{'path': '../../src/', 'destination': '../src/'}]
 
 hawkmoth_root = Path('../..').resolve()
 hawkmoth_clang = ['-DA0=23', '-DA1=22', '-DA2=21']
+Config.set_library_file('../.venv/lib/python3.14/site-packages/clang/native/libclang.dylib')
 readthedocs.clang_setup()
 
 extlinks = {

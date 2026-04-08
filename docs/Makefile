@@ -3,6 +3,8 @@
 
 DIR_DRAPEAUX = ../.drapeaux
 
+prerequis = "src/requirements.txt"
+
 include ../make/utilities.Makefile
 include ../make/pipenv.Makefile
 
@@ -29,9 +31,7 @@ $(DIR_DRAPEAUX):
 
 init: Pipfile.lock
 
-include ../make/pipenv.Makefile
-
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-singlehtml man latexpdf texinfo: Makefile init
+singlehtml man latexpdf texinfo: Makefile init $(prerequis)
 	@$(pipenv) run $(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

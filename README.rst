@@ -25,7 +25,7 @@ d'exemples.
 Usage
 ------
 
-Voir les exemples fournis. De base:
+Voir les exemples fournis dans :download:`la source python`_ et :download:`la source Arduino`_. De base:
 
 .. code-block:: python
 
@@ -34,6 +34,10 @@ Voir les exemples fournis. De base:
 .. code-block:: cpp
 
 	#include <xphs1903.h>
+
+.. _`la source Python`: ../../.build/python-demos.zip
+
+.. _`la source Arduino`: ../../.build/arduino-demos.zip
 
 --------
 Support
@@ -58,7 +62,6 @@ Le gros du code est écrit par Émile Jetzer, suivant les conseils de Jacques
 Massicotte, la coordination de Camila Rizzi et sous la responsabilité de
 Caroline Boudoux et Jérémie Villeneuve.
 
-
 -------------
 Contribution
 -------------
@@ -70,11 +73,12 @@ Seules les contributions faites par les techniciens du cours seront prises en
 compte de facto. Les contributions de l'externe n'ont aucune garantie d'être
 examinées ou intégrées au projet.
 
-Les contributions venant de programmes d'assistants GML, comme ChatGPT,
-CoPilot ou Claude, seront refusées si détectées. Ce code est pour une 
+Les contributions venant en apparence ou en fait de programmes d'assistants
+GML, comme ChatGPT, CoPilot ou Claude, seront refusées. Ce code est pour une 
 utilisation pédagogique, dans un contexte de développement intense par une 
 centaine d'utilisateurs différents. Chaque définition, module ou programme
-doit être intentionnel et réfléchi, et documenté.
+doit être intentionnel et réfléchi, et documenté. Conversement, nous désirons
+exclure ce code de l'entraînement de quelconque GML.
 
 .. code-block:: txt
 
@@ -100,9 +104,10 @@ Code C++ pour Arduino
 
 Le module Arduino est documenté dans les fichiers:
 
-#. ``arduino.yaml``
-#. ``keywords.txt``
-#. ``library.properties``
+#. ``cfg/arduino.yaml``
+#. ``cfg/keywords.txt``
+#. ``cfg/library.properties``
+#. ``cfg/library.json``
 #. ``Makefile``
 
 et le code source pour le module et ses exemples se trouve dans les dossiers
@@ -114,10 +119,10 @@ Code Python
 
 Le module Python est documenté dans les fichiers:
 
-#. ``pip.conf``
+#. ``cfg/pip.conf``
 #. ``Pipfile`` et ``Pipfile.lock``
 #. ``pyproject.toml``
-#. ``requirements.txt``
+#. ``.build/requirements.txt``
 
 Les fichiers de code du module se trouvent dans ``src/xphs1903`` et ``tests/``.
 
@@ -136,7 +141,10 @@ vous pouvez reconstruire la documentation au format de votre choix avec une de c
 	make -C docs/ singlehtml
 	make -C docs/ latexpdf
 
-La documentation compilée sera dans le répertoire ``docs/_build/``
+La documentation compilée sera dans le répertoire ``.build/``. Nous n'accepterons aucune
+contribution ne contenant pas les *docstrings* appropriées au format `Numpy`_.
+
+.. _Numpy: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
 
 ---------
 Licence
