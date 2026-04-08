@@ -61,49 +61,45 @@ jobs:
           run: make -C .github pdf
         
         - name: assembler les exemples python
-          run: tar -cf .build/python-demo.zip src/xphs1903/demos
+          run: tar -c -s /src\/xphs1903\/// -f .build/python-demo.zip src/xphs1903/demos/*
         
         - name: assembler les exemples arduino
-          run: tar -c -s /src\/arduino\/examples// -f .build/arduino-demo.zip src/arduino/examples/*
-        
-        - name: charger le module arduino
+          run: tar -c -s /src\/arduino\/examples\/// -f .build/arduino-demo.zip src/arduino/examples/*
+    
+  load:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    
+    steps:
+        - name: charger sdist python
           uses: actions/upload-artifact@v4
           with:
-            name: main-build
-            path: .build/xphs1903.zip
-        
-        - name: charger la distribution source
-          uses: action/upload-artifact@v4
-          with:
-            name: main-build
+            name: xphs1903-sdist
             path: .build/x_phs1903-*.tar.gz
-          
-        - name: charger la distribution wheel
-          uses: action/upload-artifact@v4
+        
+        - name: charger wheel python
+          uses: actions/upload-artifact@v4
           with:
-            name: main-build
+            name: xphs1903-wheel
             path: .build/x_phs1903-*.whl
         
-        - name: charger les exemples python
-          uses: action/upload-artifact@v4
+        - name: charger module arduino
+          uses: actions/upload-artifact@v4
           with:
-            name: main-build
-            path: .build/python-demo.zip
+            name: xphs1903-arduino
+            path: .build/xphs1903.zip
         
-        - name: charger les exemples arduino
-          uses: action/upload-artifact@v4
+        - name: charger doc
+          uses: actions/upload-artifact@v4
           with:
-            name: main-build
-            path: .build/arduino-demo.zip
+            name: xphs1903-doc
+            path: |
+              .build/singlehtml
+              .build/latexpdf/*.pdf
         
-        - name: charger la documentation html
-          uses: action/upload-artifact@v4
+        - name: charger les exemples
+          uses: actions/upload-artifact@v4
           with:
-            name: main-build
-            path: .build/singlehtml
-        
-        - name: charger la documentation pdf
-          uses: action/upload-artifact@v4
-          with:
-            name: main-build
-            path: .build/pdf/xphs1903.pdf
+            name: xphs1903-eg
+            path: .build/*-demo.zip
