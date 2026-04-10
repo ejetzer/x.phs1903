@@ -14,38 +14,35 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from serial.tools.list_ports_common import ListPortInfo
 
-class ChoixInvalideError(ValueError):
-    # autodoc: <https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html>
-    """Erreur indiquant un choix invalide."""
+class ObjetImmuable:
+    
+    def __init__(self, cls: type, *args, **kargs):
+        logging.debug('%s.__init__ pour %r avec cls=%r', type(self).__name__, self, cls)
+        self._fixed = False
+        self._object = cls(*args, **kargs)
+        self._fixed = True
+    
+    def __getattr__(self, attr: str):
+        logging.debug('%s.__getattr__ pour %r avec attr=%r', type(self).__name__, self, attr)
+        return getattr(super().__getattribute__('_object'), attr)
+    
+    def __setattr__(self, attr: str, val: Any):
+        logging.debug('%s.__setattr__ pour %r avec attr=%r, val=%r', type(self).__name__, self, attr, val)
+        if attr == '_fixed':
+            super().__setattr__(attr, val)
+        elif not self._fixed:
+            super().__setattr__(attr, val)
+        else:
+            raise AttributNonModifiable
+    
+    def __delattr__(self, attr: str):
+        logging.debug('%s.__delattr__ pour %r avec attr=%r', type(self).__name__, self, attr)
+        if attr == '_fixed' or self._fixed:
+            raise AttributNonModifiable
+        else:
+            super().__delattr__(attr, val)
 
 
-def choix() -> ListPortInfo:
-    """
-    Sélectionner un port série.
-
-    Raises:
-        ChoixInvalideError: indique un choix invalide.
-        TypeError: indique une entrée non-numérique.
-
-    Returns:
-        ListPortInfo: port sélectionné.
-    """
-    from serial.tools.list_ports import comports  # noqa: PLC0415
-
-    ports_disponibles: list[ListPortInfo] = comports()
-    for i, c in enumerate(ports_disponibles):
-        print(f'[{i}]\t{c.description}\t{c.device}')
-
-    sélection: str = input('Quel port?')
-    if sélection.isdigit():
-        sélection = int(sélection)
-    else:
-        raise TypeError
-
-    if sélection not in range(i):
-        raise ChoixInvalideError
-
-    return ports_disponibles[sélection]
 
 __all__ = [
     'Canal',
