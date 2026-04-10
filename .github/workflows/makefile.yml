@@ -9,42 +9,41 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
     
     steps:
-      - name: ajouter deadsnake
-        id: deadsnakes
-        run: sudo add-apt-repository ppa:deadsnakes/ppa
-
-      - name: mettre apt à jour
-        id: apt-update
-        run: sudo apt-get update -y
-        if: ${{ always() }}
-
-      - name: installer zsh
-        id: apt-zsh
-        run: sudo apt-get install -y zsh
-        if: ${{ always() }}
       
       - name: installer python
         id: apt-py
-        run: sudo apt-get install -y python3.14
+        uses: actions/setup-python@v5
         if: ${{ always() }}
+        with:
+          python-version: '3.14'
+
+      - name: installer libclang
+        id: clang
+        uses: KyleMayes/install-llvm-action@v2
+        if: ${{ always() }}
+        with:
+          version: "14.0"
+          env: true
       
       - name: installer pipenv
         id: pip-env
-        run: python3.14 -m pip install pipenv
-        if: ${{ always() }}
-
-      - name: installer libclang
-        id: apt-clang
-        run: sudo apt-get install -y libclang-14-dev
+        run: python3.14 -m pip install pipenv libclang clang
         if: ${{ always() }}
       
       - name: installer TeXlive
-        id: apt-tex
-        run: sudo apt-get install -y texlive-full
+        id: texlive
+        uses: zauguin/install-texlive@v4
         if: ${{ always() }}
+        with:
+          texlive_version: 2025
+          packages: scheme-basic
         
       - name: checkout repo
         id: checkout
