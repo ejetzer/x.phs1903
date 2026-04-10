@@ -37,10 +37,10 @@ jobs:
         run: pipenv install
 
       - name: assembler sdist python
-        run: pipenv run build --sdist .build
+        run: pipenv run python -m build --sdist .build
 
       - name: assembler wheel python
-        run: pipenv run build --wheel .build
+        run: pipenv run python -m build --wheel .build
 
       - name: assembler module arduino
         run: make -C .github arduino
