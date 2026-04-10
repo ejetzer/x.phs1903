@@ -57,7 +57,7 @@ jobs:
       - name: créer le dossier d'assemblage
         id: dotbuild
         run: mkdir -p .build
-        if: {{ always() }}
+        if: ${{ always() }}
 
       - name: assembler sdist python
         id: sdist
