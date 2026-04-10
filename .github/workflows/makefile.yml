@@ -1,91 +1,154 @@
 name: Build everything
+run-name: Build everything from ${{ github.ref_name }} by @${{ github.actor }}
+author: Émile Jetzer
+description: Assembler tous les paquets et la documentation au format html et pdf
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  setup:
+  build:
     runs-on: ubuntu-latest
     
     steps:
       - name: ajouter deadsnake
+        id: deadsnakes
         run: sudo add-apt-repository ppa:deadsnakes/ppa
+        shell: bash
 
       - name: mettre apt à jour
+        id: apt-update
         run: sudo apt-get update -y
+        shell: bash
+        if: ${{ always() }}
 
       - name: installer zsh
+        id: apt-zsh
         run: sudo apt-get install -y zsh
+        shell: bash
+        if: ${{ always() }}
       
       - name: installer python
+        id: apt-py
         run: sudo apt-get install -y python3.14
+        shell: zsh
+        if: ${{ always() }}
       
       - name: installer pipenv
+        id: pip-env
         run: python3.14 -m pip install pipenv
+        shell: zsh
+        if: ${{ always() }}
 
       - name: installer libclang
+        id: apt-clang
         run: sudo apt-get install -y libclang-14-dev
+        shell: zsh
+        if: ${{ always() }}
       
       - name: installer TeXlive
+        id: apt-tex
         run: sudo apt-get install -y texlive-full
+        shell: zsh
+        if: ${{ always() }}
         
       - name: checkout repo
+        id: checkout
         uses: actions/checkout@v4
+        shell: zsh
+        if: ${{ always() }}
 
       - name: installer le venv
+        id: venv
         run: pipenv install
+        shell: zsh
+        if: ${{ always() }}
 
       - name: assembler sdist python
+        id: sdist
         run: pipenv run python -m build --sdist .build
+        shell: zsh
+        if: ${{ always() }}
 
       - name: assembler wheel python
+        id: wheel
         run: pipenv run python -m build --wheel .build
+        shell: zsh
+        if: ${{ always() }}
 
       - name: assembler module arduino
+        id: arduino
         run: make -C .github arduino
+        shell: zsh
+        if: ${{ always() }}
 
       - name: assembler les exemples python
+        id: eg-py
         run: tar -c -s /src\/xphs1903\/// -f .build/python-demo.zip src/xphs1903/demos/*
+        shell: zsh
+        if: ${{ always() }}
       
       - name: assembler les exemples arduino
+        id: eg-ard
         run: tar -c -s /src\/arduino\/examples\/// -f .build/arduino-demo.zip src/arduino/examples/*
+        shell: zsh
+        if: ${{ always() }}
 
       - name: compiler doc html
+        id: doc-html
         run: pipenv run sphinx-build -M singlehtml docs/src .build
+        shell: zsh
+        if: ${{ always() }}
 
       - name: assembler doc LaTeX
+        id: sphinx-latex
         run: pipenv run sphinx-build -M latex docs/src .build
+        shell: zsh
+        if: ${{ always() }}
 
       - name: compiler doc LaTeX
+        id: doc-latex
         run: make -C .github pdf
+        shell: zsh
+        if: ${{ always() }}
 
       - name: charger sdist python
+        id: load-py
         uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
           name: xphs1903-sdist
           path: .build/x_phs1903-*.tar.gz
 
       - name: charger wheel python
+        id: load-wheel
         uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
           name: xphs1903-wheel
           path: .build/x_phs1903-*.whl
 
       - name: charger module arduino
+        id: load-ard
         uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
           name: xphs1903-arduino
           path: .build/xphs1903.zip
 
       - name: charger les exemples
+        id: load-eg
         uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
           name: xphs1903-eg
           path: .build/*-demo.zip
       
       - name: charger doc
+        id: load-doc
         uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
           name: xphs1903-doc
           path: |
