@@ -11,9 +11,6 @@ from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    from serial.tools.list_ports_common import ListPortInfo
-
 class ObjetImmuable:
     
     def __init__(self, cls: type, *args, **kargs):
