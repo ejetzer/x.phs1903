@@ -1,6 +1,5 @@
 name: Build everything
 run-name: Build everything from ${{ github.ref_name }} by @${{ github.actor }}
-author: Émile Jetzer
 description: Assembler tous les paquets et la documentation au format html et pdf
 
 on:
