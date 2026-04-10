@@ -42,7 +42,7 @@ jobs:
         if: ${{ always() }}
         with:
           texlive_version: 2025
-          packages: scheme-basic
+          packages: scheme-basic latexmk
         
       - name: checkout repo
         id: checkout
@@ -91,7 +91,7 @@ jobs:
 
       - name: compiler doc LaTeX
         id: doc-latex
-        run: make -C .github pdf
+        run: cd .build/latex && latexmk xph1903.tex
         if: ${{ always() }}
 
       - name: charger sdist python
