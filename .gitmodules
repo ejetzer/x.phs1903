@@ -1,3 +1,6 @@
 [submodule "arduinoFFT"]
 	path = lib/arduinoFFT
 	url = git@github.com:ejetzer/arduinoFFT.git
+[submodule "lib/ArduinoSTL"]
+	path = lib/ArduinoSTL
+	url = https://github.com/mike-matera/ArduinoSTL.git
