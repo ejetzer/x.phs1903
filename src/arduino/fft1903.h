@@ -1,5 +1,3 @@
-<<<<<<< HEAD:src/arduino/fft1903.h
-<<<<<<< HEAD:src/arduino/fft1903.h
 #ifndef PHS1903FFT
 #define PHS1903FFT
 
@@ -75,6 +73,7 @@
   */
 #define CADRE FFTWindow::Hann
 
+namespace phs {
 /** La classe :cpp:class:`ArduinoFFT` permet d'utiliser soit le type
   * :cpp:type:`float` ou le type :cpp:type:`double` pour les valeurs
   * et les résultats. Pour faciliter la configuration, vous pouvez
@@ -138,5 +137,7 @@ void fft() {
   FFT.compute(FFTDirection::Forward);           // Calcul de la FFT
   FFT.complexToMagnitude();                     // Converti la FFT complexe en valeurs réelles
   FFT.majorPeak(freq, mag);                     // Enregistre le pic de fréquence
+}
+
 }
 #endif

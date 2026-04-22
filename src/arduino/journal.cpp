@@ -1,4 +1,6 @@
-#include "journalisation.h"
+#include "journal.h"
+
+using namespace phs;
 
 char* texte_niveau(Niveau_t niveau) {
   switch (niveau) {

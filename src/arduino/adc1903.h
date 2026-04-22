@@ -13,6 +13,10 @@
 #ifndef PHS1903ADC
 #define PHS1903ADC
 
+#include <Arduino.h>
+
+namespace phs {
+
 uint8_t clear_PF() {
 	// Régler à 256
 	ADC0.CTRLC &= ~( bit(0) | bit(1) | bit(2) ); // 0b11100000
@@ -65,5 +69,7 @@ uint8_t set_PF(uint8_t pf_pow) {
 
 uint8_t set_PF() {
 	return set_PF(7);
+}
+
 }
 #endif

@@ -20,6 +20,6 @@
   ],
   "version": "2.0.1",
   "frameworks": ["arduino","mbed","espidf","arduinoFFT"],
-  "platforms": "avr",
-  "headers": ["adc1903.h", "fft1903.h", "xphs1903.h"]
+  "platforms": "megaavr",
+  "headers": ["adc1903.h", "fft1903.h", "xphs1903.h", "serie.h", "journal.h", "broche.h", "chrono.h"]
 }

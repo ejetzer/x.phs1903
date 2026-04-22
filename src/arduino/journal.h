@@ -2,7 +2,8 @@
 #define JOURNALISATION
 
 #include <ArduinoSTL.h>
-#include <ctime>
+
+namespace phs {
 
 enum Niveau_t {
   DEBUG,
@@ -24,4 +25,5 @@ public:
   void crit(char* msg);
 };
 
+}
 #endif

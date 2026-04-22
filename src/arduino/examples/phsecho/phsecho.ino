@@ -1,9 +1,8 @@
-#include "Cereal.h"
+#include <serie.h>
 
-EchoSerie com;
+phs::EchoSerie com;
 
 void setup() {
-  com = EchoSerie();
   com.setup();
 }
 
