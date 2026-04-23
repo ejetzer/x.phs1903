@@ -4,3 +4,12 @@
 [submodule "lib/ArduinoSTL"]
 	path = lib/ArduinoSTL
 	url = https://github.com/mike-matera/ArduinoSTL.git
+[submodule "lib/megaavr"]
+	path = lib/megaavr
+	url = https://github.com/arduino/ArduinoCore-megaavr.git
+[submodule "lib/avr"]
+	path = lib/avr
+	url = https://github.com/arduino/ArduinoCore-avr.git
+[submodule "lib/arduinocore-api"]
+	path = lib/arduinocore-api
+	url = https://github.com/arduino/ArduinoCore-API.git

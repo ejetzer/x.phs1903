@@ -10,6 +10,7 @@ phs::LigneSerie::LigneSerie(uint32_t baudrate) : _baudrate(baudrate) {
 
 void phs::LigneSerie::setup() {
   Serial.begin(_baudrate);
+  while (!Serial);
 }
 
 uint8_t phs::LigneSerie::read() {
@@ -37,6 +38,22 @@ void phs::LigneSerie::loop() {
 
 bool phs::LigneSerie::available() {
   return ( _entree.size() > 0 );
+}
+
+void phs::LigneSerie::print(char* msg) {
+  Serial.print(msg);
+}
+
+void phs::LigneSerie::println(char* msg) {
+  Serial.println(msg);
+}
+
+void phs::LigneSerie::print(char* msg) {
+  Serial.print(msg);
+}
+
+void phs::LigneSerie::println(char* msg) {
+  Serial.println(msg);
 }
 
 void phs::EchoSerie::loop() {

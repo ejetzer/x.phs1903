@@ -19,6 +19,26 @@ namespace phs {
     void loop();
     void regler(uint8_t val);
   };
+  
+  class BrocheAnalogique : public Broche {
+  private:
+    using Broche::regler;
+  public:
+    BrocheAnalogique();
+    void setup();
+    uint16_t sonde();
+    ufloat32_t potentiel();
+  };
+  
+  class BrochePWM : public Broche {
+  private:
+    using Broche::sonde;
+    using Broche::valeur;
+  public:
+    void setup();
+    void loop();
+    void regler(uint8_t val);
+  };
 
 }
 

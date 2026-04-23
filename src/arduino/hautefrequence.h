@@ -14,8 +14,33 @@
 #define PHS1903ADC
 
 #include <Arduino.h>
+#include "broche.h"
 
 namespace phs {
+  
+  class BrocheAnalogique_HF : public BrocheAnalogique {
+  public:
+    BrocheAnalogique_HF();
+    BrocheAnalogique_HF(uint8_t);
+    void setup();
+    uint8_t obtCTRLC();
+    uint8_t obtPrefacteur();
+    uint8_t obtPuissance();
+    void regCTRLC(uint8_t);
+    void regPrefacteur(uint8_t);
+    void regPuissance(uint8_t);
+    void reinitCTRLC();
+    ufloat32_t obtFrequence();
+    void regFrequence();
+  };
+  
+  class BrochePWM_HF : public BrochePWM {
+  public:
+    BrochePWM_HF();
+    BrochePWM_HF(uint8_t);
+    void setup();
+    /* À développer pour le Arduino Nano Every */
+  };
 
 uint8_t clear_PF() {
 	// Régler à 256

@@ -1,6 +1,6 @@
 #include "broche.h"
 
-phs::Broche::Broche() : numero(A1) {}
+phs::Broche::Broche() : numero(13) {}
 
 phs::Broche::Broche(uint8_t numero) : numero(numero) {
 
@@ -26,4 +26,22 @@ void phs::Broche::regler(uint8_t val) {
 
 void phs::Broche::loop() {
   sonde();
+}
+
+phs::BrocheAnalogique::BrocheAnalogique() : numero(A0) {}
+
+phs::BrocheAnalogique::setup() {
+  pinMode(numero, INPUT_PULLUP);
+  regler(0);
+}
+
+uint16_t phs::BrocheAnalogique::sonde() {
+  _valeur = analogRead(numero);
+  return valeur();
+}
+
+ufloat32_t phs::BrocheAnalogique::potentiel() {
+  ufloat32_t res = (ufloat32_t)(5 * valeur());
+  res /= 1024.0;
+  return res;
 }

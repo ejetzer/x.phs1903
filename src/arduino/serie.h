@@ -30,6 +30,8 @@ public:
   uint8_t read();
   void write(uint8_t octet);
   bool available();
+  void print(char*);
+  void println(char*);
 };
 
 class EchoSerie: public LigneSerie {
