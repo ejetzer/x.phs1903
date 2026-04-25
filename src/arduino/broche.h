@@ -27,7 +27,7 @@ namespace phs {
     BrocheAnalogique();
     void setup();
     uint16_t sonde();
-    ufloat32_t potentiel();
+    uint32_t potentiel();
   };
   
   class BrochePWM : public Broche {

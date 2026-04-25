@@ -40,8 +40,8 @@ uint16_t phs::BrocheAnalogique::sonde() {
   return valeur();
 }
 
-ufloat32_t phs::BrocheAnalogique::potentiel() {
-  ufloat32_t res = (ufloat32_t)(5 * valeur());
-  res /= 1024.0;
+uint32_t phs::BrocheAnalogique::potentiel() {
+  uint32_t res = (ufloat32_t)(5000 * valeur());
+  res /= 1024;
   return res;
 }
