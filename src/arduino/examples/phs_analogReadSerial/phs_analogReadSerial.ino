@@ -2,9 +2,9 @@
 #include <chrono.h>
 #include <serie.h>
 
-Chrono chrono(1000);
-BrocheAnalogique broche(A0);
-LigneSerie serie(9600);
+phs::Chrono chrono(1000);
+phs::BrocheAnalogique broche(A0);
+phs::LigneSerie serie(9600);
 
 void setup() {
   chrono.setup();

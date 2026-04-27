@@ -10,6 +10,7 @@ namespace phs {
   class Broche {
   public:
     uint8_t numero;
+    uint8_t mode;
     uint16_t _valeur;
     Broche();
     Broche(uint8_t numero);

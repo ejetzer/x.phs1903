@@ -1,8 +1,8 @@
 #include "broche.h"
 
-phs::Broche::Broche() : numero(13) {}
+phs::Broche::Broche() : numero(13) mode(OUTPUT) {}
 
-phs::Broche::Broche(uint8_t numero) : numero(numero) {
+phs::Broche::Broche(uint8_t numero) : numero(numero) mode(OUTPUT) {
 
 }
 
@@ -16,7 +16,7 @@ uint16_t phs::Broche::sonde() {
 }
 
 void phs::Broche::setup() {
-  pinMode(numero, OUTPUT);
+  pinMode(numero, mode);
   regler(LOW);
 }
 
@@ -28,11 +28,14 @@ void phs::Broche::loop() {
   sonde();
 }
 
-phs::BrocheAnalogique::BrocheAnalogique() : numero(A0) {}
+phs::BrocheAnalogique::BrocheAnalogique() : numero(A0) mode(INPUT_PULLUP) {}
+
+phs::BrocheAnalogique::BrocheAnalogique(uint8_t numero) : numero(numero) mode(INPUT_PULLUP) {}
+
+phs::BrocheAnalogique::BrocheAnalogique(uint8_t numero, uint8_t mode) : numero(numero) mode(mode) {}
 
 phs::BrocheAnalogique::setup() {
-  pinMode(numero, INPUT_PULLUP);
-  regler(0);
+  pinMode(numero, mode);
 }
 
 uint16_t phs::BrocheAnalogique::sonde() {
