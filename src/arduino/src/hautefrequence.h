@@ -30,7 +30,7 @@ namespace phs {
     void regPrefacteur(uint8_t);
     void regPuissance(uint8_t);
     void reinitCTRLC();
-    ufloat32_t obtFrequence();
+    uint32_t obtFrequence();
     void regFrequence();
   };
   

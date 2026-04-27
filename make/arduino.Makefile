@@ -11,9 +11,9 @@ arduino_prebuild ?= $(arduino_build)/$(NAME)
 arduino_package ?= $(arduino_build)/$(NAME).zip
 arduino_fichiers ?= $(arduino_extras) $(arduino_exemples)
 arduino_fichiers_config ?= $(arduino_proprietes) $(arduino_json)
-arduino_fichiers_source ?= $(dir_source_arduino)/xphs1903.h $(dir_source_arduino)/adc1903.h $(dir_source_arduino)/fft1903.h $(dir_source_arduino)/serie.h $(dir_source_arduino)/serie.cpp $(dir_source_arduino)/journal.h $(dir_source_arduino)/journal.cpp $(dir_source_arduino)/broche.h $(dir_source_arduino)/broche.cpp $(dir_source_arduino)/chrono.h $(dir_source_arduino)/chrono.cpp $(arduino_fichiers)
+arduino_fichiers_source ?= $(wildcard $(dir_source_arduino)/src/*)
 arduino_prebuild_fichiers ?= $(patsubst %,$(arduino_prebuild)/%,$(arduino_fichiers))
-arduino_prebuild_fichiers_source ?= $(patsubst $(dir_source_arduino)/%,$(arduino_prebuild)/src/%,$(arduino_fichiers_source))
+arduino_prebuild_fichiers_source ?= $(patsubst $(dir_source_arduino)/src/%,$(arduino_prebuild)/src/%,$(arduino_fichiers_source))
 arduino_prebuild_fichiers_config ?= $(patsubst $(dir_config_arduino)/%,$(arduino_prebuild)/%,$(arduino_fichiers_config))
 arduino_config ?= $(CONFIG)/arduino.yaml
 
@@ -30,7 +30,7 @@ $(arduino_package): $(arduino_prebuild_fichiers_source) $(arduino_prebuild_fichi
 $(arduino_prebuild) $(arduino_prebuild)/src:
 	$(mkdir) -p $@
 
-$(arduino_prebuild_fichiers_source): $(arduino_prebuild)/src/%: $(dir_source_arduino)/% $(arduino_prebuild)/src
+$(arduino_prebuild_fichiers_source): $(arduino_prebuild)/src/%: $(dir_source_arduino)/src/% $(arduino_prebuild)/src
 	$(cp) -r $< $@
 
 $(arduino_prebuild_fichiers_config): $(arduino_prebuild)/%: $(dir_config_arduino)/% $(arduino_prebuild)

@@ -19,8 +19,9 @@ uint8_t phs::LigneSerie::read() {
   return res;
 }
 
-void phs::LigneSerie::write(uint8_t octet) {
+size_t phs::LigneSerie::write(uint8_t octet) {
   _sortie.push(octet);
+  return sizeof(uint8_t);
 }
 
 void phs::LigneSerie::loop() {
@@ -36,24 +37,46 @@ void phs::LigneSerie::loop() {
   }
 }
 
-bool phs::LigneSerie::available() {
-  return ( _entree.size() > 0 );
+uint8_t phs::LigneSerie::available() {
+  return _entree.size();
 }
 
-void phs::LigneSerie::print(char* msg) {
-  Serial.print(msg);
+size_t phs::LigneSerie::print(const char* msg) {
+  return Serial.print(msg);
 }
 
-void phs::LigneSerie::println(char* msg) {
-  Serial.println(msg);
+size_t phs::LigneSerie::print(String msg) {
+  return Serial.print(msg);
 }
 
-void phs::LigneSerie::print(char* msg) {
-  Serial.print(msg);
+size_t phs::LigneSerie::print(const Printable& msg) {
+  return Serial.print(msg);
 }
 
-void phs::LigneSerie::println(char* msg) {
-  Serial.println(msg);
+size_t phs::LigneSerie::println(const Printable& msg) {
+  size_t n = print(msg);
+  n += Serial.println();
+  return n;
+}
+
+size_t phs::LigneSerie::println(const char* msg) {
+  size_t n = print(msg);
+  n += Serial.println();
+  return n;
+}
+
+size_t phs::LigneSerie::println(String msg) {
+  size_t n = print(msg);
+  n += Serial.println();
+  return n;
+}
+
+size_t phs::LigneSerie::tab() {
+  return print("\t");
+}
+
+size_t phs::LigneSerie::ln() {
+  return Serial.println();
 }
 
 void phs::EchoSerie::loop() {

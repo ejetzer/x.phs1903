@@ -16,6 +16,6 @@ void loop() {
   broche.loop();
   serie.loop();
   if (chrono.loop()) {
-    serie.write(broche.valeur());
+    serie.println(String(broche.potentiel()));
   }
 }

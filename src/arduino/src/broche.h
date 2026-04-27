@@ -7,18 +7,25 @@
 
 namespace phs {
 
-  class Broche {
+  class Broche : public Printable {
   public:
     uint8_t numero;
     uint8_t mode;
     uint16_t _valeur;
     Broche();
     Broche(uint8_t numero);
-    uint16_t valeur();
+    uint16_t valeur() const;
     uint16_t sonde();
     void setup();
     void loop();
     void regler(uint8_t val);
+    virtual size_t phs::Broche::printTo(Print& p) const {
+      size_t n = p.print("broche_");
+      n += p.print(numero);
+      n += p.print(':');
+      n += p.print(valeur());
+      return n;
+    }
   };
   
   class BrocheAnalogique : public Broche {
@@ -26,9 +33,18 @@ namespace phs {
     using Broche::regler;
   public:
     BrocheAnalogique();
+    BrocheAnalogique(uint8_t numero);
     void setup();
     uint16_t sonde();
-    uint32_t potentiel();
+    uint16_t potentiel() const;
+    virtual size_t phs::BrocheAnalogique::printTo(Print& p) const {
+      size_t n = p.print("V_");
+      n += p.print(numero);
+      n += p.print(':');
+      uint16_t pot = potentiel();
+      n += p.print(pot);
+      return n;
+    }
   };
   
   class BrochePWM : public Broche {

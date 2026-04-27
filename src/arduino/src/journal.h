@@ -2,6 +2,7 @@
 #define JOURNALISATION
 
 #include <ArduinoSTL.h>
+#include <string>
 
 namespace phs {
 
@@ -12,8 +13,6 @@ enum Niveau_t {
   ERROR,
   CRITICAL
 };
-
-char* texte_niveau(Niveau_t niveau);
 
 class Journal {
 public:

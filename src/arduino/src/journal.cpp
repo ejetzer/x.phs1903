@@ -2,25 +2,8 @@
 
 using namespace phs;
 
-char* texte_niveau(Niveau_t niveau) {
-  switch (niveau) {
-    case DEBUG:
-      return "DÉBOGAGE";
-    case INFO:
-      return "INFO";
-    case WARNING:
-      return "ATTENTION";
-    case ERROR:
-      return "ERREUR";
-    case CRITICAL:
-      return "CRITIQUE";
-    default:
-      return "MESSAGE";
-  }
-}
-
 void Journal::entrer(char* msg, Niveau_t niveau) {
-  Serial.print(texte_niveau(niveau));
+  Serial.print(niveau);
   Serial.print("::");
   Serial.print(millis());
   Serial.print("::");

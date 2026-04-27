@@ -28,10 +28,16 @@ public:
   void setup();
   void loop();
   uint8_t read();
-  void write(uint8_t octet);
-  bool available();
-  void print(char*);
-  void println(char*);
+  size_t write(uint8_t octet);
+  uint8_t available();
+  size_t print(String);
+  size_t println(String);
+  size_t print(const char*);
+  size_t println(const char*);
+  size_t print(const Printable&);
+  size_t println(const Printable&);
+  size_t tab();
+  size_t ln();
 };
 
 class EchoSerie: public LigneSerie {
