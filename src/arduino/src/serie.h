@@ -28,7 +28,11 @@ public:
   void setup();
   void loop();
   uint8_t read();
+  char read();
+  wchar_t read();
   size_t write(uint8_t octet);
+  size_t write(wchar_t cara);
+  size_t write(char cara);
   uint8_t available();
   size_t print(String);
   size_t println(String);
