@@ -1,6 +1,12 @@
 #ifndef XPHS1903_BROCHE
 #define XPHS1903_BROCHE 1
 
+/**
+ * La bibliothèque Arduino et la
+ * bibliothèque standard sont nécessaires
+ * pour les définitions des classes de
+ * manipulation des broches.
+ */
 #include <Arduino.h>
 #include <ArduinoSTL.h>
 #include <queue>
