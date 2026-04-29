@@ -11,109 +11,110 @@
 
 #include <Arduino.h>
 /** Au lieu d'utiliser l'opérateur de division,
-  * utilise la multiplication.
-  * Introduit potentiellement des erreurs dues
-  * à la précision des :cpp:type:`float`.
-  */
+ * utilise la multiplication.
+ * Introduit potentiellement des erreurs dues
+ * à la précision des :cpp:type:`float`.
+ */
 #define FFT_SPEED_OVER_PRECISION
 
 /** Utilise une méthode d'approximation
-  * très rapide pour les calculs.
-  */
+ * très rapide pour les calculs.
+ */
 #define FFT_SQRT_APPROXIMATION
 
 /** Garde en mémoire les facteurs utilisés
-  * pour les calculs au lieu de les recalculer.
-  * Si votre fréquence d'échantillonage est
-  * plus grande que nécessaire, vous pouvez
-  * essayer de commenter :c:macro:`USE_AVR_PROGMEM`.
-  * Ça peut théoriquement vous permettre d'utiliser
-  * plus d'échantillons, en libérant de la mémoire.
-  */
+ * pour les calculs au lieu de les recalculer.
+ * Si votre fréquence d'échantillonage est
+ * plus grande que nécessaire, vous pouvez
+ * essayer de commenter :c:macro:`USE_AVR_PROGMEM`.
+ * Ça peut théoriquement vous permettre d'utiliser
+ * plus d'échantillons, en libérant de la mémoire.
+ */
 #define USE_AVR_PROGMEM
 
 /** Importer le module.
-  * :arduinoFFT:`arduinoFFT </>` est une librairie
-  * bien maintenue et utilisée. Elle permet plusieurs
-  * optimisations
-  */
+ * :arduinoFFT:`arduinoFFT </>` est une librairie
+ * bien maintenue et utilisée. Elle permet plusieurs
+ * optimisations
+ */
 #include <arduinoFFT.h>
 #endif
 
 /** Le nombre d'échantillons récoltés pour faire la
-  * transformée. Cette valeur doit toujours être une
-  * puissance de 2.
-  * La valeur de :c:macro:`N` doit prendre en compte
-  * la période du signal à détecter et la période
-  * d'échantillonage :cpp:var:`T`.
-  *
-  * La documentation du module indique que des valeurs de 2048 et 4096
-  * causent des erreurs d'overflow, et qu'elles devraient être évitées.
-  *
-  * Le processeur ATmega4809 du Arduino Nano Every a
-  * 
-  * - 48Ko de mémoire flash
-  * - 6Ko de SRAM
-  * - 256o de EEPROM
-  * - 64o 
-  */
+ * transformée. Cette valeur doit toujours être une
+ * puissance de 2.
+ * La valeur de :c:macro:`N` doit prendre en compte
+ * la période du signal à détecter et la période
+ * d'échantillonage :cpp:var:`T`.
+ *
+ * La documentation du module indique que des valeurs de 2048 et 4096
+ * causent des erreurs d'overflow, et qu'elles devraient être évitées.
+ *
+ * Le processeur ATmega4809 du Arduino Nano Every a
+ *
+ * - 48Ko de mémoire flash
+ * - 6Ko de SRAM
+ * - 256o de EEPROM
+ * - 64o
+ */
 #define N 256
 #define N_BROCHES 1
 
 /** Type de cadre à utiliser dans le calcul de la transformée.
-  * Dans l'analyse de l'échantillon d'un signal, si on n'utilise
-  * pas une fenêtre appropriée, on peut se retrouver avec des fuites
-  * d'amplitude, de la fréquence réellement présente à des fréquences
-  * adjacentes, ou vers de hautes fréquences.
-  *
-  * La fenêtre Hann fonctionne adéquatement pour des fonctions
-  * arbitraires, mais si vous savez précisément quelles fréquences
-  * vous allez devoir détecter, d'autres cadres peuvent être plus
-  * pertinents.
-  */
+ * Dans l'analyse de l'échantillon d'un signal, si on n'utilise
+ * pas une fenêtre appropriée, on peut se retrouver avec des fuites
+ * d'amplitude, de la fréquence réellement présente à des fréquences
+ * adjacentes, ou vers de hautes fréquences.
+ *
+ * La fenêtre Hann fonctionne adéquatement pour des fonctions
+ * arbitraires, mais si vous savez précisément quelles fréquences
+ * vous allez devoir détecter, d'autres cadres peuvent être plus
+ * pertinents.
+ */
 #define CADRE FFTWindow::Hann
 
-namespace phs {
+namespace phs
+{
 /** La classe :cpp:class:`ArduinoFFT` permet d'utiliser soit le type
-  * :cpp:type:`float` ou le type :cpp:type:`double` pour les valeurs
-  * et les résultats. Pour faciliter la configuration, vous pouvez
-  * redefinir le type :cpp:type:`val_t`.
-  */
+ * :cpp:type:`float` ou le type :cpp:type:`double` pour les valeurs
+ * et les résultats. Pour faciliter la configuration, vous pouvez
+ * redefinir le type :cpp:type:`val_t`.
+ */
 
 typedef float val_t;
 
 /** La fréquence et la période d'échantillonage sont constants
-  * dans ce programme, donc on peut les déclarer comme tels et
-  * permettre au compilateur de mieux optimiser le programme.
-  */
+ * dans ce programme, donc on peut les déclarer comme tels et
+ * permettre au compilateur de mieux optimiser le programme.
+ */
 
 /** La fréquence d'échantillonage en Hz.
-  * Idéalement un nombre qui divise 1000000
-  * ou une puissance de 2
-  * pour faire une conversion exacte entre
-  * la fréquence :cpp:var:`F` en Hz et la période
-  * :cpp:var:`T` en µs.
-  */
+ * Idéalement un nombre qui divise 1000000
+ * ou une puissance de 2
+ * pour faire une conversion exacte entre
+ * la fréquence :cpp:var:`F` en Hz et la période
+ * :cpp:var:`T` en µs.
+ */
 #define Fr 75.0
 
 /** La période d'échantillonage en µs, calculée une fois
-  * à partir de la fréquence :c:macro:`F`.
-  * :cpp:var:`T` est utilisée en comparaison avec 
-  * l'horloge interne :cpp:func:`micros`.
-  */
-#define Pe (1e6/Fr)
+ * à partir de la fréquence :c:macro:`F`.
+ * :cpp:var:`T` est utilisée en comparaison avec
+ * l'horloge interne :cpp:func:`micros`.
+ */
+#define Pe (1e6 / Fr)
 
 /** Composante réelle de la fonction dont on veut
-  * calculer la transformée de Fourier. En pratique,
-  * nos mesures sont toutes positives, mais comme
-  * la transformée utilise la première moitiée de 
-  * :cpp:var:`vReal` et :cpp:var:`vImag` pour
-  * enregistrer le résultat de la transformée,
-  * il faut permettre les valeurs négatives.
-  * Pour plus de précision, vous pouvez utiliser
-  * le type :cpp:type:`double`, qui prend par contre
-  * deux fois plus de mémoire.
-  */
+ * calculer la transformée de Fourier. En pratique,
+ * nos mesures sont toutes positives, mais comme
+ * la transformée utilise la première moitiée de
+ * :cpp:var:`vReal` et :cpp:var:`vImag` pour
+ * enregistrer le résultat de la transformée,
+ * il faut permettre les valeurs négatives.
+ * Pour plus de précision, vous pouvez utiliser
+ * le type :cpp:type:`double`, qui prend par contre
+ * deux fois plus de mémoire.
+ */
 
 val_t vReal[N];
 val_t vImag[N];
@@ -121,22 +122,27 @@ int_t ts[N];
 
 ArduinoFFT<val_t> (FFT[N_BROCHES]);
 
-void fftInit() {
-  for (idx_t i=0; i<N_BROCHES; i++) {
-    FFT[i] = ArduinoFFT<val_t>(reel[i], imag[i], N, Fr);
-  }
+void
+fftInit ()
+{
+  for (idx_t i = 0; i < N_BROCHES; i++)
+    {
+      FFT[i] = ArduinoFFT<val_t> (reel[i], imag[i], N, Fr);
+    }
 }
 
 int_t ts[N];
-val_t* freq;
-val_t* mag;
+val_t *freq;
+val_t *mag;
 
-void fft() {
-  FFT.dcRemoval();                              // Enlève la composante DC
-  FFT.windowing(cadre, FFTDirection::Forward);  // Cadrage des données
-  FFT.compute(FFTDirection::Forward);           // Calcul de la FFT
-  FFT.complexToMagnitude();                     // Converti la FFT complexe en valeurs réelles
-  FFT.majorPeak(freq, mag);                     // Enregistre le pic de fréquence
+void
+fft ()
+{
+  FFT.dcRemoval ();                             // Enlève la composante DC
+  FFT.windowing (cadre, FFTDirection::Forward); // Cadrage des données
+  FFT.compute (FFTDirection::Forward);          // Calcul de la FFT
+  FFT.complexToMagnitude (); // Converti la FFT complexe en valeurs réelles
+  FFT.majorPeak (freq, mag); // Enregistre le pic de fréquence
 }
 
 }

@@ -13,49 +13,54 @@
 #ifndef PHS1903ADC
 #define PHS1903ADC
 
-#include <Arduino.h>
 #include "broche.h"
+#include <Arduino.h>
 
-namespace phs {
-  
-  class BrocheAnalogique_HF : public BrocheAnalogique {
-  public:
-    BrocheAnalogique_HF();
-    BrocheAnalogique_HF(uint8_t);
-    void setup();
-    uint8_t obtCTRLC();
-    uint8_t obtPrefacteur();
-    uint8_t obtPuissance();
-    void regCTRLC(uint8_t);
-    void regPrefacteur(uint8_t);
-    void regPuissance(uint8_t);
-    void reinitCTRLC();
-    uint32_t obtFrequence();
-    void regFrequence();
-  };
-  
-  class BrochePWM_HF : public BrochePWM {
-  public:
-    BrochePWM_HF();
-    BrochePWM_HF(uint8_t);
-    void setup();
-    /* À développer pour le Arduino Nano Every */
-  };
+namespace phs
+{
 
-uint8_t clear_PF() {
-	// Régler à 256
-	ADC0.CTRLC &= ~( bit(0) | bit(1) | bit(2) ); // 0b11100000
+class BrocheAnalogique_HF : public BrocheAnalogique
+{
+public:
+  BrocheAnalogique_HF ();
+  BrocheAnalogique_HF (uint8_t);
+  void setup ();
+  uint8_t obtCTRLC ();
+  uint8_t obtPrefacteur ();
+  uint8_t obtPuissance ();
+  void regCTRLC (uint8_t);
+  void regPrefacteur (uint8_t);
+  void regPuissance (uint8_t);
+  void reinitCTRLC ();
+  uint32_t obtFrequence ();
+  void regFrequence ();
+};
 
-	return ADC0.CTRLC;
+class BrochePWM_HF : public BrochePWM
+{
+public:
+  BrochePWM_HF ();
+  BrochePWM_HF (uint8_t);
+  void setup ();
+  /* À développer pour le Arduino Nano Every */
+};
+
+uint8_t
+clear_PF ()
+{
+  // Régler à 256
+  ADC0.CTRLC &= ~(bit (0) | bit (1) | bit (2)); // 0b11100000
+
+  return ADC0.CTRLC;
 }
 
 /**
  * Horloge du CAN
  * ---------------
  *
- * Le :abbr:`CAN (Convertisseur Analogue-à-Numérique)` du ATMega4809 a besoin d'une fréquence
- * d'horloge entre 50kHz et 1.5MHz pour une
- * résolution maximale.
+ * Le :abbr:`CAN (Convertisseur Analogue-à-Numérique)` du ATMega4809 a besoin
+ * d'une fréquence d'horloge entre 50kHz et 1.5MHz pour une résolution
+ * maximale.
  */
 
 /**
@@ -73,7 +78,7 @@ uint8_t clear_PF() {
  * processeur précis, et ne peuvent pas être assumés
  * pour d'autres plate-formes. Sur le Arduino Nano Every,
  * avec un processeur ``ATMega4809``, le CAN est géré par
- * le registre accessible via le nom :c:var:``ADC0``, et le 
+ * le registre accessible via le nom :c:var:``ADC0``, et le
  * préfacteur est réglé dans les 3 premiers bits du
  * sous-registre :c:var:`ADC0.CTRLC`.
  */
@@ -83,17 +88,21 @@ uint8_t clear_PF() {
  * qu'aux trois bits concernant le pré-facteur, et laisse
  * les autres bits intacts.
  */
-uint8_t set_PF(uint8_t pf_pow) {
-	ADC0.CTRLC &= ~( bit(0) | bit(1) | bit(2) ); // 0b11100000
-	ADC0.CTRLC |= bit(0) * (pf_pow % 8);
-	ADC0.CTRLC |= bit(1) * ( (pf_pow % 4) / 2 );
-	ADC0.CTRLC |= bit(2) * ( pf_pow / 4 );
-	
-	return ADC0.CTRLC;
+uint8_t
+set_PF (uint8_t pf_pow)
+{
+  ADC0.CTRLC &= ~(bit (0) | bit (1) | bit (2)); // 0b11100000
+  ADC0.CTRLC |= bit (0) * (pf_pow % 8);
+  ADC0.CTRLC |= bit (1) * ((pf_pow % 4) / 2);
+  ADC0.CTRLC |= bit (2) * (pf_pow / 4);
+
+  return ADC0.CTRLC;
 }
 
-uint8_t set_PF() {
-	return set_PF(7);
+uint8_t
+set_PF ()
+{
+  return set_PF (7);
 }
 
 }

@@ -2,10 +2,14 @@
 
 phs::EchoSerie com;
 
-void setup() {
-  com.setup();
+void
+setup ()
+{
+  com.setup ();
 }
 
-void loop() {
-  com.loop();
+void
+loop ()
+{
+  com.loop ();
 }

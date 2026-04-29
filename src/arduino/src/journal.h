@@ -4,9 +4,11 @@
 #include <ArduinoSTL.h>
 #include <string>
 
-namespace phs {
+namespace phs
+{
 
-enum Niveau_t {
+enum Niveau_t
+{
   DEBUG,
   INFO,
   WARNING,
@@ -14,14 +16,15 @@ enum Niveau_t {
   CRITICAL
 };
 
-class Journal {
+class Journal
+{
 public:
-  void entrer(char* msg, Niveau_t niveau);
-  void debug(char* msg);
-  void warn(char* msg);
-  void info(char* msg);
-  void error(char* msg);
-  void crit(char* msg);
+  void entrer (char *msg, Niveau_t niveau);
+  void debug (char *msg);
+  void warn (char *msg);
+  void info (char *msg);
+  void error (char *msg);
+  void crit (char *msg);
 };
 
 }

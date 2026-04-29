@@ -2,43 +2,48 @@
 #include <chrono.h>
 #include <serie.h>
 
-phs::Broche del_660nm(4);
-phs::Broche del_900nm(5);
-phs::Broche del_int(13);
-phs::BrocheAnalogique pd_660nm(A0);
-phs::BrocheAnalogique pd_900nm(A1);
-phs::Chrono chrono(250);
-phs::LigneSerie serie(9600);
+phs::Broche del_660nm (4);
+phs::Broche del_900nm (5);
+phs::Broche del_int (13);
+phs::BrocheAnalogique pd_660nm (A0);
+phs::BrocheAnalogique pd_900nm (A1);
+phs::Chrono chrono (250);
+phs::LigneSerie serie (9600);
 
-void setup() {
-  del_660nm.setup();
-  del_900nm.setup();
-  del_int.setup();
-  pd_660nm.setup();
-  pd_900nm.setup();
-  chrono.setup();
-  serie.setup();
+void
+setup ()
+{
+  del_660nm.setup ();
+  del_900nm.setup ();
+  del_int.setup ();
+  pd_660nm.setup ();
+  pd_900nm.setup ();
+  chrono.setup ();
+  serie.setup ();
 }
 
-void loop() {
-  del_660nm.loop();
-  del_900nm.loop();
-  del_int.loop();
-  pd_660nm.loop();
-  pd_900nm.loop();
-  serie.loop();
-  
-  if (chrono.loop()) {
-    serie.print(chrono);
-    serie.tab();
-    serie.print(pd_660nm);
-    serie.tab();
-    serie.print(pd_900nm);
-    serie.ln();
+void
+loop ()
+{
+  del_660nm.loop ();
+  del_900nm.loop ();
+  del_int.loop ();
+  pd_660nm.loop ();
+  pd_900nm.loop ();
+  serie.loop ();
 
-    // Mettre les DEL à jour
-    del_int.regler(!del_int.valeur());
-    del_660nm.regler(del_int.valeur());
-    del_900nm.regler(!del_int.valeur());
-  }
+  if (chrono.loop ())
+    {
+      serie.print (chrono);
+      serie.tab ();
+      serie.print (pd_660nm);
+      serie.tab ();
+      serie.print (pd_900nm);
+      serie.ln ();
+
+      // Mettre les DEL à jour
+      del_int.regler (!del_int.valeur ());
+      del_660nm.regler (del_int.valeur ());
+      del_900nm.regler (!del_int.valeur ());
+    }
 }
