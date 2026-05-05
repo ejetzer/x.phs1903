@@ -11,7 +11,7 @@ Documentation
 
 La documentation est hébergée sur `Read The Docs`_.
 
-.. _`Read The Docs`: https://xphs1903.readthedocs.io/fr/v1/
+.. _`Read The Docs`: https://xphs1903.readthedocs.io/fr/v2/
 
 -------------
 Installation
@@ -74,8 +74,8 @@ compte de facto. Les contributions de l'externe n'ont aucune garantie d'être
 examinées ou intégrées au projet.
 
 Les contributions venant en apparence ou en fait de programmes d'assistants
-GML, comme ChatGPT, CoPilot ou Claude, seront refusées. Ce code est pour une 
-utilisation pédagogique, dans un contexte de développement intense par une 
+GML, comme ChatGPT, CoPilot ou Claude, seront refusées. Ce code est pour une
+utilisation pédagogique, dans un contexte de développement intense par une
 centaine d'utilisateurs différents. Chaque définition, module ou programme
 doit être intentionnel et réfléchi, et documenté. Conversement, nous désirons
 exclure ce code de l'entraînement de quelconque GML.
@@ -97,21 +97,32 @@ Méta-données & informations
 ............................
 
 Les fichiers de méta-données sont ceux requis pour la distribution du code selon
-les conventions des communautés Python et Arduino. 
+les conventions des communautés Python et Arduino. Le moins de fichiers possible se trouvent
+dans le répertoire racine, mais pour certains c'est inévitable.
+
+#. ``README.rst`` est le code source du document que vous lisez actuellement.
+#. ``CITATION.cff`` et ``LICENSE.rst`` contiennent les détails sur comment ce module peut
+  être utilisé, sous quelles conditions et comment y faire référence.
+#. ``Pipfile`` et ``Pipfile.lock`` décrivent l'environnement de programmation pour
+  le développement du module.
+
+Les fichiers ``.tm_properties`` et ``.editorconfig`` contiennent des paramètres pour les éditeurs de fichiers
+textes comme `TextMate`_ et `VS Code`_.
 
 Code C++ pour Arduino
 .......................
 
-Le module Arduino est documenté dans les fichiers:
+Le module Arduino est contenu dans ``src/arduino``:
 
-#. ``cfg/arduino.yaml``
-#. ``cfg/keywords.txt``
-#. ``cfg/library.properties``
-#. ``cfg/library.json``
-#. ``Makefile``
+#. ``examples`` contient les programmes d'exemples inclus avec le module
+#. ``src`` contient les fichiers de déclarations et de définitions
 
-et le code source pour le module et ses exemples se trouve dans les dossiers
-``src/arduino`` et ``tests/``.
+D'autres informations sur le module Arduino se trouvent dans ``config``:
+
+#. ``arduino.yaml`` contient la configuration Arduino requise pour l'installation automatique du module
+#. ``keywords.txt`` contient les définitions de mots-clés pour la coloration syntaxique dans l'EDI Arduino
+#. ``library.json`` et ``library.properties`` contiennent l'information sur le paquet comme son nom et quels
+  fichiers doivent être accessible à l'utilisateur de l'EDI.
 
 
 Code Python
@@ -163,6 +174,14 @@ directement dans Zotero.
 ------------
 Références
 ------------
+
+#. SciPy
+#. NumPy
+#. Matplotlib
+#. Arduino
+#. Python
+#. cppreference
+#. ATMEL
 
 ---------------
 État du projet

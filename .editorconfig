@@ -1,0 +1,33 @@
+# The following Editor Config features are supported:
+# 
+# - root
+# - indent_style ("tab" or "space")
+# - indent_size
+# - tab_width
+# - insert_final_newline (newline is added when saving a document)
+# - trim_trailing_whitespace (whitespace is trimmed when saving a document)
+# - end_of_line
+# - charset (the charset `utf-8-bom` is not supported; if you need it, please [file an issue](https://github.com/Mr0grog/editorconfig-textmate/issues).)
+# - max_line_length (sets TextMate’s “wrap column,” but does not necessarily trigger hard line wraps)
+#
+# > https://github.com/Mr0grog/editorconfig-textmate
+# > https://editorconfig.org/
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+[*.py]
+indent_size = 4
+
+[*.{cpp,h,ino}]
+indent_size = 2
+
+[{*.Makefile,Makefile}]
+indent_style = tab
