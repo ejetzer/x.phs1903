@@ -1,0 +1,50 @@
+{
+    "editor.formatOnSave": true,
+    "files.autoSave": "onFocusChange",
+    "editor.fontFamily": "'CMU Typewriter Text',Menlo, Monaco, 'Courier New', monospace",
+    "editor.wordWrap": "wordWrapColumn",
+    "chat.agent.maxRequests": 1,
+    "workbench.colorTheme": "Solarized Dark",
+    "editor.formatOnPaste": true,
+    "editor.allowVariableFonts": false,
+    "editor.allowVariableLineHeights": false,
+    "editor.autoIndentOnPaste": true,
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.codeActionWidget.includeNearbyQuickFixes": false,
+    "editor.codeActionWidget.showHeaders": false,
+    "editor.codeLensFontFamily": "'CMU Typewriter Text'",
+    "editor.lightbulb.enabled": "off",
+    "editor.renderWhitespace": "all",
+    "editor.roundedSelection": false,
+    "editor.wrapOnEscapedLineFeeds": true,
+    "editor.wrappingIndent": "same",
+    "editor.experimentalGpuAcceleration": "off",
+    "editor.cursorSurroundingLines": 10,
+    "editor.cursorSurroundingLinesStyle": "all",
+    "editor.formatOnType": true,
+    "editor.acceptSuggestionOnEnter": "off",
+    "editor.suggest.showStatusBar": true,
+    "files.autoSaveWhenNoErrors": true,
+    "files.autoSaveWorkspaceFilesOnly": true,
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "chat.agent.enabled": false,
+    "chat.agent.networkFilter": true,
+    "chat.checkpoints.enabled": false,
+    "chat.customAgentInSubagent.enabled": false,
+    "chat.agent.sandbox.enabled": "on",
+    "chat.agent.thinking.terminalTools": false,
+    "remote.portsAttributes": {
+        "443": {
+            "protocol": "https"
+        },
+        "8080": {
+            "onAutoForward": "ignore"
+        },
+        "8443": {
+            "protocol": "https"
+        }
+    }
+}

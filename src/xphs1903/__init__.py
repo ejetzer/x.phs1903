@@ -26,7 +26,6 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from matplotlib import pyplot as plt
-from .outils import Acquisition, Canal, Console, Programme
 from pandas import DataFrame
 from serial import Serial  # <https://www.pyserial.com/docs>
 from serial.serialutil import SerialException
@@ -35,18 +34,19 @@ from serial.tools.list_ports import comports
 from .afficher import plot
 from .defs import DEBIT, DELAI, PORT
 from .mesure import prendre_mesure
+from .outils import Acquisition, Canal, Console, Programme
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 logging = getLogger(__name__)
 
-##if not (sys.version_info.major != 3 and sys.version_info.minor < 14):
-##    print(f'La version de Python utilisée est: {sys.version}', file=sys.stderr)
-##    print(f'{__name__} nécessite Python 3.14 et postérieur.', file=sys.stderr)
-##    print('Voir <https://www.python.org/downloads>', file=sys.stderr)
-##    msg: str = 'Version de Python incompatible'
-##    raise SystemExit(msg)
+# if not (sys.version_info.major != 3 and sys.version_info.minor < 14):
+# print(f'La version de Python utilisée est: {sys.version}', file=sys.stderr)
+# print(f'{__name__} nécessite Python 3.14 et postérieur.', file=sys.stderr)
+# print('Voir <https://www.python.org/downloads>', file=sys.stderr)
+# msg: str = 'Version de Python incompatible'
+# raise SystemExit(msg)
 
 
 # ===========================

@@ -12,9 +12,9 @@ import os.path
 import sys
 from pathlib import Path
 
+import pygit2 as pygit
 from clang.cindex import Config
 from hawkmoth.util import readthedocs
-import pygit2 as pygit
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -91,7 +91,7 @@ else:
             print(f'Using {cl}')
             clang_file_set = True
             break
-            
+
 if not clang_file_set:
     readthedocs.clang_setup()
 

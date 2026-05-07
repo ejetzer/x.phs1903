@@ -1,51 +1,23 @@
-# -*- coding: utf-8 -*-
 # Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
 """Fonctionnalités de base."""
 
-import sys
-
-from .console import Canal, Console, Programme
-from .graphe import Acquisition
+# Activer la journalisation
 import logging
-from typing import TYPE_CHECKING
 
-logger = logging.getLogger(__name__)
+# Modules internes du sous-module xphs1903.outils
+import console
+import definitions
+import exceptions
+import graphe
+import serie
 
-class ObjetImmuable:
-    
-    def __init__(self, cls: type, *args, **kargs):
-        logging.debug('%s.__init__ pour %r avec cls=%r', type(self).__name__, self, cls)
-        self._fixed = False
-        self._object = cls(*args, **kargs)
-        self._fixed = True
-    
-    def __getattr__(self, attr: str):
-        logging.debug('%s.__getattr__ pour %r avec attr=%r', type(self).__name__, self, attr)
-        return getattr(super().__getattribute__('_object'), attr)
-    
-    def __setattr__(self, attr: str, val: Any):
-        logging.debug('%s.__setattr__ pour %r avec attr=%r, val=%r', type(self).__name__, self, attr, val)
-        if attr == '_fixed':
-            super().__setattr__(attr, val)
-        elif not self._fixed:
-            super().__setattr__(attr, val)
-        else:
-            raise AttributNonModifiable
-    
-    def __delattr__(self, attr: str):
-        logging.debug('%s.__delattr__ pour %r avec attr=%r', type(self).__name__, self, attr)
-        if attr == '_fixed' or self._fixed:
-            raise AttributNonModifiable
-        else:
-            super().__delattr__(attr, val)
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-
-
+# Objets accessibles avec import *
 __all__ = [
-    'Canal',
-    'Console',
-    'Programme',
-    'Acquisition',
-    'ChoixInvalideError'
-    'choix'
+    'console',
+    'definitions',
+    'exceptions',
+    'graphe',
+    'serie',
 ]

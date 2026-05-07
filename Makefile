@@ -9,31 +9,31 @@
 VARS_OLD := $(.VARIABLES) # Pour ne pas documenter les variables d'environnement
 
 ## USAGE
-##  
+##
 ## 	make [aide]   	Afficher ce message
 ## 	make install  	Installer les modules Python et Arduino
 ## 	make batir    	Compiler les modules pour l'installation
 ##	make tests    	Lancer les tests automatiques des modules
 ## 	make develop   	Installer l'environnement de développement
-##  
+##
 
 ## INFORMATION GÉNÉRALE
-##  
+##
 ## Les modules pour Python et Arduino contenus dans ce répertoire
 ## sont conçus pour les étudiants de première session du cours
 ## PHS1903 de Polytechnique Montréal. Le développement est dirigé
 ## par Émile Jetzer & Jacques Massicotte. Pour plus d'informations,
 ## lisez le document README.rst.
 NAME = xphs1903
-VERSION = $(shell git describe --always)
-AUTHOR = "Émile Jetzer" "Jacques Massicotte"
+VERSION ?= $(shell git describe --always)
+AUTHOR ?= "Émile Jetzer" "Jacques Massicotte"
 SHELL = /bin/zsh
 SOURCE ?= src
 README ?= README.rst
 BUILD ?= .build
 CONFIG ?= cfg
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-##  
+##
 
 # Pour les fichiers d'état
 DIR_DRAPEAUX ?= .drapeaux
@@ -46,12 +46,12 @@ dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)\
 	$(arduino_prebuild) $(arduino_prebuild)/src
 
 ## INSTALLATION
-##  
+##
 ## L'installation des modules se fait avec les gestionnaires de paquet
 ## par défaut pour les environnements correspondants. Le module Python
-## s'installe avec pip, et le module Arduino avec l'outil de ligne de 
+## s'installe avec pip, et le module Arduino avec l'outil de ligne de
 ## commande Arduino.
-##  
+##
 
 include make/help.Makefile
 

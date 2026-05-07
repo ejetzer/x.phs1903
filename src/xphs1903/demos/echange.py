@@ -4,5 +4,6 @@ def main():
     with Échange(sélection_appareil()) as ex:
         ex.loop()
 
+
 if __name__ == '__main__':
     main()
