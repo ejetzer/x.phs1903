@@ -21,7 +21,7 @@ $(arduino-cli): $(dir_outils) $(curl)
 	$(curl) -fsSL $(arduino-cli_url) | BINDIR=$(dir_outils) $(SHELL)
 
 $(outils_externes):
-	@[[ -x $@ ]] || echo "Installez l'outil $(shell basename $@)."
+	@[[ -x $@ ]] || echo "Installez l'outil $(shell basename $@) ou définissez la variable appropriée."
 
 arduinoFFT = $(dir_outils)/arduinoFFT
 arduinoFFT_prebuild = $(BUILD)
@@ -36,4 +36,18 @@ $(arduinoFFT_pkg): $(arduinoFFT_prebuild) $(arduinoFFT) $(tar) $(cp) $(rm)
 	cd $(arduinoFFT_prebuild) && (([[ -e arduinoFFT.zip ]] && $(tar) -u -f arduinoFFT.zip arduinoFFT/*) || $(tar) -c -f arduinoFFT.zip arduinoFFT/*)
 
 arduinoFFT: $(arduinoFFT_pkg) $(arduino-cli)
+	$(arduino-cli) lib install --config-file $(arduino_config) --zip-path $<
+
+arduinoSTL = $(dir_outils)/ArduinoSTL
+arduinoSTL_prebuild = $(BUILD)
+arduinoSTL_pkg = $(arduinoSTL_prebuild)/ArduinoSTL.zip
+$(arduinoSTL): $(git)
+	$(git) submodule init && $(git) submodule update
+
+$(arduinoSTL_pkg): $(arduinoSTL_prebuild) $(arduinoSTL) $(tar) $(cp) $(rm)
+	$(rm) -rf $@ || echo 'Rien à effacer pour' $@
+	$(cp) -r $(arduinoSTL) $(arduinoSTL_prebuild)
+	cd $(arduinoSTL_prebuild) && (([[ -e arduinoSTL.zip ]] && $(tar) -u -f arduinoSTL.zip arduinoSTL/*) || $(tar) -c -f arduinoSTL.zip arduinoSTL/*)
+
+arduinoSTL: $(arduinoSTL_pkg) $(arduino-cli)
 	$(arduino-cli) lib install --config-file $(arduino_config) --zip-path $<

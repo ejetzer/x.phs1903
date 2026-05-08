@@ -5,11 +5,17 @@
 Ce projet fournit un module Arduino, un module Python et quelques programmes
 d'exemples d'utilisation de ces fichiers.
 
+.. toctree::
+  :maxdepth: 1
+  :caption: Table des matières
+
+  self
+
 --------------
 Documentation
 --------------
 
-La documentation est hébergée sur `Read The Docs`_. La source se trouve dans le répertoire `docs/`_
+La documentation est hébergée sur `Read The Docs`_. La source se trouve dans le répertoire `docs/`_.
 
 .. _`docs/`: docs/
 
@@ -26,6 +32,8 @@ d'exemples.
 .. _PyPI: https://pypi.org/
 
 .. _Github: https://github.com/ejetzer/x.phs1903
+
+Voir la :doc:`section sur l'installation <docs/src/install.rst>` pour plus de détails.
 
 ------
 Usage

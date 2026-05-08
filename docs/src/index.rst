@@ -9,11 +9,11 @@
 
 .. include:: ../../README.rst
 
-Ce module est fourni par l'équipe technique du cours PHS1903 de Polytechnique
+.. Ce module est fourni par l'équipe technique du cours PHS1903 de Polytechnique
 Montréal. La première version a été développée et testée à l'automne 2025.
 La deuxième version est en cours de développement.
 
-Pendant la session de cours, vous pouvez consulter directement vos chargés de 
+.. Pendant la session de cours, vous pouvez consulter directement vos chargés de
 projet et techniciens pour obtenir de l'aide avec ce module. En dehors de la
 session, soumettez un signalement de bogue via Github.
 
