@@ -7,7 +7,7 @@
  * la :download:`fiche de données techniques <../../refs/ATMega4809.pdf>`.
  * Par Émile Jetzer, à l'hiver 2026.
  *
- * .. _une compilation de M. Gammon: https://www.gammon.com.au/adc
+ * .. _une compilation de M. Gammon: :gammon:`une compilation de M. Gammon <adc>`
  */
 
 #ifndef PHS1903ADC

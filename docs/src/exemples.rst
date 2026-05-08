@@ -12,13 +12,15 @@ Clignotement
 
 .. cpp:autodoc:: src/arduino/examples/phsecho/phsecho.ino
 
-.. automodule:: xphs1903.demos.echange
-  :members:
+.. .. automodule:: xphs1903.demos.echange
+..   :members:
+..   :no-index:
 
 Oxymètre
 ---------------------------------
 
 .. cpp:autodoc:: src/arduino/examples/oxymetre/oxymetre.ino
 
-.. automodule:: xphs1903.demos.echange
-  :members:
+.. .. automodule:: xphs1903.demos.echange
+..   :members:
+..   :no-index:

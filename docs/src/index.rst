@@ -16,16 +16,17 @@
 .. session, soumettez un signalement de bogue via Github.
 
 .. toctree::
-	:maxdepth: 3
-	:caption: Table des matières
+  :maxdepth: 3
+  :caption: Table des matières
 
-	quickstart
-	install
-	usage
-	develop
-	contrib
-	exemples
+  self
+  quickstart
+  install
+  usage
+  develop
+  contrib
+  exemples
   code
-	glos
-	license
+  glos
+  license
 

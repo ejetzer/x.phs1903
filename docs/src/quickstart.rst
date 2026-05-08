@@ -7,6 +7,7 @@
 #. Y installer le module ``x.phs1903`` avec ``pip``:
 
   .. code:: shell
+
     pip install x.phs1903@2
 
 #. Ouvrir l'IDE Arduino

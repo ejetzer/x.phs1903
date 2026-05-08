@@ -13,3 +13,6 @@
 [submodule "lib/arduinocore-api"]
 	path = lib/arduinocore-api
 	url = https://github.com/arduino/ArduinoCore-API.git
+[submodule "lib/avr-libc"]
+	path = lib/avr-libc
+	url = https://github.com/avrdudes/avr-libc.git

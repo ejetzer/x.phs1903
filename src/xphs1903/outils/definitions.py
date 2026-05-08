@@ -27,12 +27,7 @@ if TYPE_CHECKING:
 
 
 class ObjetImmuable:
-    """Capsule pour rendre la modification d'un objet peu praticable.
-
-    Attributes:
-        _fixed: indique et détermine si _object peut être modifié
-        _object: l'objet à protéger
-    """
+    """Capsule pour rendre la modification d'un objet peu praticable."""
 
     def __init__(
         self, cls: type, *args: GenericArgsType, **kargs: GenericKArgsType
@@ -47,8 +42,13 @@ class ObjetImmuable:
         changement équivalent pour l'interlocuteur. La solution simple est
         d'empêcher toute modification après l'initialisation.
         """  # noqa: D401
+
+        'indique et détermine si :attr:`_object` peut être modifié'
         self._fixed: bool = False
+
+        "l'objet à protéger"
         self._object: Final[cls] = cls(*args, **kargs)
+
         self.fixer()
 
     def fixer(self) -> None:

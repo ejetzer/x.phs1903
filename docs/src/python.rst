@@ -39,14 +39,14 @@ Implémentation
 .. automodule:: xphs1903.outils
 	:members:
 
-.. automodule:: xphs1903.outils.definitions
-  :members:
-
-.. automodule:: xphs1903.outils.exceptions
-  :members:
-
-.. automodule:: xphs1903.outils.serie
-  :members:
+.. .. automodule:: xphs1903.outils.definitions
+..   :members:
+..
+.. .. automodule:: xphs1903.outils.exceptions
+..   :members:
+..
+.. .. automodule:: xphs1903.outils.serie
+..   :members:
 
 
 .. Définitions uniformes

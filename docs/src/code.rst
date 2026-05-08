@@ -2,6 +2,9 @@
  Interface programmation-application
 =====================================
 
-.. include:: arduino.rst
+.. toctree::
+  :maxdepth: 2
+  :caption: Table des matières
 
-.. include:: python.rst
+  arduino
+  python
