@@ -25,13 +25,11 @@ d'exemples.
 
 .. _Github: https://github.com/ejetzer/x.phs1903
 
-Voir :doc:`install` pour plus de détails.
-
 ------
 Usage
 ------
 
-Voir les exemples fournis dans :doc:`python` et :doc:`arduino`. De base:
+De base:
 
 .. code-block:: python
 
@@ -74,13 +72,17 @@ Pour contribuer au projet, voir :doc:`contrib`
 Licence
 ---------
 
-Ce projet est sous la licence GNU publique (GPLv3+). Voir :doc:`license`.
+Ce projet est sous la licence GNU publique (GPLv3+). Voir `LICENSE.rst`_.
+
+.. _`LICENSE.rst`: LICENSE.rst
 
 ----------
 Citations
 ----------
 
-Si vous utilisez ce projet dans un contexte académique, référez vous à :doc:`citation` pour le format à utiliser. Vous pouvez l'importer directement dans Zotero_.
+Si vous utilisez ce projet dans un contexte académique, référez vous à `CITATION.cff`_ pour le format à utiliser. Vous pouvez l'importer directement dans Zotero_.
+
+.. _`CITATION.cff`: CITATION.cff
 
 .. _Zotero: https://zotero.org
 

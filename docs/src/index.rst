@@ -16,10 +16,9 @@ projet et techniciens pour obtenir de l'aide avec ce module. En dehors de la
 session, soumettez un signalement de bogue via Github.
 
 .. toctree::
-	:maxdepth: 4
+	:maxdepth: 3
 	:caption: Table des matières
 
-	self
 	quickstart
 	install
 	usage
