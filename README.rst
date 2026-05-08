@@ -62,12 +62,6 @@ Le gros du code est écrit par Émile Jetzer, suivant les conseils de Jacques
 Massicotte, la coordination de Camila Rizzi et sous la responsabilité de
 Caroline Boudoux et Jérémie Villeneuve.
 
--------------
-Contribution
--------------
-
-Pour contribuer au projet, voir :doc:`contrib`
-
 ---------
 Licence
 ---------
