@@ -5,19 +5,11 @@
 Ce projet fournit un module Arduino, un module Python et quelques programmes
 d'exemples d'utilisation de ces fichiers.
 
-.. toctree::
-  :maxdepth: 1
-  :caption: Table des matières
-
-  self
-
 --------------
 Documentation
 --------------
 
-La documentation est hébergée sur `Read The Docs`_. La source se trouve dans le répertoire `docs/`_.
-
-.. _`docs/`: docs/
+La documentation est hébergée sur `Read The Docs`_.
 
 .. _`Read The Docs`: https://xphs1903.readthedocs.io/fr/dev/
 
@@ -26,20 +18,20 @@ Installation
 -------------
 
 Le module Python est disponible sur PyPI_. Le module compressé pour Arduino
-est disponible via le répertoire Github_, et même que les programmes Python
+est disponible via le répertoire Github_, de même que les programmes Python
 d'exemples.
 
 .. _PyPI: https://pypi.org/
 
 .. _Github: https://github.com/ejetzer/x.phs1903
 
-Voir la :doc:`section sur l'installation <docs/src/install.rst>` pour plus de détails.
+Voir :doc:`install` pour plus de détails.
 
 ------
 Usage
 ------
 
-Voir les exemples fournis dans :download:`la source python`_ et :download:`la source Arduino`_. De base:
+Voir les exemples fournis dans :doc:`python` et :doc:`arduino`. De base:
 
 .. code-block:: python
 
@@ -48,10 +40,6 @@ Voir les exemples fournis dans :download:`la source python`_ et :download:`la so
 .. code-block:: cpp
 
 	#include <xphs1903.h>
-
-.. _`la source Python`: src/xphs1903
-
-.. _`la source Arduino`: src/arduino
 
 --------
 Support
@@ -80,27 +68,21 @@ Caroline Boudoux et Jérémie Villeneuve.
 Contribution
 -------------
 
-Pour contribuer au projet, voir `docs/src/contrib.rst`_
-
-.. _`docs/src/contrib.rst`: docs/src/contrib.rst
+Pour contribuer au projet, voir :doc:`contrib`
 
 ---------
 Licence
 ---------
 
-Ce projet est sous la licence GNU publique (GPLv3+). Voir `LICENSE.rst`_
-
-.. _LICENSE.rst: LICENSE.rst
+Ce projet est sous la licence GNU publique (GPLv3+). Voir :doc:`license`.
 
 ----------
 Citations
 ----------
 
-Si vous utilisez ce projet dans un contexte académique, référéz vous au fichier
-`CITATION.cff`_ pour le format à utiliser. Vous pouvez l'importer
-directement dans Zotero.
+Si vous utilisez ce projet dans un contexte académique, référez vous à :doc:`citation` pour le format à utiliser. Vous pouvez l'importer directement dans Zotero_.
 
-.. _`CITATION.cff`: CITATION.cff
+.. _Zotero: https://zotero.org
 
 ------------
 Références
@@ -114,4 +96,17 @@ Références
 #. cppreference_
 #. ATMEL_
 
+.. _SciPy:
+
+.. _NumPy:
+
+.. _Matplotlib:
+
+.. _Arduino:
+
+.. _Python:
+
+.. _cppreference:
+
+.. _ATMEL:
 

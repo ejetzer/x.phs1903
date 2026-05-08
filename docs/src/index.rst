@@ -7,8 +7,6 @@
  Code de base pour PHS1903
 ###########################
 
-.. include:: ../../README.rst
-
 .. Ce module est fourni par l'équipe technique du cours PHS1903 de Polytechnique
 Montréal. La première version a été développée et testée à l'automne 2025.
 La deuxième version est en cours de développement.
@@ -18,7 +16,7 @@ projet et techniciens pour obtenir de l'aide avec ce module. En dehors de la
 session, soumettez un signalement de bogue via Github.
 
 .. toctree::
-	:maxdepth: 3
+	:maxdepth: 4
 	:caption: Table des matières
 
 	self
@@ -28,8 +26,7 @@ session, soumettez un signalement de bogue via Github.
 	develop
 	contrib
 	exemples
-	python
-	arduino
+  api
 	glos
 	license
 

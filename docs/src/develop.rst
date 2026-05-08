@@ -30,3 +30,16 @@ En attente
 
 - ``src/xphs1903``
 - ``docs/``
+
+-------------------------------
+ Outils de développement
+-------------------------------
+
+- git_
+- make_
+- `arduino-cli`_
+- twine_
+- sphinx_
+- pipenv_
+- Python_
+- `VS Code`_
