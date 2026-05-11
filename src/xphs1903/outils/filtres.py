@@ -15,11 +15,15 @@ class Cadre:
 
 
 class Transformée:
-
     def __init__[R](self, nom: str, fonc: Callable[R, R], dom: tuple[type[R]]):
         self.nom = nom
         self.fonc = fonc
         self.dom = dom
+
+    def __call__[R](
+        self, nom: str, fonc: Callable[R, R], dom: tuple[type[R]]
+    ) -> Self:
+        return type(self)(nom, fonc, dom)
 
     def __matmul__(self, other):
         if isinstance(other, self.dom):
@@ -29,7 +33,6 @@ class Transformée:
 
 
 class Fenêtre(Transformée):
-
     def __init__(self, fwhm, forme):
         pass
 
@@ -39,7 +42,6 @@ class TransforméeFourier(Transformée):
 
 
 class Filtre(Transformée):
-
     def __init__(self, f_c, Q=1):
         pass
 
@@ -53,12 +55,10 @@ class FiltrePasseHaut(Filtre):
 
 
 class FiltreCoupeBande(Filtre):
-
     def __init__(self, f_a, f_b, Q=1):
         pass
 
 
 class FiltrePasseBande(Filtre):
-
     def __init__(self, f_a, f_b, Q=1):
         pass

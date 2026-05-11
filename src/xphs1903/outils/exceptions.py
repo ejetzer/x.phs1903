@@ -27,6 +27,9 @@ class KeyPHS1903Error(BasePHS1903Error): ...  # noqa: D101
 class ValuePHS1903Error(BasePHS1903Error): ...  # noqa: D101
 
 
+class TypePHS1903Error(BasePHS1903Error): ...  # noqa: D101
+
+
 class ObjetImmuableError(RuntimePHS1903Error):
     """Erreur indiquant un accès non-autorisé à un objet immuable.
 
@@ -105,4 +108,23 @@ class PasUnNombreEntierError(ValuePHS1903Error):
 
         super().__init__(
             f'La sélection {selection:r} ne représentepas un nombre entier.'
+        )
+
+
+class AppareilInexistantOuInvalide(TypePHS1903Error):
+    def __init__(self, appareil: str, _type: type):
+        self.appareil: str = appareil
+        self._type: type = _type
+
+        super().__init__(
+            f"L'objet {appareil:s} de type {_type:s} ne décrit pas un appareil valide."
+        )
+
+
+class StopDeLaLigneDeCommande(BasePHS1903Error, StopIteration):
+    def __init__(self, commandes: Queue, resultats: Queue):
+        self.commandes: Queue = commandes
+        self.resultats: Queue = resultats
+        super().__init__(
+            f'Fin de la file de commandes {commandes:r}, avec les résultats {resultats:r}'
         )

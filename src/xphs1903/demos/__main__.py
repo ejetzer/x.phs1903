@@ -13,7 +13,9 @@ logging = getLogger(__name__)
 
 
 def main():
-    repo_path = (pathlib.Path(__file__) / '..' / '..' / '..' / '.git').resolve()
+    repo_path = (
+        pathlib.Path(__file__) / '..' / '..' / '..' / '.git'
+    ).resolve()
     repo = pygit.Repository(repo_path)
     reference = repo.describe(dirty_suffix='+')
     __version__ = reference
@@ -28,7 +30,9 @@ def main():
     fichier_courant = Path(__file__)
     dossier_courant = fichier_courant.parent
     exemples = [
-        nom.stem for nom in dossier_courant.glob('*.py') if nom.stem != '__main__'
+        nom.stem
+        for nom in dossier_courant.glob('*.py')
+        if nom.stem != '__main__'
     ]
 
     lecteur.add_argument(

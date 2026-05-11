@@ -5,7 +5,10 @@ import logging
 from functools import partial
 from typing import TYPE_CHECKING
 
-from ..outils.exceptions import AttributNonModifiableError, ItemNonModifiableError
+from ..outils.exceptions import (
+    AttributNonModifiableError,
+    ItemNonModifiableError,
+)
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 if TYPE_CHECKING:
@@ -42,7 +45,6 @@ class ObjetImmuable:
         changement équivalent pour l'interlocuteur. La solution simple est
         d'empêcher toute modification après l'initialisation.
         """  # noqa: D401
-
         'indique et détermine si :attr:`_object` peut être modifié'
         self._fixed: bool = False
 
