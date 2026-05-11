@@ -5,12 +5,12 @@
 Clignotement
 -------------
 
-.. cpp:autodoc:: src/arduino/examples/phsblink/phsblink.ino
+.. .. cpp:autodoc:: src/arduino/examples/phsblink/phsblink.ino
 
 Écho série
 ------------
 
-.. cpp:autodoc:: src/arduino/examples/phsecho/phsecho.ino
+.. .. cpp:autodoc:: src/arduino/examples/phsecho/phsecho.ino
 
 .. .. automodule:: xphs1903.demos.echange
 ..   :members:
@@ -19,7 +19,7 @@ Clignotement
 Oxymètre
 ---------------------------------
 
-.. cpp:autodoc:: src/arduino/examples/oxymetre/oxymetre.ino
+.. .. cpp:autodoc:: src/arduino/examples/oxymetre/oxymetre.ino
 
 .. .. automodule:: xphs1903.demos.echange
 ..   :members:

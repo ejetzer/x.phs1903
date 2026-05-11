@@ -13,13 +13,5 @@ d'acquisition du Arduino. Pour un exemple de son utilisation, allez voir :menuse
 Implémentation
 ----------------------------
 
-.. cpp:autodoc:: src/arduino/src/xphs1903.h
 
-.. cpp:autodoc:: src/arduino/src/chrono.h
-
-.. cpp:autodoc:: src/arduino/src/broche.h
-
-.. cpp:autodoc:: src/arduino/src/serie.h
-
-.. cpp:autodoc:: src/arduino/src/hautefrequence.h
 

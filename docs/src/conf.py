@@ -46,8 +46,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     #    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
-    'hawkmoth',  # https://github.com/jnikula/hawkmoth
-    'hawkmoth.ext.napoleon',
+    #'hawkmoth',  # https://github.com/jnikula/hawkmoth
+    #'hawkmoth.ext.napoleon',
 ]
 
 # Autres extensions:
@@ -70,45 +70,45 @@ autosectionlabel_prefix_document = True
 
 apidoc_modules = [{'path': '../../src/', 'destination': '../src/'}]
 
-hawkmoth_root = Path('../..').resolve()
-hawkmoth_clang = [
-#    '-nostdinc',
-#    '-nostdlib',
-#    '--target=megaavr',
-    f'-I{hawkmoth_root}/lib/megaavr/cores/arduino',
-    f'-I{hawkmoth_root}/lib/megaavr/libraries/EEPROM/src',
-    f'-I{hawkmoth_root}/lib/megaavr/libraries/SoftwareSerial/src',
-    f'-I{hawkmoth_root}/lib/megaavr/libraries/SPI/src',
-    f'-I{hawkmoth_root}/lib/megaavr/libraries/Wire/src',
-    f'-I{hawkmoth_root}/lib/megaavr/variants/nona4809',
-    f'-I{hawkmoth_root}/lib/avr/variants/mega',
-    f'-I{hawkmoth_root}/lib/avr/cores/arduino'
-    f'-I{hawkmoth_root}/lib/ArduinoSTL/src',
-    f'-I{hawkmoth_root}/lib/arduinoFFT/src',
-    f'-I{hawkmoth_root}/src/arduino/src',
-    f'-I{hawkmoth_root}/lib/arduinocore-api',
-    f'-I{hawkmoth_root}/lib/arduinoHawkmoth',
-    f'-I{hawkmoth_root}/lib/avr-libc/include',
-]
+#hawkmoth_root = Path('../..').resolve()
+#hawkmoth_clang = [
+##    '-nostdinc',
+##    '-nostdlib',
+##    '--target=megaavr',
+#    f'-I{hawkmoth_root}/lib/megaavr/cores/arduino',
+#    f'-I{hawkmoth_root}/lib/megaavr/libraries/EEPROM/src',
+#    f'-I{hawkmoth_root}/lib/megaavr/libraries/SoftwareSerial/src',
+#    f'-I{hawkmoth_root}/lib/megaavr/libraries/SPI/src',
+#    f'-I{hawkmoth_root}/lib/megaavr/libraries/Wire/src',
+#    f'-I{hawkmoth_root}/lib/megaavr/variants/nona4809',
+#    f'-I{hawkmoth_root}/lib/avr/variants/mega',
+#    f'-I{hawkmoth_root}/lib/avr/cores/arduino'
+#    f'-I{hawkmoth_root}/lib/ArduinoSTL/src',
+#    f'-I{hawkmoth_root}/lib/arduinoFFT/src',
+#    f'-I{hawkmoth_root}/src/arduino/src',
+#    f'-I{hawkmoth_root}/lib/arduinocore-api',
+#    f'-I{hawkmoth_root}/lib/arduinoHawkmoth',
+#    f'-I{hawkmoth_root}/lib/avr-libc/include',
+#]
 
-dev_clang = Path('../.venv/lib/python3.14/site-packages/clang/native/libclang.dylib')
-clang_file_set = False
-
-if dev_clang.exists():
-    Config.set_library_file(str(dev_clang))
-    print(f'Using {dev_clang}')
-    clang_file_set = True
-else:
-    any_clang = Path('.').rglob('libclang.*')
-    for cl in any_clang:
-        if cl.exists():
-            Config.set_library_file(str(cl))
-            print(f'Using {cl}')
-            clang_file_set = True
-            break
-
-if not clang_file_set:
-    readthedocs.clang_setup()
+#dev_clang = Path('../.venv/lib/python3.14/site-packages/clang/native/libclang.dylib')
+#clang_file_set = False
+#
+#if dev_clang.exists():
+#    Config.set_library_file(str(dev_clang))
+#    print(f'Using {dev_clang}')
+#    clang_file_set = True
+#else:
+#    any_clang = Path('.').rglob('libclang.*')
+#    for cl in any_clang:
+#        if cl.exists():
+#            Config.set_library_file(str(cl))
+#            print(f'Using {cl}')
+#            clang_file_set = True
+#            break
+#
+#if not clang_file_set:
+#    readthedocs.clang_setup()
 
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
