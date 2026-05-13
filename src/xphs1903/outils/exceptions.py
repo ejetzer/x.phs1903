@@ -4,6 +4,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from queue import Queue
+
     from .definitions import ObjetImmuable
 
 
@@ -111,7 +113,7 @@ class PasUnNombreEntierError(ValuePHS1903Error):
         )
 
 
-class AppareilInexistantOuInvalide(TypePHS1903Error):
+class AppareilInexistantOuInvalideError(TypePHS1903Error):
     def __init__(self, appareil: str, _type: type):
         self.appareil: str = appareil
         self._type: type = _type
@@ -121,7 +123,7 @@ class AppareilInexistantOuInvalide(TypePHS1903Error):
         )
 
 
-class StopDeLaLigneDeCommande(BasePHS1903Error, StopIteration):
+class StopLigneDeCommande(BasePHS1903Error, StopIteration):
     def __init__(self, commandes: Queue, resultats: Queue):
         self.commandes: Queue = commandes
         self.resultats: Queue = resultats

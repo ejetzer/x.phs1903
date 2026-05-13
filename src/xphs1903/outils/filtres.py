@@ -2,12 +2,11 @@
 # autodoc: <https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html>
 """Fonctions et classes pour faciliter les transformées de Fourier."""
 
-from collections.abc import Callable
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from pandas import DataFrame
-
-from .echange import Échange
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Self
 
 
 class Cadre:
@@ -28,8 +27,7 @@ class Transformée:
     def __matmul__(self, other):
         if isinstance(other, self.dom):
             return self.fonc(other)
-        else:
-            return NotImplemented
+        return NotImplemented
 
 
 class Fenêtre(Transformée):

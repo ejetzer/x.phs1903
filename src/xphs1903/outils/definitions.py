@@ -127,45 +127,45 @@ class ObjetImmuable:
         """Règle attr de _object à val si pas _fixed.
 
         Raises:
-            AttributNonModifiable: Si l'objet ne peut pas être modifié
+            AttributNonModifiableError: Si l'objet ne peut pas être modifié
         """
         if attr == '_fixed' or not self._fixed:
             super().__setattr__(attr, val)
         else:
-            raise AttributNonModifiable(self, attr)
+            raise AttributNonModifiableError(self, attr)
 
     def __setitem__(self, key: GenericKeyType, val: GenericValueType) -> None:
         """Règle key de _object à val si pas _fixed.
 
         Raises:
-            ItemNonModifiable: Si l'objet ne peut pas être modifié
+            ItemNonModifiableError: Si l'objet ne peut pas être modifié
         """
         if not self._fixed:
             self._object[key] = val
         else:
-            raise ItemNonModifiable(self, key)
+            raise ItemNonModifiableError(self, key)
 
     def __delattr__(self, attr: str) -> None:
         """Retire attr de _object si pas _fixed.
 
         Raises:
-            AttributNonModifiable: Si l'objet ne peut pas être modifié
+            AttributNonModifiableError: Si l'objet ne peut pas être modifié
         """
         if attr != '_fixed' and not self._fixed:
             super().__delattr__(attr)
         else:
-            raise AttributNonModifiable(self, attr)
+            raise AttributNonModifiableError(self, attr)
 
     def __delitem__(self, key: GenericKeyType) -> None:
         """Retire key de _object si pas _fixed.
 
         Raises:
-            ItemNonModifiable: Si l'objet ne peut pas être modifié
+            ItemNonModifiableError: Si l'objet ne peut pas être modifié
         """
         if not self._fixed:
             del self._object[key]
         else:
-            raise ItemNonModifiable(self, key)
+            raise ItemNonModifiableError(self, key)
 
 
 def immuable(cls: type) -> type:

@@ -1,8 +1,7 @@
 # Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
 """Affichage de mesures sur un graphe en temps réel."""
 
-import logging
-import sys
+from threading import Thread
 from typing import TYPE_CHECKING
 
 import pandas as pd
@@ -15,13 +14,15 @@ if TYPE_CHECKING:
 
     from pandas import Series
 
-logging = logging.getLogger(__name__)
+
+class FileData(Queue):
+    pass
 
 
-class Acquisition(Programme):
+class Graphe(Thread):
     """Programme d'acquisition de données."""
 
-    def __init__(self, port: str, *cmds: str, loop: bool = False) -> None:
+    def __init__(self, données: FileData) -> None:
         """Programme d'acquisition de données."""
         super(self).__init__(port, *cmds, loop)
         self.stack = DataFrame()
