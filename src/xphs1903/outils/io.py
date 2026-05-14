@@ -8,8 +8,10 @@ import sys
 from queue import ShutDown
 from threading import Thread
 from typing import TYPE_CHECKING
+from matplotlib.axes import Axes
 
 from .serie import FilAppelReponse, FileCommandes, FileRéponses, Réponse
+from .data import Data, FileData
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -54,6 +56,11 @@ class FilEntree(Thread):
 
 
 class FilSortie(Thread):
+    def __init__(self, reponses: FileRéponses | None = None, prefixe: str = ''):
+        self.reponses: FileRéponses = reponses
+        self.prefixe: str = prefixe
+        super().__init__(daemon=True)
+
     def run(self):
         while True:
             try:
@@ -69,3 +76,19 @@ class FilSortie(Thread):
     def __exit__(self, *exc):
         self.join()
         return exc[0] is None
+
+class FilTraceur(Thread):
+
+    def __init__(self, data: FileData | None, ax: Axes | None):
+        self.data: FileData = data
+        self.ax: Figure = fig
+
+    def run(self):
+        while True:
+            try:
+                df: Data = self.data.get()
+            except ShutDown:
+                break
+            else:
+                self.ax.clear()
+                df.plot(ax=self.axes)

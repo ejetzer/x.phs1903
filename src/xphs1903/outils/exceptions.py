@@ -130,3 +130,10 @@ class StopLigneDeCommande(BasePHS1903Error, StopIteration):
         super().__init__(
             f'Fin de la file de commandes {commandes:r}, avec les résultats {resultats:r}'
         )
+
+class AucunDatumError(ValuePHS1903Error):
+
+    def __init__(self, args: tuple[Any], kargs: dict[str, Any]):
+        self.args: tuple[Any] = args
+        self.kargs: dict[str, Any] = kargs
+        super.__init__(f'Arguments invalides {args} et {kargs} reçus, attendait 1 Datum.')
