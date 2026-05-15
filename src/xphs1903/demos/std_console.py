@@ -98,7 +98,7 @@ fs = (serie, copie, clavier, sortie)
 fils = [
     Thread(target=serie, args=(commandes, ser, proxy)),
     Thread(target=copie, args=(proxy, réponses, data)),
-    Thread(target=clavier, args=(commandes,), daemon=True),
+#    Thread(target=clavier, args=(commandes,), daemon=True),
     Thread(target=sortie, args=(réponses,), daemon=True),
 ]
 

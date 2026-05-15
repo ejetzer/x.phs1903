@@ -56,7 +56,9 @@ class FilEntree(Thread):
 
 
 class FilSortie(Thread):
-    def __init__(self, reponses: FileRéponses | None = None, prefixe: str = ''):
+    def __init__(
+        self, reponses: FileRéponses | None = None, prefixe: str = ''
+    ):
         self.reponses: FileRéponses = reponses
         self.prefixe: str = prefixe
         super().__init__(daemon=True)
@@ -77,18 +79,16 @@ class FilSortie(Thread):
         self.join()
         return exc[0] is None
 
-class FilTraceur(Thread):
 
+class Traceur:
     def __init__(self, data: FileData | None, ax: Axes | None):
         self.data: FileData = data
-        self.ax: Figure = fig
+        self.ax: Axes = ax
 
-    def run(self):
-        while True:
-            try:
-                df: Data = self.data.get()
-            except ShutDown:
-                break
-            else:
-                self.ax.clear()
-                df.plot(ax=self.axes)
+    def call(self):
+        try:
+            df: Data = self.data.get()
+        except ShutDown:
+            break
+        else:
+            df.plot(ax=self.axes)

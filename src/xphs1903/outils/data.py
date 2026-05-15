@@ -6,8 +6,8 @@ from numbers import Real
 
 from .exceptions import AucunDatumError
 
-class Data(DataFrame):
 
+class Data(DataFrame):
     @property
     def _constructor(self):
         return Data
@@ -18,7 +18,6 @@ class Data(DataFrame):
 
 
 class Datum(Series):
-
     @property
     def _constructor(self):
         return Datum
@@ -27,10 +26,10 @@ class Datum(Series):
     def _constructor_expanddim(self):
         return Data
 
-class FileData(Queue):
 
+class FileData(Queue):
     def __init__(self, df: Data | None = None):
-        self.df = df is df is not None else Data()
+        self.df = df if df is not None else Data()
         super().__init__()
 
     @typing.override
@@ -49,4 +48,3 @@ class FileData(Queue):
         datum_ligne: Data = datum_col.to_frame().T
         self.df = concat([self.df, datum_ligne])
         return Data(self.df)
-

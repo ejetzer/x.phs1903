@@ -8,6 +8,7 @@ from queue import Queue
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+
 def paires(x: iter, n: int = 2):
     """Retourne des tranches de x de taille n.
 
@@ -18,7 +19,8 @@ def paires(x: iter, n: int = 2):
     list_of_slices = zip(*(iter(the_list),) * slice_size)
 
     """
-    yield from zip( *(iter(x),) * n)
+    yield from zip(*(iter(x),) * n)
+
 
 def se_tourner_les_pouces():
     while True:
@@ -27,8 +29,8 @@ def se_tourner_les_pouces():
         except KeyboardInterrupt:
             break
 
-class FilCopie(Thread):
 
+class FilCopie(Thread):
     def __init__(self, orig: Queue, *args: Queue | Callable):
         self.orig = orig
         self.args = args
@@ -50,7 +52,7 @@ class FilCopie(Thread):
                 x = self.orig.get()
 
                 for q, conv in paires(self.args):
-                     q.put(conv(x))
+                    q.put(conv(x))
                 self.orig.task_done()
             except ShutDown:
                 self.shutdown()
