@@ -20,3 +20,20 @@ Pour installer le module Python, il suffit de:
 Vous devriez maintenant pouvoir import le module et exécuter les exemples.
 
 .. _`VS Code`:
+
+.. --------------
+.. Installation
+.. --------------
+..
+.. Pour installer ce module, vous pouvez utiliser la commande
+..
+.. .. code-block:: shell
+..
+.. 	python3.14 -m pip install x.phs1903@2
+..
+.. Ou pour installer le module dans un nouvel environnement virtuel,
+..
+.. .. code-block:: shell
+..
+.. 	python3.14 -m pipenv install xphs1903@2
+..

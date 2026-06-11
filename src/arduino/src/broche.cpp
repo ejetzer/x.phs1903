@@ -33,7 +33,7 @@ phs::Broche::regler (uint8_t val)
 void
 phs::Broche::loop ()
 {
-  sonde ();
+  this->sonde ();
 }
 
 phs::BrocheAnalogique::BrocheAnalogique () { this->Broche::numero = A0; }
@@ -56,9 +56,15 @@ phs::BrocheAnalogique::sonde ()
   return valeur ();
 }
 
+void
+phs::BrocheAnalogique::loop ()
+{
+  this->sonde ();
+}
+
 uint16_t
 phs::BrocheAnalogique::potentiel () const
 {
-  uint16_t res = valeur () * 5e6 / 1024;
+  uint16_t res = valeur () * 5e3 / 1024;
   return res;
 }

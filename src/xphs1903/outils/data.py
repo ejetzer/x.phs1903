@@ -1,8 +1,9 @@
 # Copyright (C) 2026 Émile Jetzer, Polytechnique Montréal
-from pandas import DataFrame, Series, concat
 import typing
-from queue import Queue
 from numbers import Real
+from queue import Queue
+
+from pandas import DataFrame, Series, concat
 
 from .exceptions import AucunDatumError
 

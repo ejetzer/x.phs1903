@@ -1,14 +1,15 @@
+import logging
+import time
+from queue import Empty, Queue, ShutDown
 from threading import Thread
-from queue import Queue, ShutDown, Empty
+
+import numpy
 from matplotlib import pyplot as plt
 from serial import Serial
-import numpy
-import time
-import logging
 
 logging.basicConfig(level=logging.ERROR)
 
-PORT = '/dev/cu.usbmodemFD1301'
+PORT = '/dev/cu.usbmodemFA13101'
 FIGNAME = 'test_fig.pdf'
 
 commandes = Queue()
@@ -18,13 +19,15 @@ data = Queue()
 
 files = [commandes, proxy, réponses, data]
 
-ser = Serial(PORT)
+ser = Serial(PORT, 115_200)
 plt.ion()
-ligne, *_ = plt.plot([], [])
+ligne1, *_ = plt.plot([], [])
+ligne2, *_ = plt.plot([], [])
 plt.ylim(0, 5000)
 plt.xlim(auto=True)
 plt.show()
 plt.pause(0.001)
+
 
 def serie(commandes, ser, proxy):
     while True:
@@ -47,10 +50,12 @@ def serie(commandes, ser, proxy):
             commandes.task_done()
         time.sleep(0.001)
 
+
 def parse(x):
     cols = x.split()
     vals = [int(c.split(':')[1]) for c in cols]
     return vals
+
 
 def copie(proxy, réponses, data):
     while True:
@@ -72,15 +77,17 @@ def copie(proxy, réponses, data):
                 proxy.task_done()
         time.sleep(0.001)
 
+
 def clavier(commandes):
     while True:
         com = input('>>>')
-        
+
         try:
             commandes.put(com)
         except ShutDown:
             break
         time.sleep(0.001)
+
 
 def sortie(réponses):
     while True:
@@ -92,7 +99,7 @@ def sortie(réponses):
             print(rep)
             réponses.task_done()
         time.sleep(0.001)
-        
+
 
 fs = (serie, copie, clavier, sortie)
 fils = [
@@ -109,10 +116,14 @@ while all(fil.is_alive() for fil in fils):
     try:
         ds = data.get()
         logging.info('ds = %s', ds)
-        logging.info('xdata = %s', ligne.get_xdata())
-        logging.info('ydata = %s', ligne.get_ydata())
-        ligne.set_xdata(numpy.append(ligne.get_xdata(), ds[0]))
-        ligne.set_ydata(numpy.append(ligne.get_ydata(), ds[1]))
+        logging.info('xdata = %s', ligne1.get_xdata())
+        logging.info('ydata = %s', ligne1.get_ydata())
+        logging.info('xdata = %s', ligne2.get_xdata())
+        logging.info('ydata = %s', ligne2.get_ydata())
+        ligne1.set_xdata(numpy.append(ligne1.get_xdata(), ds[0]))
+        ligne1.set_ydata(numpy.append(ligne1.get_ydata(), ds[1]))
+        ligne2.set_xdata(numpy.append(ligne2.get_xdata(), ds[0]))
+        ligne2.set_ydata(numpy.append(ligne2.get_ydata(), ds[2]))
         data.task_done()
         plt.xlim(0, ds[0])
         plt.pause(0.001)
@@ -125,10 +136,9 @@ while all(fil.is_alive() for fil in fils):
         break
     except ShutDown:
         break
-        
+
 for f in files:
     f.shutdown()
 
 for f in fils:
     f.join(timeout=1)
-

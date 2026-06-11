@@ -5,10 +5,10 @@
 phs::Broche del_660nm (2);
 phs::Broche del_900nm (3);
 phs::Broche del_int (13);
-phs::BrocheAnalogique pd_660nm (A1);
-phs::BrocheAnalogique pd_900nm (A2);
-phs::Chrono chrono (250);
-phs::LigneSerie serie (9600);
+phs::BrocheAnalogique pd_660nm (A2);
+phs::BrocheAnalogique pd_900nm (A3);
+phs::Chrono chrono (10);
+phs::LigneSerie serie (115200);
 
 void
 setup ()

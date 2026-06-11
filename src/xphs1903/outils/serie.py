@@ -805,3 +805,43 @@ class FilAnnonce(FilAppelReponse):
     ):
         resultats: FileRéponses = FileRéponsesNulles()
         super().__init__(appareil, commandes, resultats)
+
+
+class Arduino(FilAppelReponse):
+    __devname__: str = 'Arduino'
+
+    def __init__(self, dev: ListPortInfo | str | int | None = None) -> None:
+        appareil: ListPortInfo
+        ports: list[ListPortInfo]
+        if isinstance(dev, ListPortInfo):
+            appareil = dev
+        elif dev is None:
+            ports = [d for d in list_ports.grep(self.__devname__)]
+            if len(ports) == 1:
+                appareil = ports[0]
+            else:
+                raise AppareilsTropNombreuxError(self.__devname__, ports)
+        elif isinstance(dev, str):
+            ports = [d for d in list_ports.grep(dev)]
+            if len(ports) == 1:
+                appareil = ports[0]
+            else:
+                raise AppareilIntrouvableError(dev, ports)
+        elif isinstance(dev, int):
+            ports = [d for d in list_ports.grep(self.__devname__)]
+            if len(ports) >= dev:
+                appareil = ports[dev]
+            else:
+                raise PasAssezAppareilsError(dev, ports)
+        else:
+            raise SelectionAppareilTypeError(dev, ListPortInfo, str, int, None)
+
+        super().__init__(appareil)
+
+
+class ArduinoNano(Arduino):
+    __devname__: str = 'Arduino Nano'
+
+
+class ArduinoNanoEvery(ArduinoNano):
+    __devname__: Final[str] = 'Arduino Nano Every'

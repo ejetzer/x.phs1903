@@ -8,10 +8,11 @@ import sys
 from queue import ShutDown
 from threading import Thread
 from typing import TYPE_CHECKING
+
 from matplotlib.axes import Axes
 
-from .serie import FilAppelReponse, FileCommandes, FileRéponses, Réponse
 from .data import Data, FileData
+from .serie import FilAppelReponse, FileCommandes, FileRéponses, Réponse
 
 if TYPE_CHECKING:
     from collections.abc import Callable

@@ -48,6 +48,7 @@ public:
   BrocheAnalogique (uint8_t numero);
   void setup ();
   uint16_t sonde ();
+  void loop ();
   uint16_t potentiel () const;
   virtual size_t
   phs::BrocheAnalogique::printTo (Print &p) const

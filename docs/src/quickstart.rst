@@ -22,3 +22,18 @@
 #. Valider le fonctionnement.
 
 Félicitations!
+
+.. --------------
+.. Utilisation
+.. --------------
+..
+.. Ce module assume que son compagnon Arduino a aussi été installé.
+.. Une fois le programme Arduino inclut en exemple compilé et téléchargé,
+.. vous pouvez lancer le programme ``demo.py`` ainsi:
+..
+.. .. code-block:: shell
+..
+.. 	python3.14 -m xphs1903
+..
+.. Pour l'inclure à votre projet, utilisez l'énoncé ``import xphs1903`` normal
+.. de Python.

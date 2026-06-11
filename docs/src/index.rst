@@ -20,13 +20,16 @@
   :caption: Table des matières
 
   self
-  quickstart
-  install
-  usage
-  develop
-  contrib
-  exemples
-  code
+  python
   glos
-  license
+
+..  quickstart
+..  install
+..  arduino
+..  usage
+..  develop
+..  contrib
+..  exemples
+..  license
+
 

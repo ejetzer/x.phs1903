@@ -1,9 +1,9 @@
+from collections.abc import Callable
 from queue import Queue
 from typing import Self
-from collections.abc import Callable
 
 
-class QueueBase[A](Queue):
+class FileBase[A](Queue):
     def __init__(
         self,
         maxsize: int = 0,
@@ -55,16 +55,16 @@ class QueueBase[A](Queue):
         return super().get_nowait()
 
 
-def queue[A](_cls: type[A]) -> type[QueueBase]:
+def file[A](_cls: type[A]) -> type[FileBase]:
 
-    class _Q[A](QueueBase):
+    class _Q[A](FileBase):
         def __init__(
-            self, maxsize: int = 0, aval: list[QueueBase[A]] | None = None
+            self, maxsize: int = 0, aval: list[FileBase[A]] | None = None
         ) -> None:
             super().__init__(maxsize, _cls, aval)
 
     return _Q
 
 
-QueueStr = queue(str)
-QueueBytes = queue(bytes)
+FileStr = file(str)
+FileBytes = file(bytes)
