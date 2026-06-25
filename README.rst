@@ -46,8 +46,8 @@ serez pas encouragés à les utiliser:
 
 #. La ligne de commande ``bash`` ou ``zsh``
 
-    #. Via Cygwin_ sur Windows
-    #. Ou via votre terminal préféré sur Linux et MacOS
+   #. Via Cygwin_ sur Windows
+   #. Ou via votre terminal préféré sur Linux et MacOS
 
 #. Le système de gestion des versions `git`_
 #. L'interpréteur `Python 3.14`_
