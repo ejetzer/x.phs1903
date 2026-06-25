@@ -50,7 +50,6 @@ def serie(commandes, ser, proxy):
             commandes.task_done()
         time.sleep(0.001)
 
-
 def parse(x):
     cols = x.split()
     vals = [int(c.split(':')[1]) for c in cols]

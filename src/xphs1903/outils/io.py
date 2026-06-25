@@ -21,75 +21,15 @@ if TYPE_CHECKING:
     from serial import Serial
 
 
-class FilEntree(Thread):
-    def __init__(
-        self,
-        commandes: FileCommandes | None = None,
-        invite: str = '>>>',
-        encoding: str = 'utf-8',
-    ):
-        self.commandes = commandes
-        self.invite: str = invite
-        self.encoding: str = encoding
+class Clavier:
+    """Capture l'entrée clavier et la transmet à un autre fil."""
+    pass
 
-        super().__init__(daemon=True)
+class Fichier:
+    """Reçoit des entrées et les écrits dans un fichier bloc par bloc."""
+    pass
 
-    @classmethod
-    def dune_ligneserie(cls, ser: FilAppelReponse):
-        return cls(ser.commandes)
+class Sortie:
+    """Reçoit des entrées et les écrits dans la sortie standard."""
+    pass
 
-    def run(self):
-        while not self.arret:
-            nouv: str = input(self.invite)
-            cmd: bytes = bytes(nouv, encoding=self.encoding)
-            try:
-                self.commandes.put(nouv, cmd=cmd)
-            except ShutDown:
-                break
-
-    def __enter__(self):
-        self.start()
-        return self
-
-    def __exit__(self, *exc):
-        self.join()
-        return exc[0] is None
-
-
-class FilSortie(Thread):
-    def __init__(
-        self, reponses: FileRéponses | None = None, prefixe: str = ''
-    ):
-        self.reponses: FileRéponses = reponses
-        self.prefixe: str = prefixe
-        super().__init__(daemon=True)
-
-    def run(self):
-        while True:
-            try:
-                nouv: Réponse = self.reponses.get()
-            except ShutDown:
-                break
-            print(f'{self.prefixe}{nouv}')
-
-    def __enter__(self):
-        self.start()
-        return self
-
-    def __exit__(self, *exc):
-        self.join()
-        return exc[0] is None
-
-
-class Traceur:
-    def __init__(self, data: FileData | None, ax: Axes | None):
-        self.data: FileData = data
-        self.ax: Axes = ax
-
-    def call(self):
-        try:
-            df: Data = self.data.get()
-        except ShutDown:
-            break
-        else:
-            df.plot(ax=self.axes)

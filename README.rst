@@ -5,39 +5,107 @@
 Ce projet fournit un module Arduino, un module Python et quelques programmes
 d'exemples d'utilisation de ces fichiers.
 
---------------
-Documentation
---------------
-
-La documentation est hébergée sur `Read The Docs`_.
-
-.. _`Read The Docs`: https://xphs1903.readthedocs.io/fr/dev/
-
 -------------
-Installation
+Utilisation
 -------------
 
-Le module Python est disponible sur PyPI_. Le module compressé pour Arduino
-est disponible via le répertoire Github_, de même que les programmes Python
-d'exemples.
+Outils
+--------
 
-.. _PyPI: https://pypi.org/
+Dans le cadre du cours PHS1903, vous devez installer:
 
-.. _Github: https://github.com/ejetzer/x.phs1903
+#. L'éditeur Spyder_
+#. L'interpréteur `Python 3.14`_
+#. L'`environnement de développement Arduino`_
 
-------
-Usage
-------
+.. _Spyder: https://www.spyder-ide.org/download
 
-De base:
+.. _`Python 3.14`: https://www.python.org/downloads/
 
-.. code-block:: python
+.. _`environnement de développement Arduino`: https://www.arduino.cc/en/software/#ide
 
-	import xphs1903
+Ces outils sont ceux qui sont *officiellement supportés* par l'équipe
+technique dans le cadre du cours. D'autres éditeurs que vous pourriez utiliser,
+mais pour lesquels l'équipe du cours ne prendra pas la responsabilité du
+débogage sont:
 
-.. code-block:: cpp
+- `VS Code`_ ou la version libre `VS Codium`_
+- `Zed`_ ou la version sans contribution de GML, `gram`_
 
-	#include <xphs1903.h>
+.. _`VS Code`: https://code.visualstudio.com/
+
+.. _`VS Codium`: https://vscodium.com/
+
+.. _`Zed`: https://zed.dev/
+
+.. _`gram`: https://gram-editor.com/
+
+Pour les étudiants ayant plus d'expérience avec la programmation et la ligne
+de commande, ces outils sont aussi *officiellement supportés* mais vous ne
+serez pas encouragés à les utiliser:
+
+#. La ligne de commande ``bash`` ou ``zsh``
+    #. Via Cygwin_ sur Windows
+    #. Ou via votre terminal préféré sur Linux et MacOS
+#. Le système de gestion des versions `git`_
+#. L'interpréteur `Python 3.14`_
+#. L'`environnement développement Arduino`_ (nous n'encourageons pas
+  l'utilisation des outils `arduino-cli` dans le cadre du cours)
+#. N'importe quel éditeur de texte avec coloration syntaxique, comme
+  `Notepad++`_, `TextMate`_, `vim`_ ou votre préféré.
+
+.. _`Cygwin`: https://cygwin.com/
+
+.. _`git`: https://git-scm.com/
+
+.. _`Notepad++`: https://notepad-plus-plus.org/
+
+.. _`TextMate`: https://macromates.com/
+
+.. _`vim`: https://www.vim.page/
+
+Premiers pas
+---------------
+
+#. Assurez vous d'avoir installer les outils décrits plus haut.
+#. Téléchargez l'archive zip du module Arduino xphs1903 sur la page
+  des `sorties`_.
+#. Installez le module Arduino xphs1903.
+#. Téléchargez le `modèle de projet`_ de la page des `sorties`_.
+#. Extrayez le dossier ``template`` et renommez le en quelque chose
+  de plus descriptiof
+#. Renommez les différents fichiers nommés ``projets`` avec un nom
+  descriptif de votre projet, mais concis, avec seulement des caractères
+  alphanumériques.
+#. Ouvrez le fichier ``.ino`` dans l'IDE Arduino.
+#. Ouvrez Spyder
+#. Sélectionnez :menu:`Projects -> New Project...` et créez un nouveau projet
+  à partir de votre répertoire anciennement nommé ``template``.
+#. Dans les réglages de Spyder, réglez l'interpréteur Python à
+  l'interpréteur Python 3.14 que vous avez installé précédemment.
+#. Dans la console IPython de Spyder, entrez les commandes:
+
+  .. code::ipython
+
+      import venv
+      venv.create('venv', system_site_packages=True, with_pip=True)
+
+#. Dans les préférences de Spyder, changez l'interpréteur Python pour
+    ``venv/bin/python``.
+#. Rechargez la console IPython de Spyder
+#. Dans la console IPython, entrez
+
+  .. code::ipython
+
+      pip install -r requirements.txt
+
+#. Complétez les différents `tutoriels`_.
+
+.. _`modèle de projet`:
+
+.. _`sorties`:
+
+.. _`tutoriels`:
 
 --------
 Support
@@ -52,6 +120,14 @@ Seules les requêtes provenant d'étudiants de la session en cours de PHS1903 on
 l'assurance d'être lues, entendues et prises en compte dans le développement du
 module ou la correction de bogues. Ces requêtes doivent être faites par
 courriel ou via le groupe MS Teams approprié.
+
+--------------
+Documentation
+--------------
+
+La documentation complète est hébergée sur `Read The Docs`_.
+
+.. _`Read The Docs`: https://xphs1903.readthedocs.io/fr/dev/
 
 --------
 Auteurs
@@ -84,25 +160,44 @@ Si vous utilisez ce projet dans un contexte académique, référez vous à `CITA
 Références
 ------------
 
-#. SciPy_
-#. NumPy_
-#. Matplotlib_
-#. Arduino_
-#. Python_
-#. cppreference_
-#. ATMEL_
+Accessibles à tous
+---------------------------
 
-.. _SciPy:
+Une fois que vous êtes à l'aise avec les exemples de code, et que vous
+avez lu les différents tutoriels de ce module, je vous invite à consulter
+les documentations suivantes pour aller plus loin.
 
-.. _NumPy:
+#. SciPy_, pour le calcul scientifique, en particulier les transformées
+  de Fourier.
+#. NumPy_, pour les calculs plus simples, mais sur de grands ensembles de
+  données, comme toute une série de mesures.
+#. Matplotlib_, pour l'affichage de vos données.
+#. Arduino_, pour de la documentation générale sur l'Arduino.
+#. Python_, pour de la documentation générale sur Python.
 
-.. _Matplotlib:
+Lecture avancée
+------------------
 
-.. _Arduino:
+Ces références sont plus détaillées, plus précises, mais aussi plus arides
+et difficiles à comprendre si vous n'êtes pas déjà à l'aise avec le C++ et
+la programmation pour micro-contrôleurs. Je vous conseille de venir discuter
+avec moi (Émile) avant de vous lancer dans ces lectures, du moins dans le cadre
+du cours PHS1903.
 
-.. _Python:
+#. cppreference_, une référence complète sur le C++
+#. ATMEL_, une référence pour les micro-contrôleurs des Arduino Nano Every.
 
-.. _cppreference:
+.. _SciPy: https://docs.scipy.org/doc/scipy/
 
-.. _ATMEL:
+.. _NumPy: https://numpy.org/doc/stable/
+
+.. _Matplotlib: https://matplotlib.org/stable/users/index
+
+.. _Arduino: https://docs.arduino.cc/
+
+.. _Python: https://docs.python.org/3/
+
+.. _cppreference: https://cppreference.com/
+
+.. _ATMEL: https://www.microchip.com/en-us/product/ATMEGA4809
 

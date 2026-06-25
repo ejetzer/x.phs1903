@@ -40,181 +40,206 @@ if TYPE_CHECKING:
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-class FilCopie[A, B](Thread):
-    """Fil copiant les éléments d'une file vers d'autres.
+import logging
+import time
+from queue import Empty, Queue, ShutDown
+from threading import Thread
 
-    Parameters
-    -----------
-    orig: queue.Queue[A]
-        File d'origine, à copier.
-    dest: list[queue.Queue[B]]
-        Files vers lesquelles copier les éléments de :py:data:`orig`.
-    conv: list[typing.Callable[[A], B]]
-        Fonctions de conversion à utiliser.
+import numpy
+from matplotlib import pyplot as plt
+from serial import Serial
 
-    Attributes
-    -----------
-    orig: queue.Queue[A]
-        File d'origine, à copier.
-    dest: list[queue.Queue[B]]
-        Files vers lesquelles copier :py:attr:`FilCopie.orig`.
-    conv: list[typing.Callable[[A], B]]
-        Fonctions de conversion de :py:attr:`FilCopie.orig`
-        vers :py:attr:`FilCopie.dest`.
+logging.basicConfig(level=logging.ERROR)
 
-    Methods
-    --------
-    start()
-        Démarre l'exécution du fil, et donc la copie d'une file
-        aux autres. Héritée de :py:class:`threading.Thread`.
+PORT = '/dev/cu.usbmodemFA13101'
+FIGNAME = 'test_fig.pdf'
 
-    Notes
-    ------
-    Cette classe est destinée à être utilisée quand les différentes
-    files se trouvent dans différents fils d'exécution, avec normalement
-    aucune file traitée uniquement dans le fil principal. En particulier,
-    cette classe résout le problème d'envoyer un message d'un fil
-    d'exécution à plusieurs autres fils.
+commandes = Queue()
+proxy = Queue()
+réponses = Queue()
+data = Queue()
 
-    Par exemple, dans un programme de communication et affichage de base
-    du cours PHS1903, on peut vouloir afficher et traiter les mêmes données
-    de manières différentes et simultanées. On peut donc relier la file de
-    sortie du fil de prise de données aux files d'entrée des fils de traitement
-    et d'affichage.
+files = [commandes, proxy, réponses, data]
 
-    See also
-    ---------
-    threading.Thread: Classe de fil d'exécution en parallèle
-    queue.Queue: Classe de file partagée entre fils
-    itertools.tee: Fonction similaire mais pour des itérateurs
+ser = Serial(PORT, 115_200)
+plt.ion()
+ligne1, *_ = plt.plot([], [])
+ligne2, *_ = plt.plot([], [])
+plt.ylim(0, 5000)
+plt.xlim(auto=True)
+plt.show()
+plt.pause(0.001)
 
-    Examples
-    ----------
-    Un exemple simplifié à en être inutile et trivial serait le suivant.
-    Rien n'est fait avec les données, mais on peut voir qu'elles ont
-    été copiées vers les deux files de sortie.
 
-    >>> with FilCopie(
-    ...     queue.Queue(), [queue.Queue(), queue.Queue()], lambda x: x
-    ... ) as fil:
-    ...     for i in range(10):
-    ...         fil.orig.put(1)
-    >>>  while (res := fil.dest[0].get()):
-    ...     print(res)
-    ...
-    0
-    1
-    2
-    3
-    4
-    5
-    6
-    7
-    8
-    9
-    >>> while res := fil.dest[1].get():
-    ...     print(res)
-    0
-    1
-    2
-    3
-    4
-    5
-    6
-    7
-    8
-    9
+def serie(commandes, ser, proxy):
+    while True:
+        try:
+            com = commandes.get(timeout=0.01)
+        except ShutDown:
+            proxy.shutdown()
+            ser.close()
+            break
+        except Empty:
+            if ser.in_waiting:
+                rep = str(ser.readline(), encoding='utf-8')
+                try:
+                    proxy.put(rep)
+                except ShutDown:
+                    ser.close()
+                    break
+        else:
+            ser.write(bytes(com, encoding='utf-8'))
+            commandes.task_done()
+        time.sleep(0.001)
 
-    """
+class Appareil(FilAppelReponse):
+    __devname__: str
 
-    def __init__(
-        self,
-        orig: Queue[A],
-        dest: list[Queue[B]],
-        conv: list[Callable[[A], B]],
-    ) -> None:
-        """Fil copiant les éléments d'une file vers d'autres.
+    def __init__(self, dev: ListPortInfo | str | int | None = None) -> None:
+        appareil: ListPortInfo
+        ports: list[ListPortInfo]
+        if isinstance(dev, ListPortInfo):
+            appareil = dev
+        elif dev is None:
+            ports = [d for d in list_ports.grep(self.__devname__)]
+            if len(ports) == 1:
+                appareil = ports[0]
+            else:
+                raise AppareilsTropNombreuxError(self.__devname__, ports)
+        elif isinstance(dev, str):
+            ports = [d for d in list_ports.grep(dev)]
+            if len(ports) == 1:
+                appareil = ports[0]
+            else:
+                raise AppareilIntrouvableError(dev, ports)
+        elif isinstance(dev, int):
+            ports = [d for d in list_ports.grep(self.__devname__)]
+            if len(ports) >= dev:
+                appareil = ports[dev]
+            else:
+                raise PasAssezAppareilsError(dev, ports)
+        else:
+            raise SelectionAppareilTypeError(dev, ListPortInfo, str, int, None)
 
-        Parameters
-        -----------
-        orig: queue.Queue[A]
-            File d'origine, à copier.
-        dest: list[queue.Queue[B]]
-            Files vers lesquelles copier les éléments de :py:data:`orig`.
-        conv: list[Callable[[A], B]]
-            Fonctions de conversion à utiliser.
-        """
-        self.orig: Queue[A] = orig
-        self.dest: list[Queue[B]] = dest.copy()
-        self.conv: list[Callable[[A], B]] = conv.copy()
+        super().__init__(appareil)
 
-        # Pas besoin de modifier les valeurs par défaut
-        # Sauf pour la démonisation
-        super().__init__(daemon=True)
-
-    def shutdown(self) -> None:
-        """Termine le fil d'exécution.
-
-        Appelle :py:meth:`threading.Thread.shutdown` sur
-        :py:attr:`FilCopie.orig` et sur les
-        files listées dans :py:attr:`FilCopie.dest`. Termine ensuite le fil
-        d'exécution.
-        """
-        for q in self.dest:
-            q.shutdown()
-        super().shutdown()
-
-    def join(self) -> None:
-        """Termine le fil d'exécution.
-
-        Attend que la file :py:attr:`FilCopie.orig` soit vide, puis celles
-        listées dans :py:attr:`FilCopie.dest`. Termine ensuite le fil
-        d'exécution.
-        """
-        for q in self.dest:
-            q.join()
-        super().join()
-
-    def __enter__(self) -> Self:
-        """Démarre le fil d'exécution.
-
-        Returns
-        --------
-        Self
-        """
+    def __enter__(self):
         self.start()
-        return self
 
-    def __exit__(self, *exc) -> bool:
-        """Termine le fil d'exécution.
+    def __exit__(self, *exc):
+        if exc[0] is not None:
+            self.shutdown()
+            return False
+        else:
+            self.join()
+            return True
 
-        Parameters
-        -----------
-        *exc
-            Description de l'exception ou :py:obj:None.
+    def start(self):
+        pass
 
-        Returns
-        --------
-        True
-            Si il n'y a aucune exception
-        False
-            Relève toutes les exceptions sans les gérer.
-        """
-        self.shutdown()
-        return exc[0] is None
+    def join(self):
+        pass
 
-    def run(self) -> None:
-        """Copie les éléments de :py:attr:`FilCopie.orig` vers :py:attr:`FilCopie.dest`."""
-        while True:
+    def shutdown(self):
+        pass
+
+class Arduino(Appareil):
+    __devname__: str = 'Arduino'
+
+class ArduinoNanoEvery(Arduino):
+    __devname__: str = 'Arduino Nano Every'
+
+def parse(x):
+    cols = x.split()
+    vals = [int(c.split(':')[1]) for c in cols]
+    return vals
+
+
+def copie(proxy, réponses, data):
+    while True:
+        try:
+            x = proxy.get()
+        except ShutDown:
+            réponses.shutdown()
+            data.shutdown()
+            break
+        else:
+            réponses.put(x)
             try:
-                x = self.orig.get()
+                x = parse(x)
+            except Exception:
+                continue
+            else:
+                data.put(x)
+            finally:
+                proxy.task_done()
+        time.sleep(0.001)
 
-                for q, conv in zip(self.dest, self.conv, strict=True):
-                    q.put(conv(x))
-                self.orig.task_done()
-            except ShutDown:
-                self.shutdown()
-                break
+
+def clavier(commandes):
+    while True:
+        com = input('>>>')
+
+        try:
+            commandes.put(com)
+        except ShutDown:
+            break
+        time.sleep(0.001)
+
+
+def sortie(réponses):
+    while True:
+        try:
+            rep = réponses.get().strip()
+        except ShutDown:
+            break
+        else:
+            print(rep)
+            réponses.task_done()
+        time.sleep(0.001)
+
+
+fs = (serie, copie, clavier, sortie)
+fils = [
+    Thread(target=serie, args=(commandes, ser, proxy)),
+    Thread(target=copie, args=(proxy, réponses, data)),
+#    Thread(target=clavier, args=(commandes,), daemon=True),
+    Thread(target=sortie, args=(réponses,), daemon=True),
+]
+
+for fil in fils:
+    fil.start()
+
+while all(fil.is_alive() for fil in fils):
+    try:
+        ds = data.get()
+        logging.info('ds = %s', ds)
+        logging.info('xdata = %s', ligne1.get_xdata())
+        logging.info('ydata = %s', ligne1.get_ydata())
+        logging.info('xdata = %s', ligne2.get_xdata())
+        logging.info('ydata = %s', ligne2.get_ydata())
+        ligne1.set_xdata(numpy.append(ligne1.get_xdata(), ds[0]))
+        ligne1.set_ydata(numpy.append(ligne1.get_ydata(), ds[1]))
+        ligne2.set_xdata(numpy.append(ligne2.get_xdata(), ds[0]))
+        ligne2.set_ydata(numpy.append(ligne2.get_ydata(), ds[2]))
+        data.task_done()
+        plt.xlim(0, ds[0])
+        plt.pause(0.001)
+        time.sleep(0.001)
+    except KeyboardInterrupt:
+        commandes.shutdown()
+        proxy.shutdown()
+        réponses.shutdown()
+        data.shutdown()
+        break
+    except ShutDown:
+        break
+
+for f in files:
+    f.shutdown()
+
+for f in fils:
+    f.join(timeout=1)
 
 
 class ObjetImmuable:

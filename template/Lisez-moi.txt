@@ -1,0 +1,41 @@
+<!-- Ceci est un commentaire. -->
+<!-- Ce document est écrit en Markdown -->
+<!-- https://daringfireball.net/projects/markdown/ -->
+
+<!-- Changez le titre de votre projet: -->
+# <titre du projet>
+<!-- Changez aussi le nom des fichiers suivants: -->
+<!-- * projet/
+     * projet/projet.ino
+     * projet.py                                 -->
+<!-- pour qu'ils aient un nom descriptif. -->
+<!-- Les noms de vos fichiers ne devraient contenir que des caractères
+     alphanumériques et le trait de soulignement. -->
+
+Remplacez ce texte par une description de votre projet.
+    - Le contexte du cours
+    - La mise en situation
+    - Ce que votre code doit faire
+
+## Usage/Examples
+
+Indiquez ici comment utiliser votre code. Eg:
+
+1. Ouvrir l'IDE Arduino
+2. Ouvrir le projet Arduino
+3. Compiler le code
+4. Télécharger le code sur l'Arduino
+5. Ouvrir l'éditeur Spyder
+6. Ouvrir le projet
+7. Activer l'environnement virtuel
+8. Exécuter le programme `projet.py`
+
+## Auteurs
+
+<!-- Listez les noms de tous les membres de votre équipe -->
+- [Nom, prénom](courriel.institutionnel@polymtl.ca)
+
+## Remerciements
+
+<!-- Identifiez ici vos professeurs, chargés, techniciens, agents
+     administratifs etc qui vous ont aidés pour votre projet et le cours. -->
