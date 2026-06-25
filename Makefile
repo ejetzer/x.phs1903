@@ -67,6 +67,7 @@ include make/arduino.Makefile
 include make/python.Makefile
 include make/docs.Makefile
 include make/tests.Makefile
+include make/template.Makefile
 
 init: Pipfile.lock $(MAKE)
 	$(MAKE) -C $(dir_docs) init

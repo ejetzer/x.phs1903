@@ -45,14 +45,16 @@ de commande, ces outils sont aussi *officiellement supportés* mais vous ne
 serez pas encouragés à les utiliser:
 
 #. La ligne de commande ``bash`` ou ``zsh``
+
     #. Via Cygwin_ sur Windows
     #. Ou via votre terminal préféré sur Linux et MacOS
+
 #. Le système de gestion des versions `git`_
 #. L'interpréteur `Python 3.14`_
-#. L'`environnement développement Arduino`_ (nous n'encourageons pas
-  l'utilisation des outils `arduino-cli` dans le cadre du cours)
+#. L'`environnement de développement Arduino`_ (nous n'encourageons pas
+   l'utilisation des outils `arduino-cli` dans le cadre du cours)
 #. N'importe quel éditeur de texte avec coloration syntaxique, comme
-  `Notepad++`_, `TextMate`_, `vim`_ ou votre préféré.
+   `Notepad++`_, `TextMate`_, `vim`_ ou votre préféré.
 
 .. _`Cygwin`: https://cygwin.com/
 
@@ -69,43 +71,43 @@ Premiers pas
 
 #. Assurez vous d'avoir installer les outils décrits plus haut.
 #. Téléchargez l'archive zip du module Arduino xphs1903 sur la page
-  des `sorties`_.
+   des `sorties`_.
 #. Installez le module Arduino xphs1903.
 #. Téléchargez le `modèle de projet`_ de la page des `sorties`_.
 #. Extrayez le dossier ``template`` et renommez le en quelque chose
-  de plus descriptiof
+   de plus descriptif.
 #. Renommez les différents fichiers nommés ``projets`` avec un nom
-  descriptif de votre projet, mais concis, avec seulement des caractères
-  alphanumériques.
+   descriptif de votre projet, mais concis, avec seulement des caractères
+   alphanumériques.
 #. Ouvrez le fichier ``.ino`` dans l'IDE Arduino.
 #. Ouvrez Spyder
 #. Sélectionnez :menu:`Projects -> New Project...` et créez un nouveau projet
-  à partir de votre répertoire anciennement nommé ``template``.
+   à partir de votre répertoire anciennement nommé ``template``.
 #. Dans les réglages de Spyder, réglez l'interpréteur Python à
-  l'interpréteur Python 3.14 que vous avez installé précédemment.
+   l'interpréteur Python 3.14 que vous avez installé précédemment.
 #. Dans la console IPython de Spyder, entrez les commandes:
 
-  .. code::ipython
+  .. code:: python
 
       import venv
       venv.create('venv', system_site_packages=True, with_pip=True)
 
 #. Dans les préférences de Spyder, changez l'interpréteur Python pour
-    ``venv/bin/python``.
+   ``venv/bin/python``.
 #. Rechargez la console IPython de Spyder
 #. Dans la console IPython, entrez
 
-  .. code::ipython
+  .. code:: bash
 
       pip install -r requirements.txt
 
 #. Complétez les différents `tutoriels`_.
 
-.. _`modèle de projet`:
+.. _`modèle de projet`: https://github.com/ejetzer/x.phs1903/releases/download/v2/template.zip
 
-.. _`sorties`:
+.. _`sorties`: https://github.com/ejetzer/x.phs1903/releases
 
-.. _`tutoriels`:
+.. _`tutoriels`: https://xphs1903.readthedocs.io/fr/dev/
 
 --------
 Support
@@ -168,9 +170,9 @@ avez lu les différents tutoriels de ce module, je vous invite à consulter
 les documentations suivantes pour aller plus loin.
 
 #. SciPy_, pour le calcul scientifique, en particulier les transformées
-  de Fourier.
+   de Fourier.
 #. NumPy_, pour les calculs plus simples, mais sur de grands ensembles de
-  données, comme toute une série de mesures.
+   données, comme toute une série de mesures.
 #. Matplotlib_, pour l'affichage de vos données.
 #. Arduino_, pour de la documentation générale sur l'Arduino.
 #. Python_, pour de la documentation générale sur Python.
