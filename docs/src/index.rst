@@ -16,20 +16,14 @@
 .. session, soumettez un signalement de bogue via Github.
 
 .. toctree::
-  :maxdepth: 3
+  :maxdepth: 2
   :caption: Table des matières
 
   self
-  python
+  install
+  quickstart
+  tuto
+  contrib
+  api
   glos
-
-..  quickstart
-..  install
-..  arduino
-..  usage
-..  develop
-..  contrib
-..  exemples
-..  license
-
-
+  license

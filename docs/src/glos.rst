@@ -4,6 +4,7 @@
 
 .. glossary::
 
+  IDE
   EDI
     Environnement de développement intégré.
 
@@ -20,3 +21,11 @@
   environnement virtuel
     Une description reproduisible des programmes, modules et fichiers accessibles par un projet.
     Généralement géré indirectement par un programme comme venv_ ou pipenv_.
+
+  ligne de commande
+  cli
+    ...
+
+  terminal
+    ...
+

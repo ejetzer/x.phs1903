@@ -2,38 +2,42 @@
  Démarrage rapide
 ============================
 
-#. Ouvrir votre projet VS Code
-#. Activer son environnement virtuel
-#. Y installer le module ``x.phs1903`` avec ``pip``:
+#. Assurez vous d'avoir installer les outils dans :doc:`install`.
+#. Téléchargez l'archive zip du module Arduino xphs1903 sur la page
+   des `sorties`_.
+#. Installez le module Arduino xphs1903.
+#. Téléchargez le `modèle de projet`_ de la page des `sorties`_.
+#. Extrayez le dossier ``template`` et renommez le en quelque chose
+   de plus descriptif.
+#. Renommez les différents fichiers nommés ``projets`` avec un nom
+   descriptif de votre projet, mais concis, avec seulement des caractères
+   alphanumériques.
+#. Ouvrez le fichier ``.ino`` dans l'IDE Arduino.
+#. Ouvrez Spyder
+#. Sélectionnez :menuselection:`Projects -> New Project...` et créez un nouveau projet
+   à partir de votre répertoire anciennement nommé ``template``.
+#. Dans les réglages de Spyder, réglez l'interpréteur Python à
+   l'interpréteur Python 3.14 que vous avez installé précédemment.
+#. Dans la console IPython de Spyder, entrez les commandes:
 
-  .. code:: shell
+  .. code:: python
 
-    pip install x.phs1903@2
+      import venv
+      venv.create('venv', system_site_packages=True, with_pip=True)
 
-#. Ouvrir l'IDE Arduino
-#. Télécharger le module Arduino compressé
-#. Cliquer sur :menuselection:`Croquis --> Importer une bibliothèque --> Ajouter la bibliothèque .ZIP...`
-#. Sélectionner l'archive du module Arduino
-#. Ouvrir l'exemple `phsblink`
-#. Le télécharger sur l'Arduino et vérifier qu'il fonctionne
-#. Ouvrir l'exemple `phsecho`
-#. Le télécharger sur l'Arduino et vérifier qu'il fonctionne en utilisant la ligne série
-#. Exécuter ``python -m xphs1903.demos.echo`` dans VS Code
-#. Valider le fonctionnement.
+#. Dans les préférences de Spyder, changez l'interpréteur Python pour
+   ``venv/bin/python``.
+#. Rechargez la console IPython de Spyder
+#. Dans la console IPython, entrez
 
-Félicitations!
+  .. code:: bash
 
-.. --------------
-.. Utilisation
-.. --------------
-..
-.. Ce module assume que son compagnon Arduino a aussi été installé.
-.. Une fois le programme Arduino inclut en exemple compilé et téléchargé,
-.. vous pouvez lancer le programme ``demo.py`` ainsi:
-..
-.. .. code-block:: shell
-..
-.. 	python3.14 -m xphs1903
-..
-.. Pour l'inclure à votre projet, utilisez l'énoncé ``import xphs1903`` normal
-.. de Python.
+      pip install -r requirements.txt
+
+#. Complétez les différents `tutoriels`_.
+
+.. _`modèle de projet`: https://github.com/ejetzer/x.phs1903/releases/download/v2/template.zip
+
+.. _`sorties`: https://github.com/ejetzer/x.phs1903/releases
+
+.. _`tutoriels`: https://xphs1903.readthedocs.io/fr/dev/

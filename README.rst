@@ -81,7 +81,7 @@ Premiers pas
    alphanumériques.
 #. Ouvrez le fichier ``.ino`` dans l'IDE Arduino.
 #. Ouvrez Spyder
-#. Sélectionnez :menu:`Projects -> New Project...` et créez un nouveau projet
+#. Sélectionnez :menuselection:`Projects -> New Project...` et créez un nouveau projet
    à partir de votre répertoire anciennement nommé ``template``.
 #. Dans les réglages de Spyder, réglez l'interpréteur Python à
    l'interpréteur Python 3.14 que vous avez installé précédemment.
