@@ -20,8 +20,7 @@
   :caption: Table des matières
 
   self
-  install
-  quickstart
+  start
   tuto
   contrib
   api

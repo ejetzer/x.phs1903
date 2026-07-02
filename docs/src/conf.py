@@ -115,6 +115,7 @@ apidoc_modules = [{'path': '../../src/', 'destination': '../src/'}]
 
 extlinks = {
     'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
+    'arduinolib': ('https://docs.arduino.cc/libraries/%s', '%s'),
     'arduinocard': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
     'gammon': ('https://www.gammon.com.au/%s', '%s'),
 }

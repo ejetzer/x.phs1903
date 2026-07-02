@@ -84,17 +84,19 @@ clean:
 install: arduino python alldocs
 
 ## Compiler tous les modules et la documentation
-build: develop $(arduino_package) $(python_build) $(python_wheel) alldocs $(demos)
+build: develop $(arduino_package) $(sdist) $(wheel) alldocs $(demos)
 
 ## Créer un environnement virtuel pour le développement des modules
 develop: pipenv $(arduino-cli)
 
 ## Publier le module Python et l'archive Arduino
 twine = $(pipenv) run python -m twine
-publish: build
-	$(twine) upload $(python_build)/* $(python_wheel)/*
+publish: $(sdist) $(wheel)
+	$(twine) upload $(sdist)/* $(wheel)/*
 
 include make/demos.Makefile
 
 github-build:
 	$(MAKE) -C .github/ build
+
+include make/release.Makefile
