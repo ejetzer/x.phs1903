@@ -29,3 +29,37 @@
   terminal
     ...
 
+  Grand Modèle de Langage
+  GML
+  Large Language Model
+  LLM
+    ...
+
+  fonction
+    ...
+
+  méthode
+    ...
+
+  classe
+    ...
+
+  type
+    ...
+
+  objet
+    ...
+
+  instance
+    ...
+
+  compilateur
+    ...
+
+  interprèteur
+    ...
+
+
+.. _venv:
+
+.. _pipenv:

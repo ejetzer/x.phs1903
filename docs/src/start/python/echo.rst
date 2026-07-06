@@ -21,8 +21,8 @@ Premier pas avec Spyder
 
    .. code:: python
 
-      import venv
-      venv.create('.venv', system_site_packages=True, with_pip=True)
+      >>> import venv
+      >>> venv.create('.venv', system_site_packages=True, with_pip=True)
 
 #. Dans les préférences de Spyder, changez l'interpréteur Python pour
    ``.venv/bin/python``.
@@ -31,14 +31,14 @@ Premier pas avec Spyder
 
    .. code:: bash
 
-       pip install -r requirements.txt
+       $ pip install -r requirements.txt
 
 #. Dans la console IPython, entrez
 
    .. code:: python
 
-       from xphs1903.demos.echo import echo
-       echo()
+       >>> from xphs1903.demos.echo import echo
+       >>> echo()
 
 Vous devriez voir apparaître un invite de commande, qui vous renvoie exactement
 le texte que vous tapez quand vous appuyez sur :kbd:`<Enter>`. Bravo!

@@ -22,6 +22,7 @@
   self
   start
   tuto
+  ateliers
   contrib
   api
   glos
