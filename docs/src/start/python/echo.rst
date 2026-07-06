@@ -98,6 +98,8 @@ seulement la fonction ``echo``. Ensuite, on l'exécute.
   from xphs1903.demos.echo import echo
   echo()
 
+Pour plus de détails sur la fonction :py:func:`!echo`, utilisez la fonction
+:py:func:`help`.
 Pour plus d'informations sur la syntaxe de base de Python, je vous invite à lire
 `A Byte of Python <https://python.swaroopch.com/>`_ (aussi disponible
 `en français <https://rgilliotte.gitbook.io/byte-of-python>`_).
