@@ -11,39 +11,26 @@ from typing import TYPE_CHECKING
 
 from matplotlib.axes import Axes
 
-from .data import Data, FileData
-from .serie import FilAppelReponse, FileCommandes, FileRéponses, Réponse
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from pandas import DataFrame
     from serial import Serial
 
-
-class Clavier:
-    """Capture l'entrée clavier et la transmet à un autre fil."""
+class Format:
     pass
 
-class Fichier:
-    """Reçoit des entrées et les écrits dans un fichier bloc par bloc."""
+class FormatTexte(Format):
     pass
 
-class Sortie:
-    """Reçoit des entrées et les écrits dans la sortie standard."""
+class FormatTraceurSerie(Format):
     pass
 
-class Données(Fichier):
-    """Sauvegarde des entrées dans un:class:`~pandas.DataFrame`."""
-
-class LigneSérie(Clavier):
+class FormatDico(Format):
     pass
 
-class Arduino(LigneSérie):
+class FormatListe(Format):
     pass
 
-class TerminalArduino(Arduino):
-    pass
-
-class TraceurArduino(Arduino):
+class FormatFlotOctets(Format):
     pass

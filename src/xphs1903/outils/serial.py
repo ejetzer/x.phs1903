@@ -1,91 +1,154 @@
 import serial
-import serial.threaded
 import queue
 import pandas
 import matplotlib
 import matplotlib.axes
 import matplotlib.figure
 import typing
+import threading
 
 type BaudRateType = typing.Literal(9600, 115200, 1000000)
 
-class ArduinoSerialPlotterReader(serial.threaded.LineReader):
+from .acq import Format
+
+class LigneSerie:
 
     def __init__(self):
-        super().__init__()
-        self.sortie: queue.Queue = queue.Queue()
-        self.df: pandas.Dataframe = pandas.Dataframe()
-        self.ax: matplotlib.axes.Axes = matplotlib.axes.Axes()
+        self.__thread = threading.Thread(target=self.run)
+        self.__serial = serial.Serial()
+        self.__formatter = Format
+        self.__input = queue.Queue()
+        self.__output = queue.Queue()
+        self.__arret = threading.Event()
+        self.__loquet = threading.Lock()
 
-    def connection_made(self, transport: serial.threaded.ReaderThread):
-        self.transport: serial.threaded.ReaderThread = transport
-        ser: serial.Serial = transport.serial
+    def open(self):
+        self.__serial.open()
 
-        if not ser.is_open:
-            ser.open()
+    def close(self):
+        self.shutdown()
 
-    def handle_line(self, ligne: str) -> None:
-        champs: list[str] = ligne.split('\t')
-        champs: list[tuple[str, 2]] = [champ.split(':') for champ in champs]
-        champs: dict[str, float] = {c: float(v) for c, v in champs}
-        champs: pandas.Series = pandas.Series(champs)
-        self.df = pandas.concat([self.df, champs])
-        self.sortie.put(champs)
+    def acquire(self):
+        self.__loquet.acquire()
 
-    def get(self) -> pandas.Series:
-        return self.sortie.get()
+    def release(self):
+        self.__loquet.release()
 
-    def put(self, ligne: str) -> None:
-        self.write_line(ligne)
+    def put(self, data):
+        self.__input.put(data)
 
-    def plot(self) -> matplotlib.figure.Figure, matplotlib.axes.Axes:
+    def get(self):
+        return self.__output.get()
+
+    def join(self):
+        self.__input.shutdown()
+        self.__thread.join()
+        self.__serial.close()
+        self.__output.shutdown()
+
+    def shutdown(self):
+        self.__input.shutdown()
+        self.__thread.shutdown()
+        self.__serial.close()
+        self.__output.shutdown()
+
+    def run(self):
+        while True:
+            loop()
+
+    def loop(self):
+        cmd = self.__input.get()
+
+        with self.__loquet:
+            self.__serial.write(cmd)
+
+            while not self.__serial.in_waiting:
+                pass
+
+            self.__output.put(self.__serial.read())
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+        return None not in exc
+
+    def read(self):
+        return self.get()
+
+    def read_all(self):
+        cumul = [self.read()]
+        while self.out_waiting:
+            cumul.append(self.read())
+        return cumul
+
+    def read_until(self, until='\n'):
+        cumul = [self.read()]
+        while until not in cumul[-1]:
+            cumul.append(self.read())
+        return cumul
+
+    def write(self, data):
+        self.put(data)
+
+    def flush(self):
+        try:
+            while True:
+                self.__input.get()
+                self.__input.task_done()
+        except Exception:
+            pass
+
+        try:
+            while True:
+                self.__output.get()
+                self.__output.task_done()
+        except Exception:
+            pass
+
+        self.__serial.reset_input_buffer()
+        self.__serial.reset_output_buffer()
+        self.__serial.flush()
+
+    def task_done(self):
+        self.__output.task_done()
+
+    def __len__(self):
+        return NotImplemented
+
+    @property
+    def in_waiting(self):
+        return self.__serial.in_waiting + self.__input.qsize()
+
+    @property
+    def out_waiting(self):
+        return self.__serial.out_waiting + self.__output.qsize()
+
+    def __next__(self):
+        try:
+            return self.__output.get()
+        except Exception:
+            raise StopIteration
+
+class Echo(LigneSerie):
+    pass
+
+class Appareil(LigneSerie):
+    APPAREIL: str|None = None
+
+
+    def autoconnect(self):
         pass
 
-class ArduinoNanoEveryThread(ReaderThread):
-    DEVNAME: str = 'Arduino Nano Every'
+    def filtre(self, description):
+        return description.startswith(self.APPAREIL):
 
-    def __init__(
-        self,
-        port: str | None = None,
-        baudrate: BaudRateType = 9600
-    ):
-        if port is None:
-            port = self.autoselect()
-
-        ser: serial.Serial = serial.serial_for_url(port, do_not_open=True)
-        ser.baudrate = baudrate
-
-        super().__init__(ser, ArduinoSerialPlotterReader)
-
-    def autoselect(self) -> str:
-        appareil: serial.tools.list_ports.ListPortInfo
-        ports: list[serial.tools.list_ports.ListPortInfo]
-        if isinstance(dev, serial.tools.list_ports.ListPortInfo):
-            appareil = dev
-        elif dev is None:
-            ports = [d for d in serial.tools.list_ports.grep(self.DEVNAME)]
-            if len(ports) == 1:
-                appareil = ports[0]
-            else:
-                raise AppareilsTropNombreuxError(self.DEVNAME, ports)
-        elif isinstance(dev, str):
-            ports = [d for d in serial.tools.list_ports.grep(dev)]
-            if len(ports) == 1:
-                appareil = ports[0]
-            else:
-                raise AppareilIntrouvableError(dev, ports)
-        elif isinstance(dev, int):
-            ports = [d for d in serial.tools.list_ports.grep(self.__devname__)]
-            if len(ports) >= dev:
-                appareil = ports[dev]
-            else:
-                raise PasAssezAppareilsError(dev, ports)
-        else:
-            raise SelectionAppareilTypeError(dev, serial.tools.list_ports.ListPortInfo, str, int, None)
-
-        return appareil.device
-
+class ArduinoNanoEvery(Appareil):
+    APPAREIL: str = 'Arduino Nano Every'
 
 if __name__ == '__main__':
-    with ArduinoNanoEveryThread('loop://') as arduino:
-        arduino.put('t:0\tx:0')
+    with Echo() as com:
+        com.write('t:0\tx:0')
+        print(com.read())
