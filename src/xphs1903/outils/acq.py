@@ -33,3 +33,17 @@ class Sortie:
     """Reçoit des entrées et les écrits dans la sortie standard."""
     pass
 
+class Données(Fichier):
+    """Sauvegarde des entrées dans un:class:`~pandas.DataFrame`."""
+
+class LigneSérie(Clavier):
+    pass
+
+class Arduino(LigneSérie):
+    pass
+
+class TerminalArduino(Arduino):
+    pass
+
+class TraceurArduino(Arduino):
+    pass

@@ -132,6 +132,7 @@ intersphinx_mapping = {
     'pip': ('https://pip.pypa.io/en/stable/', None),
     'pipenv': ('https://pipenv.pypa.io/en/latest/', None),
     'conda': ('https://docs.conda.io/projects/conda/en/stable/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None),
 }
 
 language = 'fr'

@@ -49,6 +49,8 @@ dans le répertoire racine, mais pour certains c'est inévitable.
 Les fichiers ``.tm_properties`` et ``.editorconfig`` contiennent des paramètres pour les éditeurs de fichiers
 textes comme `TextMate`_ et `VS Code`_.
 
+.. _TextMate:
+
 Code C++ pour Arduino
 ----------------------
 
@@ -142,3 +144,20 @@ En attente
 - pipenv_
 - Python_
 - `VS Code`_
+
+.. _git:
+
+.. _make:
+
+.. _`arduino-cli`:
+
+.. _twine:
+
+.. _sphinx:
+
+.. _pipenv:
+
+.. _Python:
+
+.. _`VS Code`:
+
