@@ -40,11 +40,9 @@ finally:
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-    #    'sphinx.ext.apidoc',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
-    #    'sphinx.ext.linkcode',
     'sphinx.ext.viewcode',
     # 'hawkmoth',  # https://github.com/jnikula/hawkmoth
     # 'hawkmoth.ext.napoleon',
@@ -57,7 +55,7 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 # Configuration d'autodoc
-autoclass_content = 'class'
+autoclass_content = 'init'
 autodoc_class_signature = 'mixed'
 autodoc_typehints = 'both'
 autodoc_typehints_description_target = 'all'
@@ -147,3 +145,9 @@ html_static_path = ['_static']
 latex_additional_files = [
     'latexmkrc',
 ]
+
+# -- Options pour viewcode -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html
+
+viewcode_follow_imported_members = True
+viewcode_line_numbers = True

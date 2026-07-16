@@ -4,8 +4,8 @@
 from ...outils.serial import ArduinoNanoEvery
 
 def serial():
-    with ArduinoNanoEvery() as arduino:
+    with ArduinoNanoEvery() as ard:
         while ( cmd := input('>>>') ):
-            print(cmd, file=arduino)
-            print(arduino.read())
+            ard.print(cmd)
+            print(next(ard))
 

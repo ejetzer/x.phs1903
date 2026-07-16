@@ -1,376 +1,203 @@
-# (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
-"""Classes pour l'exécution en parallèle.
+from concurrent.futures import ThreadPoolExecutor, Future
+import pandas as pd
+from typing import Callable, Final
+import logging
+import numpy as np
 
-Les classes définient ici permettent de facilement exécuter
-différentes fonctions en parallèle, en mettant bout à bout
-leurs entrées et sorties.
+__logger = logging.getLogger(__name__)
+"""Journal de débogage interne du module.
+
+Utile pour le débogage, ne devrait être obtenu qu'avec
+:func:`logging.getLogger`.
 """
 
-import typing
-from collections.abc import (
-    Callable,
-    Collection,  #: Types de base abstraits pour les vérifications
-)
-from threading import (
-    Event,  #: Objet de signal entre fils
-    Thread,  #: Objet de base de parallélisme
-)
-from typing import AnyStr
+__logger.addHandler(logging.NullHandler())
 
-# import matplotlib #: Affichage graphique
-import matplotlib.axes
+class Calcul:
+    __logger = logging.getLogger(f'{__name__}.Calcul')
+    """Journal de débogage pour les objets de classe Calcul."""
 
-type ActionFil[A, B] = Callable[[FileBase[A], FileBase[B], Event, ...], None] | None
-"""La signature d'une fonction pouvant être exécutée dans un fil parallèle avec ce module."""
-
-type AnimateAction[A] = Callable[[A, ...], matplotlib.axes.Axes]
-"""La signature d'une fonction générant des cadres d'animation pour l'affichage graphique."""
-
-class FileBase[A](Queue):
-    def __init__(
-        self,
-        maxsize: int = 0,
-        _cls: type[A] | Callable[..., A] = lambda x: x,
-        aval: list[Self] | None = None,
-        parent: FilBase | None = None,
-    ) -> None:
-        self._cls: type[A] = _cls
-        self._aval: list[Self] = [] if aval is None else aval
-        self._parent: FilBase | None = parent
-        super().__init__(maxsize=maxsize)
-
-    def _avaliser(self, fct: str, *args: Any, **kargs: Any) -> None:
-        _file: Self
-        for _file in self._aval:
-            fct: Callable[..., None] = getattr(_file, fct)
-            fct(*args, **kargs)
-
-    def put(
-        self,
-        item: A,
-        block: bool = True,
-        timeout: float | None = None
-    ) -> None:
-        item: A = self._cls(item)
-        try:
-            super().put(item, block=block, timeout=timeout)
-        except Full:
-            logging.getLogger(__name__).exception()
-            raise
-        except ShutDown:
-            logging.getLogger(__name__).exception()
-            raise
-        else:
-            self._avaliser('put', item)
-
-    def put_nowait(self, item: A) -> None:
-        self.put(item, block=False)
-
-    def shutdown(self, immediate: bool = False) -> None:
-        self._avaliser('shutdown', immediate=immediate)
-        super().shutdown()
-
-    def join(self) -> None:
-        self._avaliser('join')
-        super().join()
-
-    def envoyer_à(self, autre: Self) -> None:
-        self._aval.append(autre)
-
-    def recevoir_de(self, autre: Self) -> None:
-        autre.envoyer_à(self)
-
-    def get(self, block: bool = True, timeout: float | None = None) -> A:
-        return super().get(block, timeout)
-
-    def get_nowait(self) -> A:
-        return super().get_nowait()
-
-    def __lshift__(self, other: Self):
-        if isinstance(self, FileBase):
-            self.recevoir_de(other)
-        else:
-            return NotImplemented
-
-    def __rshift__(self, other: Self):
-        if isinstance(self, FileBase):
-            self.envoyer_à(other)
-        else:
-            return NotImplemented
-
-class FilBase[A, B](Thread):
-    """Classe de fil de base avec files d'entrée et sortie et signal d'arrêt."""
+    __logger.addHandler(logging.NullHandler())
 
     def __init__(
         self,
-        group: None = None,  #: Argument bidon pour implémentation future.
-        target: ActionFil[A, B] = None,  #: Fonction à exécuter en parallèle.
-        name: str | None = None,  #: Nom du fil d'exécution.
-        args: tuple[Any] = tuple(),  #: Arguments positionnels pour target
-        kargs: dict[str, Any] = {},  #: Arguments nommés pour target
-        *,
-        daemon: bool | None = None,  #: True si le fil doit se fermer automatiquement
-        context: Context | None = None,  #: Contexte d'exécution, voir :mod:Threads.
-        arrêt: Event | None = None,  #: Événement d'arrêt de l'exécution.
-        entrée: FileBase[A] | None = None,  #: File d'objets en entrée.
-        sortie: FileBase[B] | None = None,  #: File d'objets en sortie.
-        atype: type[A] = str,  #: Type des objets en entrée.
-        btype: type[B] = str  #: Type des objets en sortie.
+        fct: Callable[pd.DataFrame, pd.DataFrame] = lambda x: x,
+        nom: str = ''
     ) -> None:
-        self._action: ActionFil = target
-        """Fonction exécutée en parallèle."""
+        self.__nom: Final[str] = str(nom)
+        self.fct: Final[Callable[pd.DataFrame, pd.DataFrame]] = fct
+        self.__executor: ThreadPoolExecutor = ThreadPoolExecutor()
 
-        if arrêt is None:
-            arrêt: Event = Event()
+    def __call__(self, df: pd.DataFrame) -> Future:
+        future = self.__executor.submit(self.__run, df.copy())
+        return future
 
-        self._arrêt: Event = arrêt
-        """Signal d'arrêt de l'exécution."""
+    def __run(self, df: pd.DataFrame) -> pd.DataFrame:
+        return self.fct(df)
 
-        if entrée is None:
-            entrée: FileBase = FileBase(atype)
+    def __enter__(self):
+        return self
 
-        self._entrée: FileBase = entrée
-        """File d'entrée pour self._action."""
+    def __exit__(self, exc_type, exc, tb):
+        self.__excutor.shutdown(wait=True, cancel_futures=True)
+        return False
 
-        if sortie is None:
-            sortie: FileBase = FileBase(btype)
+    def __matmul__(self, other: Self) -> Self:
+        if not isinstance(other, Calcul):
+            return NotImplemented
 
-        self._sortie: FileBase = sortie
-        """File de sortie pour self._action."""
+        def fct(df: pd.DataFrame) -> pd.DataFrame:
+            return self.fct(other.fct(df))
 
-        #: Initialisation de l'objet Thread
-        #: avec les paramètres par défaut
-        #: adéquats. Spécifiquement,
-        #: target=None pour permettre la redéfinition
-        #: de la méthode run.
-        super().__init__(
-            group=group,
-            target=None,
-            name=name,
-            args=args,
-            kargs=kargs,
-            daemon=daemon,
-            context=context
+        return type(self)(fct)
+
+    def __rmatmul__(self, other: Self) -> Self:
+        if not isinstance(other, Calcul):
+            return NotImplemented
+
+        def fct(df: pd.DataFrame) -> pd.DataFrame:
+            return other.fct(self.fct(df))
+
+        return type(self)(fct)
+
+    def __add__(self, other: Self) -> Self:
+        if not isinstance(other, Calcul):
+            return NotImplemented
+
+        def fct(df: pd.DataFrame) -> pd.DataFrame:
+            return self.fct(df) + other.fct(df)
+
+        return type(self)(fct)
+
+    def __mul__(self, other: Self) -> Self:
+        if not isinstance(other, Calcul):
+            return NotImplemented
+
+        def fct(df: pd.DataFrame) -> pd.DataFrame:
+            return self.fct(df) * other.fct(df)
+
+        return type(self)(fct)
+
+    def __sub__(self, other: Self) -> Self:
+        if not isinstance(other, Calcul):
+            return NotImplemented
+
+        def fct(df: pd.DataFrame) -> pd.DataFrame:
+            return self.fct(df) - other.fct(df)
+
+        return type(self)(fct)
+
+def _I(df: pd.DataFrame) -> pd.DataFrame:
+    return df
+
+class Identite(Calcul):
+
+    def __init__(self, fct=_I, nom='identite'):
+        super().__init__(fct, nom)
+
+def _moyenne(df: pd.DataFrame) -> pd.DataFrame:
+    res: pd.Series = df.aggregate('mean', 'index')
+    res.name = 'moyenne'
+    res: pd.DataFrame = res.to_frame()
+    return res
+
+class Moyenne(Calcul):
+
+    def __init__(self, fct=_moyenne, nom='moyenne'):
+        super().__init__(fct, nom)
+
+def _fft(df: pd.DataFrame) -> pd.DataFrame:
+    items = df.items()
+    _, index = next(items)
+    index = index.to_numpy()
+    dt = np.mean(index[1:] - index[:-1])
+    cols = [v.to_numpy() for _, v in items]
+    ffts = [np.fft.rfft(col) for col in cols]
+    ffts = [np.multiply(fft, fft.conjugate()) for fft in ffts]
+    ffts = [np.sqrt(fft.real) for fft in ffts]
+    fs = np.fft.rfftfreq(len(index), dt)
+    dico = {'f': fs} | {(col+1): fft for col, fft in enumerate(ffts)}
+    df = pd.DataFrame(dico)
+    return df.copy()
+
+class FFT(Calcul):
+
+    def __init__(self, fct=_fft, nom='fft'):
+        super().__init__(fct, nom)
+
+
+def _der(df: pd.DataFrame) -> pd.DataFrame:
+    items = df.items()
+    _, index = next(items)
+    index = index.to_numpy()
+    cols = [v.to_numpy() for _, v in items]
+    ders = [np.gradient(col, index) for col in cols]
+    dico = {'t': index} | {(col+1): der for col, der in enumerate(ders)}
+    df = pd.DataFrame(dico)
+    return df.copy()
+
+class Derivee(Calcul):
+
+    def __init__(self, fct=_der, nom='dérivée'):
+        super().__init__(fct, nom)
+
+
+def main(*, debug: bool = False) -> None:
+    from .serial import LigneSerie
+    from .acq import Tableau, aléatoire, sinus
+    import numpy as np
+
+    if debug:
+        __logger.setLevel(logging.DEBUG)
+        __handler = logging.StreamHandler()
+        fmt: str = (
+            '%(levelname)s\t'
+            '%(threadName)s\t'
+            '%(funcName)s (%(lineno)s)\t'
+            '%(message)s'
         )
+        __formatter = logging.Formatter(fmt)
+        __handler.setFormatter(__formatter)
+        __logger.addHandler(__handler)
 
-    def run(self, *args: Any, **kargs: Any):
-        """Fonction exécutée en parallèle."""
-        if self._action is not None:
-            while not self._arret.is_set():
-                self._action(self._entrée, self._sortie, self._arrêt, *args, **kargs)
+    N = 50
+    phase = 0
+    lignes = sinus(N=50, phase=phase)
 
-    def arrêter(self) -> None:
-        self._entrée.shutdown()
-        self._arrêt.set()
+    calcul_fft: Calcul = FFT()
 
-    def put(self, item: A, block: bool = True, timeout: float | None = None) -> None:
-        self._entrée.put(item, block, timeout)
+    with LigneSerie() as com:
+        __logger.debug('%s', com)
+        com.print(lignes)
 
-    def get(self, block: bool = True, timeout: float | None = None) -> B:
-        return self._sortie.get(block, timeout)
+        with Tableau(com.parse()) as tab:
+            __logger.debug('%s', tab)
 
-    def envoyer_à(self, autre: Self[B] | QueueBase[B]) -> None:
-        if isinstance(autre, type(self)):
-            self._sortie.envoyer_à(autre._entrée)
-        elif isinstance(autre, FileBase):
-            self._sortie.envoyer_à(autre)
-        else:
-            raise TypeError
+            while True:
+                try:
+                    phase += N
+                    lignes = sinus(N=N, phase=phase)
+                    com.print(lignes)
+                    df = tab.df
 
-    def recevoir_de(self, autre: Self | QueueBase[A]) -> None:
-        if isinstance(autre, type(self)):
-            self._entrée.recevoir_de(autre._sortie)
-        elif isinstance(autre, FileBase):
-            self._entrée.recevoir_de(autre)
+                    fft_para = calcul_fft(df)
 
-    def join(self, timeout: float | None = None):
-        super().join(timeout)
+                    try:
+                        res = fft_para.result(timeout=10)
+                    except TimeoutError:
+                        continue
+                    except KeyboardInterrupt:
+                        raise
+                    else:
+                        print()
+                        print(fft_para.result())
+                        print()
 
-        if not self.is_alive():
-            self._entrée.shutdown(immediate=True)
-            self._sortie.shutdown(immediate=False)
-
-    def __or__(self, other):
-        if isinstance(other, FilBase):
-            self.envoyer_à(other)
-            return other
-        else:
-            return NotImplemented
-
-    def __ror__(self, other):
-        if isinstance(other, FilBase):
-            self.recevoir_de(other)
-            return self
-        else:
-            return NotImplemented
-
-    def __rrshift__(self, other):
-        if isinstance(other, (FilBase, FileBase)):
-            self.recevoir_de(other)
-        else:
-            return NotImplemented
-
-    def __lshift__(self, other):
-        if isinstance(other, (FilBase, FileBase)):
-            self.recevoir_de(other)
-        else:
-            return NotImplemented
+                except KeyboardInterrupt:
+                    com.close()
+                    tab.close()
+                    break
 
 
-class Fil[A](FilBase[A, A]):
-    def __init__(
-        self,
-        group: None = None,  # Argument bidon pour implémentation future.
-        target: ActionFil[A, B] = None,  # Fonction à exécuter en parallèle.
-        name: str | None = None,  # Nom du fil d'exécution.
-        args: tuple[Any] = tuple(),  # Arguments positionnels pour target
-        kargs: dict[str, Any] = {},  # Arguments nommés pour target
-        *,
-        daemon: bool | None = None,  # True si le fil doit se fermer automatiquement
-        context: Context | None = None,  # Contexte d'exécution, voir :py:class:threading.Threads.
-        arrêt: Event | None = None,  # Événement d'arrêt de l'exécution.
-        entrée: FileBase[A] | None = None,  # File d'objets en entrée.
-        sortie: FileBase[A] | None = None,  # File d'objets en sortie.
-        atype: type[A] = str,  # Type des objets en entrée.
-    ) -> None:
-        super().__init__(
-            group=group,
-            target=target,
-            name=name,
-            args=args
-            kargs=kargs,
-            daemon=daemon,
-            context=context,
-            arrêt=arrêt,
-            entrée=entrée
-            sortie=sortie,
-            atype=atype,
-            btype=atype
-        )
-
-class FilConversion[A, B](FilBase[A, B]):
-
-    @typing.override
-    def __init__(
-        self,
-        cible: ActionFil[A, B],
-        atype: type[A],
-        btype: type[B]
-    ):
-        super().__init__(
-            group=None,
-            target=cible,
-            name=None,
-            args=tuple(),
-            kargs={},
-            daemon=True,
-            arrêt=None,
-            entrée=None,
-            sortie=None,
-            atype=atype,
-            btype=btype
-        )
-
-class FilConversionDict(FilConversion[bytes, dict[str, float]]):
-
-    @typing.override
-    def __init__(self):
-        super().__init__(self._conv, bytes, dict[str, float])
-
-    def _conv(self, a: bytes) -> dict[str, float]:
-        ligne = str(a, encoding='utf-8')
-        champs = ligne.split('\t')
-        cles_valeurs = [champ.split() for champ in champs]
-        b = {c: float(v) for c, v in cles_valeurs}
-        return b
-
-class FilConversionSeries(FilConversion[dict[str, float], pandas.Series]):
-
-    @typing.override
-    def __init__(self):
-        super().__init__(self._conv, dict[str, float], pandas.Series)
-
-    def _conv(self, a: dict[str, float]) -> pandas.Series:
-        return pandas.Series(a)
-
-
-class FilDataframe(FilConversion[pandas.Series, pandas.Dataframe]):
-
-    @typing.override
-    def __init__(self):
-        super().__init__(self._conv, pandas.Series, pandas.Dataframe)
-        self._acc: pandas.Dataframe = pandas.Dataframe()
-
-    def _conv(self, a: pandas.Series) -> pandas.Dataframe:
-        self._acc = pandas.concat([self._acc, a])
-        return self._acc
-
-class FilCalcul(Fil[pandas.Dataframe]):
-
-    @typing.override
-    def __init__(self, calcul: Callable[pandas.Dataframe, pandas.Dataframe]):
-        super().__init__(self._conv, pandas.Dataframe)
-        self._calcul: Callable[pandas.Dataframe, pandas.Dataframe] = calcul
-
-    def _conv(self, a: pandas.Dataframe) -> pandas.Dataframe:
-        b = calcul(a)
-        return b
-
-class FilFFT(FilCalcul):
-
-    @typing.override
-    def __init__(self, tcol: str, xcol: str):
-        super().__init__(calcul=self._fft)
-        self.tcol: str = tcol
-        self.xcol: str = xcol
-
-    def _fft(self, a: pandas.Dataframe):
-        ts: numpy.ndarray = a.loc[:, self.tcol].to_numpy()
-        xs: numpy.ndarray = a.loc[:, self.xcol].to_numpy()
-        Xs: numpy.ndarray = numpy.fft.rfft(xs)
-
-        n = ts.size
-        d = (ts[:-1] - ts[1:]).mean()
-        Fs: numpy.ndarray = numpy.fft.rfftfreq(n, d)
-        return pandas.Dataframe({'F': Fs, 'X': Xs})
-
-class Journal:
-
-    def __init__(
-        self,
-        entrée,
-    ):
-        pass
-
-    def start(self):
-        pass
-
-    def pause(self):
-        pass
-
-    def resume(self):
-        pass
-
-    def mute(self):
-        pass
-
-class Tableur(Journal):
-    pass
-
-# eg: pour mettre une matplotlib.figure.Figure à jour
-# - Utiliser FuncAnimation pour ne pas avoir besoin d'une boucle
-# - Utiliser un timeout pour ne pas bloquer l'exécution
-# - les cadres sont les items obtenus de _entrée
-class Traceur(Journal):
-
-    def __init__(self):
-        pass
-
-    def start(self):
-        pass
-
-    def pause(self):
-        pass
-
-    def resume(self):
-        pass
+if __name__ == '__main__':
+    main(debug=False)
