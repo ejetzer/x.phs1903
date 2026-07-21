@@ -323,7 +323,7 @@ class LigneSerie:
         self.__output.shutdown()
         self.__logger.debug('%s', self.__output)
 
-        return None if typ is None else True
+        return False  # Re-raise the exception please
 
     def __next__(self) -> str:
         """Retourne l'élément suivant reçu sur la ligne série.
@@ -405,7 +405,8 @@ class LigneSerie:
             if ligne is not None
         )
 
-    def close(self):
+    def close(self) -> None:
+        """Ferme la connexion."""
         self.__arret.set()
         self.__input.shutdown()
 
@@ -505,6 +506,7 @@ def main(*, debug: bool = False) -> None:
     avec :func:`LigneSerie.parse`.
     """
     from pprint import pprint  # noqa: PLC0415
+
     import numpy as np  # noqa: PLC0415
 
     if debug:
@@ -523,13 +525,16 @@ def main(*, debug: bool = False) -> None:
     seed = 1903
     gna = np.random.default_rng(seed=seed)
 
-    N: int = 10
+    n: int = 10
     incert: float = 0.001
-    ts = np.arange(N) + gna.normal(0, incert, N)
-    xs = np.arange(N) + gna.normal(0, incert, N)
-    ys = (np.arange(N) + gna.normal(0, incert, N))**2
-    zs = (np.arange(N) + gna.normal(0, incert, N))**2
-    lignes = [{'t': t, 'x': x, 'y': y, 'z': z} for t, x, y, z in zip(ts, xs, ys, zs)]
+    ts = np.arange(n) + gna.normal(0, incert, n)
+    xs = np.arange(n) + gna.normal(0, incert, n)
+    ys = (np.arange(n) + gna.normal(0, incert, n)) ** 2
+    zs = (np.arange(n) + gna.normal(0, incert, n)) ** 2
+    lignes = [
+        {'t': t, 'x': x, 'y': y, 'z': z}
+        for t, x, y, z in zip(ts, xs, ys, zs, strict=True)
+    ]
     __logger.debug('%s', lignes)
 
     with LigneSerie() as com:

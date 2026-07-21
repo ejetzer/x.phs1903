@@ -4,14 +4,12 @@
 """Fonctions de contrôle ordiné."""
 
 import logging
-import sys
 import queue
 import threading
 from typing import TYPE_CHECKING
-import pandas as pd
-import numpy as np
 
-from matplotlib.axes import Axes
+import numpy as np
+import pandas as pd
 
 __logger = logging.getLogger(__name__)
 """Journal de débogage interne du module.
@@ -23,10 +21,12 @@ Utile pour le débogage, ne devrait être obtenu qu'avec
 __logger.addHandler(logging.NullHandler())
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from types import TracebackType
+    from typing import Self
 
-    from pandas import DataFrame
-    from serial import Serial
+type TraceurSerie = list[dict[str, float]]
+type IterTraceurSerie = iter[dict[str, float]]
+
 
 class Tableau:
     __logger = logging.getLogger(f'{__name__}.Tableau')
@@ -34,19 +34,18 @@ class Tableau:
 
     __logger.addHandler(logging.NullHandler())
 
-    def __init__(self, _iter: iter[dict[str, float]]) -> None:
-        self.__iter: iter[dict[str, float]] = _iter
+    def __init__(self, _iter: IterTraceurSerie) -> None:
+        self.__iter: IterTraceurSerie = _iter
         self.__df: pd.DataFrame = pd.DataFrame()
         self.__buffer: list[pd.Series] = []
         self.__thread: threading.Thread = threading.Thread(target=self.__run)
         self.__queue: queue.Queue = queue.Queue()
         self.__arret: threading.Event = threading.Event()
 
-
-    def __run(self):
+    def __run(self) -> None:
         self.__logger.debug('%s', self.__iter)
 
-        for i, ser in enumerate(self.__iter):
+        for ser in self.__iter:
             if self.__arret.is_set():
                 break
 
@@ -58,13 +57,13 @@ class Tableau:
 
         self.__logger.debug('%s', self.__queue)
 
-    def close(self):
-        self.__event.set()
+    def close(self) -> None:
+        self.__arret.set()
 
-    def __iter__(self):
+    def __iter__(self) -> Self:
         return self
 
-    def __next__(self):
+    def __next__(self) -> pd.DataFrame:
         return self.df
 
     def __enter__(self) -> Self:
@@ -72,30 +71,38 @@ class Tableau:
         self.__logger.debug('%s', self.__thread)
         return self
 
-    def __exit__(self, exc_type, exc, tb) -> bool:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> bool:
+        self.close()
         self.__queue.shutdown()
         self.__thread.join()
-        return True
+        return False  # Re-raise the exception please
 
-    def __consume(self):
+    def __consume(self) -> None:
         self.__logger.debug('')
         count: int = 0
         while True:
             try:
-                item = self.__queue.get(timeout=0.01)
-                self.__logger.debug('#%s %s', count, item)
+                item = self.__queue.get(timeout=0.001)
+                self.__logger.debug('#%s %s', count, type(item))
             except queue.Empty as err:
-                self.__logger.debug('#%s %s', count, self.__queue, exc_info=err)
+                self.__logger.debug(
+                    '#%s %s', count, self.__queue, exc_info=err
+                )
                 break
             except queue.ShutDown as err:
-                self.__logger.debug('#%s %s', count, self.__queue, exc_info=err)
-                break
-            except KeyboardInterrupt as err:
-                self.__logger.debug('#%s %s', count, self.__queue, exc_info=err)
+                self.__logger.debug(
+                    '#%s %s', count, self.__queue, exc_info=err
+                )
                 break
             else:
                 self.__buffer.append(item)
-                self.__logger.debug('#%s %s', count, self.__buffer)
+                self.__queue.task_done()
+                self.__logger.debug('#%s len(buffer) = %s', count, len(self.__buffer))
             finally:
                 count += 1
 
@@ -103,44 +110,60 @@ class Tableau:
     def df(self) -> pd.DataFrame:
         self.__logger.debug('')
         self.__consume()
-        self.__logger.debug('%s', self.__buffer)
+        self.__logger.debug('len(buffer) = %s', len(self.__buffer))
 
         if len(self.__buffer) > 0:
-            self.__logger.debug('%s', self.__buffer)
-            self.__logger.debug('%s', self.__df)
+            self.__logger.debug('len(buffer) = %s', len(self.__buffer))
+            self.__logger.debug('%s %s', self.__df.size, self.__df.columns)
 
-            self.__df = pd.concat([self.__df] + self.__buffer)\
-                          .reset_index(drop=True)
-            self.__logger.debug('%s', self.__df)
+            self.__df = pd.concat([self.__df] + self.__buffer).reset_index(
+                drop=True
+            )
+            self.__logger.debug('%s %s', self.__df.size, self.__df.columns)
 
             del self.__buffer[:]
             self.__logger.debug('%s', self.__buffer)
 
-        self.__logger.debug('%s', self.__df)
+        self.__logger.debug('%s %s', self.__df.size, self.__df.columns)
         return self.__df.copy()
 
 
-def aléatoire(*, N: int = 10, incert: float = 0.001, seed: int = 1903) -> list[dict[str, float]]:
+def aléatoire(
+    *, n: int = 10, incert: float = 0.001, seed: int = 1903
+) -> TraceurSerie:
     gna = np.random.default_rng(seed=seed)
-    ts = np.arange(N) + gna.normal(0, incert, N)
-    xs = np.arange(N) + gna.normal(0, incert, N)
-    ys = (np.arange(N) + gna.normal(0, incert, N))**2
-    zs = (np.arange(N) + gna.normal(0, incert, N))**2
-    lignes = [{'t': t, 'x': x, 'y': y, 'z': z} for t, x, y, z in zip(ts, xs, ys, zs)]
+    ts: np.ndarray = np.arange(n) + gna.normal(0, incert, n)
+    xs: np.ndarray = np.arange(n) + gna.normal(0, incert, n)
+    ys: np.ndarray = (np.arange(n) + gna.normal(0, incert, n)) ** 2
+    zs: np.ndarray = (np.arange(n) + gna.normal(0, incert, n)) ** 2
+    lignes: TraceurSerie = [
+        {'t': t, 'x': x, 'y': y, 'z': z}
+        for t, x, y, z in zip(ts, xs, ys, zs, strict=True)
+    ]
     return lignes
 
-def sinus(*, N: int = 10, incert: float = 0.001, seed: int = 1903, phase: int = 0):
+
+def sinus(
+    *, n: int = 10, incert: float = 0.001, seed: int = 1903, phase: int = 0
+) -> TraceurSerie:
     gna = np.random.default_rng(seed=seed)
-    ts = np.arange(phase, phase+N) + gna.normal(0, incert, N)
-    xs = np.sin(np.arange(phase, phase+N)) + gna.normal(0, incert, N)
-    lignes = [{'t': t, 'x': x} for t, x in zip(ts, xs)]
+    ts: np.ndarray = np.arange(phase, phase + n) + gna.normal(0, incert, n)
+    xs: np.ndarray = 2 * np.sin(np.arange(phase, phase + n)) + gna.normal(
+        0, incert, n
+    ) + 2.5
+    ys: np.ndarray = 2 * np.cos(np.arange(phase, phase + n)) + gna.normal(
+        0, incert, n
+    ) + 2.5
+    lignes: TraceurSerie = [
+        {'t': t, 'x': x, 'y': y} for t, x, y in zip(ts, xs, ys, strict=True)
+    ]
     return lignes
 
-def main(*, debug: bool = True):
-    from pprint import pprint
-    import numpy as np
-    from .serial import LigneSerie
-    import time
+
+def main(*, debug: bool = True) -> None:
+    import time  # noqa: PLC0415
+
+    from .serial import LigneSerie  # noqa: PLC0415
 
     if debug:
         __logger.setLevel(logging.DEBUG)
@@ -155,9 +178,9 @@ def main(*, debug: bool = True):
         __handler.setFormatter(__formatter)
         __logger.addHandler(__handler)
 
-    N = 50
+    n = 50
     phase = 0
-    lignes = sinus(N=N, phase=phase)
+    lignes = sinus(n=n, phase=phase)
 
     with LigneSerie() as com:
         __logger.debug('%s', com)
@@ -167,21 +190,16 @@ def main(*, debug: bool = True):
             __logger.debug('%s', tab)
 
             while True:
-                try:
-                    phase += N
-                    lignes = sinus(N=N, phase=phase)
-                    com.print(lignes)
-                    df = tab.df
+                phase += n
+                lignes = sinus(n=n, phase=phase)
+                com.print(lignes)
+                df = tab.df
 
-                    print()
-                    print(df)
-                    print()
+                print()
+                print(df)
+                print()
 
-                    time.sleep(5)
-                except KeyboardInterrupt:
-                    com.close()
-                    tab.close()
-                    break
+                time.sleep(5)
 
     df = tab.df
     print()
@@ -190,6 +208,7 @@ def main(*, debug: bool = True):
     print()
     print(df)
     print()
+
 
 if __name__ == '__main__':
     main(debug=False)
