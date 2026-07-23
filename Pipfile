@@ -38,6 +38,7 @@ kiwisolver = "1.4.9"
 sphinx = "9.1.0"
 pygit2 = "*"
 pipfromrepl = "*"
+pandastable = "*"
 
 [dev-packages]
 "x.phs1903" = {editable = true, path = "."}

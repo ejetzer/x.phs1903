@@ -65,10 +65,10 @@ class Format:
         xss = [ligne.get_data()[0] for ligne in self.__ax.get_lines()]
 
         if self.__left is None:
-            minimum = min(min(xs) for xs in xss)
+            minimum = min(min(xs) for xs in xss) - 1
 
         if self.__right is None:
-            maximum = max(max(xs) for xs in xss)
+            maximum = max(max(xs) for xs in xss) + 1
 
         return minimum, maximum
 
@@ -89,10 +89,10 @@ class Format:
         yss = [ligne.get_data()[1] for ligne in self.__ax.get_lines()]
 
         if self.__left is None:
-            minimum = min(min(ys) for ys in yss)
+            minimum = min(min(ys) for ys in yss) - 1
 
         if self.__right is None:
-            maximum = max(max(ys) for ys in yss)
+            maximum = max(max(ys) for ys in yss) + 1
 
         return minimum, maximum
 
@@ -164,6 +164,7 @@ class Graphe:
         self.__format = format_ if isinstance(format_, Format) else Format()
         self.__pending_res = None
         self.__count = 0
+        self.__res = None
 
     @property
     def fig(self) -> mpl.figure.Figure:
@@ -174,8 +175,8 @@ class Graphe:
         return self.__axes
 
     def close(self):
-        self.__calcul.shutdown()
         self.__tab.close()
+        self.__canvas.get_tk_widget().destroy()
 
     def func(self) -> list | None:
         self.__count += 1
@@ -227,35 +228,46 @@ class Graphe:
         return self
 
     def __next__(self) -> pd.DataFrame:
-        res = pd.DataFrame()
+        if self.__res is None:
+            self.__res = pd.DataFrame()
+
+        old_res = self.__res.copy()
 
         if self.__pending_res is None:
-            df: pd.DataFrame = self.__tab.df
-            res: Future = self.__calcul(df)
+            res: Future = self.__calcul(self.__tab)
         else:
             res = self.__pending_res
             self.__pending_res = None
 
         self.__logger.debug('%s', type(res))
 
+        if res is None:
+            self.__res = pd.DataFrame()
+            return self.__res
+
         try:
             res: pd.DataFrame = res.result(timeout=0.01)
         except TimeoutError as err:
             self.__logger.debug('', exc_info=err)
             self.__pending_res = res
-            res = pd.DataFrame()
+            res = old_res
         except Exception as err:
             self.__logger.debug('', exc_info=err)
             raise
 
         self.__logger.debug('%s', type(res))
+        self.__res = res
         return res
+
+    def show(self):
+        self.func()
+        self.__canvas.get_tk_widget().pack(
+            side=tk.TOP, fill=tk.BOTH, expand=True
+        )
 
     def __enter__(self) -> Self:
         self.__logger.debug('')
         self.func()
-        self.__logger.debug('%s', self.__canvas)
-
         self.__canvas.get_tk_widget().pack(
             side=tk.TOP, fill=tk.BOTH, expand=True
         )
@@ -285,26 +297,8 @@ def main(*, debug: bool = False) -> None:
     from .serial import LigneSerie  # noqa: PLC0415
 
     if debug:
-        #__parent = logging.getLogger('src.xphs1903')
-        __calcul = logging.getLogger('src.xphs1903.calcul')
-        __logger.setLevel(logging.DEBUG)
-        __calcul.setLevel(logging.DEBUG)
-        #__parent.setLevel(logging.DEBUG)
-        __handler = logging.StreamHandler()
-        fmt: str = (
-            '%(name)s:'
-            '%(levelname)s\t'
-            '%(threadName)s\t'
-            '%(funcName)s (%(lineno)s)\t'
-            '%(message)s'
-        )
-        __formatter = logging.Formatter(fmt)
-        __handler.setFormatter(__formatter)
-        __logger.addHandler(__handler)
-        __calcul.addHandler(__handler)
-        #__parent.addHandler(__handler)
-
-    __logger.debug('%s', __name__)
+        from .logging import config, DEBUG
+        config(__name__, level=DEBUG)
 
     lignes = sinus(n=50)
 
@@ -316,7 +310,8 @@ def main(*, debug: bool = False) -> None:
 
     format_fft = Format(
         title='Transformée de Fourier',
-        xlim=(0, 0.5)
+        xlim=(0, 0.5),
+        ylim=None
     )
 
     format_sig = Format(

@@ -38,27 +38,35 @@ class Tableau:
         self.__iter: IterTraceurSerie = _iter
         self.__df: pd.DataFrame = pd.DataFrame()
         self.__buffer: list[pd.Series] = []
-        self.__thread: threading.Thread = threading.Thread(target=self.__run)
-        self.__queue: queue.Queue = queue.Queue()
+        self.__thread_consume: threading.Thread = threading.Thread(target=self.__run_consume)
+        self.__thread_update: threading.Thread = threading.Thread(target=self.__run_update)
         self.__arret: threading.Event = threading.Event()
+        self.__loquet_df: threading.Lock = threading.Lock()
+        self.__loquet_buffer: threading.Lock = threading.Lock()
 
-    def __run(self) -> None:
+    def __run_consume(self) -> None:
         self.__logger.debug('%s', self.__iter)
 
-        for ser in self.__iter:
-            if self.__arret.is_set():
-                break
+        while not self.__arret.is_set():
+            ser = next(self.__iter)
 
-            try:
-                self.__queue.put(pd.Series(ser).to_frame().T)
-            except queue.ShutDown as err:
-                self.__logger.info('%s', self.__queue, exc_info=err)
-                break
+            if ser is None:
+                continue
 
-        self.__logger.debug('%s', self.__queue)
+            with self.__loquet_buffer:
+                self.__buffer.append(pd.Series(ser).to_frame().T)
+
+        self.__logger.debug('len(buffer) = %s', len(self.__buffer))
+
+    def __run_update(self) -> None:
+        while not self.__arret.is_set():
+            with self.__loquet_buffer, self.__loquet_df:
+                self.__df = pd.concat([self.__df] + self.__buffer).reset_index(drop=True)
 
     def close(self) -> None:
         self.__arret.set()
+        self.__thread_consume.join()
+        self.__thread_update.join()
 
     def __iter__(self) -> Self:
         return self
@@ -66,9 +74,12 @@ class Tableau:
     def __next__(self) -> pd.DataFrame:
         return self.df
 
+    def start(self):
+        self.__thread_consume.start()
+        self.__thread_update.start()
+
     def __enter__(self) -> Self:
-        self.__thread.start()
-        self.__logger.debug('%s', self.__thread)
+        self.start()
         return self
 
     def __exit__(
@@ -78,54 +89,12 @@ class Tableau:
         tb: TracebackType | None,
     ) -> bool:
         self.close()
-        self.__queue.shutdown()
-        self.__thread.join()
         return False  # Re-raise the exception please
-
-    def __consume(self) -> None:
-        self.__logger.debug('')
-        count: int = 0
-        while True:
-            try:
-                item = self.__queue.get(timeout=0.001)
-                self.__logger.debug('#%s %s', count, type(item))
-            except queue.Empty as err:
-                self.__logger.debug(
-                    '#%s %s', count, self.__queue, exc_info=err
-                )
-                break
-            except queue.ShutDown as err:
-                self.__logger.debug(
-                    '#%s %s', count, self.__queue, exc_info=err
-                )
-                break
-            else:
-                self.__buffer.append(item)
-                self.__queue.task_done()
-                self.__logger.debug('#%s len(buffer) = %s', count, len(self.__buffer))
-            finally:
-                count += 1
 
     @property
     def df(self) -> pd.DataFrame:
-        self.__logger.debug('')
-        self.__consume()
-        self.__logger.debug('len(buffer) = %s', len(self.__buffer))
-
-        if len(self.__buffer) > 0:
-            self.__logger.debug('len(buffer) = %s', len(self.__buffer))
-            self.__logger.debug('%s %s', self.__df.size, self.__df.columns)
-
-            self.__df = pd.concat([self.__df] + self.__buffer).reset_index(
-                drop=True
-            )
-            self.__logger.debug('%s %s', self.__df.size, self.__df.columns)
-
-            del self.__buffer[:]
-            self.__logger.debug('%s', self.__buffer)
-
-        self.__logger.debug('%s %s', self.__df.size, self.__df.columns)
-        return self.__df.copy()
+        with self.__loquet_df:
+            return self.__df.copy()
 
 
 def aléatoire(
@@ -166,17 +135,8 @@ def main(*, debug: bool = True) -> None:
     from .serial import LigneSerie  # noqa: PLC0415
 
     if debug:
-        __logger.setLevel(logging.DEBUG)
-        __handler = logging.StreamHandler()
-        fmt: str = (
-            '%(levelname)s\t'
-            '%(threadName)s\t'
-            '%(funcName)s (%(lineno)s)\t'
-            '%(message)s'
-        )
-        __formatter = logging.Formatter(fmt)
-        __handler.setFormatter(__formatter)
-        __logger.addHandler(__handler)
+        from .logging import config, DEBUG
+        config(__name__, level=DEBUG)
 
     n = 50
     phase = 0
@@ -200,6 +160,10 @@ def main(*, debug: bool = True) -> None:
                 print()
 
                 time.sleep(5)
+
+            tab.close()
+
+        com.close()
 
     df = tab.df
     print()

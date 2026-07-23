@@ -8,6 +8,8 @@ from concurrent.futures import Future, ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 
+from .acq import Tableau
+
 if typing.TYPE_CHECKING:
     from types import TracebackType
     from typing import Final, Self
@@ -39,6 +41,7 @@ class Calcul:
         self.__nom: Final[str] = str(nom)
         self.__fct: Final[FonctionCalcul] = fct
         self.__executor: ThreadPoolExecutor = ThreadPoolExecutor()
+        self.__shutdown = False
 
     @property
     def nom(self):
@@ -50,15 +53,21 @@ class Calcul:
         self.__logger.debug('')
         return self.__fct
 
-    def __call__(self, df: pd.DataFrame) -> Future:
+    def __call__(self, tab: Tableau) -> Future:
         self.__logger.debug('')
-        future = self.__executor.submit(self.__run, df.copy())
+        if not self.__shutdown:
+            future = self.__executor.submit(self.__run, tab)
+        else:
+            future = None
         self.__logger.debug('%s', future)
         return future
 
-    def __run(self, df: pd.DataFrame) -> pd.DataFrame:
+    def __str__(self):
+        return str(self.df)
+
+    def __run(self, tab: Tableau) -> pd.DataFrame:
         self.__logger.debug('')
-        return self.fct(df)
+        return self.fct(tab.df)
 
     def __enter__(self) -> None:
         self.__logger.debug('')
@@ -71,12 +80,13 @@ class Calcul:
         tb: TracebackType | None,
     ) -> bool:
         self.__logger.debug('')
-        self.__excutor.shutdown(wait=True, cancel_futures=True)
+        self.shutdown()
         return False  # Re-raise the exception please
 
     def shutdown(self) -> None:
         self.__logger.debug('')
         self.__executor.shutdown(wait=True, cancel_futures=True)
+        self.__shutdown = True
 
     def __matmul__(self, other: Self) -> Self:
         self.__logger.debug('')
@@ -146,12 +156,31 @@ class Moyenne(Calcul):
     ) -> None:
         super().__init__(fct, nom)
 
+def _describe(df: pd.DataFrame) -> pd.DataFrame:
+    __logger.debug('')
+    try:
+        res: pd.DataFrame = df.describe()
+    except ValueError:
+        return df
+
+    return res
+
+class Description(Calcul):
+    def __init__(
+        self, fct: FonctionCalcul = _describe, nom: str = 'description'
+    ) -> None:
+        super().__init__(fct, nom)
 
 def _fft(df: pd.DataFrame) -> pd.DataFrame:
     __logger.debug('')
 
     items = df.items()
-    _, index = next(items)
+
+    try:
+        _, index = next(items)
+    except StopIteration:
+        return df
+
     index = index.to_numpy()
     index = np.subtract(index, index[0])
     __logger.debug('index[0] = %s', index[0])
@@ -176,11 +205,42 @@ class FFT(Calcul):
     def __init__(self, fct: FonctionCalcul = _fft, nom: str = 'fft') -> None:
         super().__init__(fct, nom)
 
+def _pics(df: pd.DataFrame) -> pd.DataFrame:
+    import scipy.signal
+
+    __logger.debug('')
+
+    items = df.items()
+
+    try:
+        _, fs = next(items)
+    except StopIteration:
+        return df
+
+    fs = fs.to_numpy()
+    cols = [v.to_numpy() for _, v in items]
+    pics = [scipy.signal.find_peaks(c) for c in cols]
+    pics = [p for p, _ in pics]
+    max_len = max(map(len, pics))
+    dico = {str(num + 1): [cols[num][p] for p in pic] + [None for n in range(max_len-len(pic))] for num, pic in enumerate(pics)}
+    dico |= {f'f{num+1}': [fs[p] for p in pic] + [None for n in range(max_len-len(pic))] for num, pic in enumerate(pics)}
+    df = pd.DataFrame(dico)
+
+    return df.copy()
+
+class Pics(Calcul):
+    def __init__(self, fct: FonctionCalcul = _pics, nom: str = 'fft') -> None:
+        super().__init__(fct, nom)
 
 def _der(df: pd.DataFrame) -> pd.DataFrame:
     __logger.debug('')
     items = df.items()
-    _, index = next(items)
+
+    try:
+        _, index = next(items)
+    except StopIteration:
+        return df
+
     index = index.to_numpy()
     cols = [v.to_numpy() for _, v in items]
     ders = [np.gradient(col, index) for col in cols]
@@ -210,7 +270,12 @@ def window(win: str = 'boxcar', n: int = 100, **kargs) -> type[Calcul]:
 
         tail = df.tail(n)
         items = tail.items()
-        _, index = next(items)
+
+        try:
+            _, index = next(items)
+        except StopIteration:
+            return df
+
         index = index.to_numpy()
 
         __logger.debug('len(index) = %s', len(index))
@@ -247,17 +312,8 @@ def main(*, debug: bool = False) -> None:
     from .serial import LigneSerie  # noqa: PLC0415
 
     if debug:
-        __logger.setLevel(logging.DEBUG)
-        __handler = logging.StreamHandler()
-        fmt: str = (
-            '%(levelname)s\t'
-            '%(threadName)s\t'
-            '%(funcName)s (%(lineno)s)\t'
-            '%(message)s'
-        )
-        __formatter = logging.Formatter(fmt)
-        __handler.setFormatter(__formatter)
-        __logger.addHandler(__handler)
+        from .logging import config, DEBUG
+        config(__name__, level=DEBUG)
 
     n = 50
     phase = 0
@@ -265,7 +321,8 @@ def main(*, debug: bool = False) -> None:
 
     fenetre: Calcul = rectangle(50)()
     calcul_fft: Calcul = FFT() @ fenetre
-    calcul_moyenne: Calcul = Moyenne() @ fenetre
+    calcul_moyenne: Calcul = Description() @ fenetre
+    calcul_pics: Calcul = Pics() @ calcul_fft
 
 
     with LigneSerie() as com:
@@ -282,14 +339,13 @@ def main(*, debug: bool = False) -> None:
                 lignes = sinus(n=n, phase=phase)
                 com.print(lignes)
 
-                df = tab.df
                 if pending_fft is None:
-                    fft_para = calcul_fft(df)
+                    fft_para = calcul_pics(tab)
                 else:
                     fft_para, pending_fft = pending_fft, None
 
                 if pending_moy is None:
-                    moy_para = calcul_moyenne(df)
+                    moy_para = calcul_moyenne(tab)
                 else:
                     moy_para, pending_moy = pending_moy, None
 
