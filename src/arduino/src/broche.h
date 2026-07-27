@@ -10,6 +10,7 @@
 #include <Arduino.h>
 #include <ArduinoSTL.h>
 #include <queue>
+#include <vector>
 
 namespace phs
 {
@@ -74,6 +75,49 @@ public:
   void regler (uint8_t val);
 };
 
+class ListeBroche
+{
+public:
+  ListeBroche ();
+  ListeBroche (uint8_t numeros, uint8_t size, uint8_t len);
+  ~ListeBroche ();
+  uint8_t len;
+  uint8_t size;
+  uint8_t curri = 0;
+  std::vector<uint16_t> valeurs;
+  void setup();
+  void loop();
+  uint16_t sonde(uint8_t);
+  uint16_t sonde();
+  uint16_t valeur(uint8_t) const;
+  uint16_t valeur() const;
+  virtual size_t
+    phs::ListeBroche::printTo (Print &p) const
+  {
+
+  }
 }
+
+class ListeBrocheAnalogique : public ListeBroche
+{
+public:
+  ListeBrocheAnalogique ();
+  ListeBrocheAnalogique (uint8_t numeros, uint8_t size, uint8_t len);
+  ~ListeBrocheAnalogique ();
+  void setup();
+  void loop();
+  uint16_t sonde(uint8_t);
+  uint16_t sonde();
+  uint16_t potentiel(uint8_t);
+  uint16_t potentiel();
+  virtual size_t
+    phs::ListeBrocheAnalogique::printTo (Print &p) const
+  {
+
+  }
+}
+
+}
+
 
 #endif
