@@ -140,6 +140,8 @@ language = 'fr'
 
 html_theme = 'classic'
 html_static_path = ['_static']
+html_copy_source = True
+html_show_sourcelink = True
 
 # Options pour la sortie LaTeX
 latex_additional_files = [
