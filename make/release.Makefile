@@ -1,4 +1,5 @@
-release_name ?= $(NAME)$(VERSION)
+VERSION ?= $(shell git describe --always)
+release_name ?= $(NAME)_$(VERSION)
 release_dir ?= $(BUILD)/$(release_name)
 
 $(release_dir):
