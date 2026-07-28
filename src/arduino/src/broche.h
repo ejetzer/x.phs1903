@@ -41,15 +41,17 @@ public:
 
 class BrocheAnalogique : public Broche
 {
-private:
-  using Broche::regler;
-
 public:
   BrocheAnalogique ();
   BrocheAnalogique (uint8_t numero);
+  using Broche::regler;
+  using Broche::loop;
+  using Broche::valeur;
+  using Broche::numero;
+  using Broche::mode;
+  using Broche::_valeur;
   void setup ();
   uint16_t sonde ();
-  void loop ();
   uint16_t potentiel () const;
   virtual size_t
   phs::BrocheAnalogique::printTo (Print &p) const
@@ -65,57 +67,64 @@ public:
 
 class BrochePWM : public Broche
 {
-private:
+public:
   using Broche::sonde;
   using Broche::valeur;
-
-public:
-  void setup ();
-  void loop ();
+  using Broche::loop;
+  using Broche::setup;
+  using Broche::_valeur;
+  using Broche::mode;
+  using Broche::numero;
   void regler (uint8_t val);
 };
 
-class ListeBroche
+class ListeBroche : public Broche
 {
 public:
   ListeBroche ();
-  ListeBroche (uint8_t numeros, uint8_t size, uint8_t len);
-  ~ListeBroche ();
-  uint8_t len;
+  ListeBroche (uint8_t numero);
+  ListeBroche (uint8_t numero, uint8_t size);
+  using Broche::numero;
   uint8_t size;
   uint8_t curri = 0;
-  std::vector<uint16_t> valeurs;
+  std::vector<uint16_t> _temps;
+  std::vector<uint16_t> _valeurs;
   void setup();
   void loop();
-  uint16_t sonde(uint8_t);
+  using Broche::regler;
   uint16_t sonde();
+  uint8_t pos(uint8_t);
+  uint8_t pos() const;
+  uint8_t move();
+  uint8_t move(uint8_t);
   uint16_t valeur(uint8_t) const;
   uint16_t valeur() const;
+  uint16_t temps (uint8_t) const;
+  uint16_t temps () const;
+  uint8_t begin () const;
+  uint8_t end () const;
+  uint8_t next () const;
+  bool is_full() const;
+  void empty();
   virtual size_t
     phs::ListeBroche::printTo (Print &p) const
   {
-
+    size_t n = p.print ("t_");
+    n += p.print (this->numero);
+    n += p.print (':');
+    uint16_t t = this->temps();
+    n += p.print (t);
+    n += p.print ('\t');
+    n += p.print ("broche_");
+    n += p.print (this->numero);
+    n += p.print (':');
+    uint16_t v = this->valeur();
+    n += p.print (v);
+    return n;
   }
-}
+};
 
-class ListeBrocheAnalogique : public ListeBroche
-{
-public:
-  ListeBrocheAnalogique ();
-  ListeBrocheAnalogique (uint8_t numeros, uint8_t size, uint8_t len);
-  ~ListeBrocheAnalogique ();
-  void setup();
-  void loop();
-  uint16_t sonde(uint8_t);
-  uint16_t sonde();
-  uint16_t potentiel(uint8_t);
-  uint16_t potentiel();
-  virtual size_t
-    phs::ListeBrocheAnalogique::printTo (Print &p) const
-  {
 
-  }
-}
 
 }
 
