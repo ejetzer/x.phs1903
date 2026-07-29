@@ -13,37 +13,10 @@
 #ifndef PHS1903ADC
 #define PHS1903ADC
 
-#include "broche.h"
 #include <Arduino.h>
 
 namespace phs
 {
-
-class BrocheAnalogique_HF : public BrocheAnalogique
-{
-public:
-  BrocheAnalogique_HF ();
-  BrocheAnalogique_HF (uint8_t);
-  void setup ();
-  uint8_t obtCTRLC ();
-  uint8_t obtPrefacteur ();
-  uint8_t obtPuissance ();
-  void regCTRLC (uint8_t);
-  void regPrefacteur (uint8_t);
-  void regPuissance (uint8_t);
-  void reinitCTRLC ();
-  uint32_t obtFrequence ();
-  void regFrequence ();
-};
-
-class BrochePWM_HF : public BrochePWM
-{
-public:
-  BrochePWM_HF ();
-  BrochePWM_HF (uint8_t);
-  void setup ();
-  /* À développer pour le Arduino Nano Every */
-};
 
 uint8_t
 clear_PF ()
@@ -89,7 +62,7 @@ clear_PF ()
  * les autres bits intacts.
  */
 uint8_t
-set_PF (uint8_t pf_pow)
+regler_prefacteur (uint8_t pf_pow)
 {
   ADC0.CTRLC &= ~(bit (0) | bit (1) | bit (2)); // 0b11100000
   ADC0.CTRLC |= bit (0) * (pf_pow % 8);
@@ -100,7 +73,7 @@ set_PF (uint8_t pf_pow)
 }
 
 uint8_t
-set_PF ()
+regler_prefacteur ()
 {
   return set_PF (7);
 }

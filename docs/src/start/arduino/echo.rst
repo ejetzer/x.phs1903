@@ -62,7 +62,7 @@ des objets du module :mod:`!xphs1903`, les objets de classe
    }
 
 Premièrement, notez que la définition ci-dessus est en fait pour la fonction
-:cpp:member:`phs::LigneSerie::setup`. :cpp:class:`phs::LigneSerie` est la
+:cpp:func:`phs::LigneSerie::setup`. :cpp:class:`phs::LigneSerie` est la
 classe parente de :cpp:class:`phs::EchoSerie`. Si une fonction n'est pas
 explicitement définie par :cpp:class:`phs::EchoSerie`, la définition de
 :cpp:class:`phs::LigneSerie` sera utilisée. C'est ce qui se passe ici, comme

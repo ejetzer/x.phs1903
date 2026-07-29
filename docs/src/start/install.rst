@@ -41,41 +41,6 @@ débogage sont:
 
 .. _`gram`: https://gram-editor.com/
 
-Outils officieux
--------------------
-
-Pour les étudiants ayant plus d'expérience avec la programmation et la ligne
-de commande, ces outils sont aussi *officiellement supportés* mais vous ne
-serez pas encouragés à les utiliser:
-
-#. La ligne de commande ``bash`` ou ``zsh``
-
-   #. Via Cygwin_ sur Windows
-   #. Ou via votre terminal préféré sur Linux et MacOS
-
-#. Le système de gestion des versions `git`_
-#. L'interpréteur `Python 3.14`_
-#. L'`environnement de développement Arduino`_ (nous n'encourageons pas
-   l'utilisation des outils `arduino-cli` dans le cadre du cours)
-#. N'importe quel éditeur de texte avec coloration syntaxique, comme
-   `Notepad++`_, `TextMate`_, `vim`_ ou votre préféré.
-
-.. _`Cygwin`: https://cygwin.com/
-
-.. _`git`: https://git-scm.com/
-
-.. _`Notepad++`: https://notepad-plus-plus.org/
-
-.. _`TextMate`: https://macromates.com/
-
-.. _`vim`: https://www.vim.page/
-
-.. warning::
-
-  N'utilisez pas ces outils à moins d'y être déjà habitués. Si les techniciens
-  constatent que vous n'êtes pas proficient dans leur utilisation, ils vous
-  recommenderont d'utiliser la suite officielle.
-
 Python
 --------
 

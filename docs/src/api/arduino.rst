@@ -1,17 +1,19 @@
 Module Arduino
 ============================
 
---------------
-Utilisation
---------------
+La librairie :mod:`!xphs1903` pour Arduino contient plusieurs fichiers
+d'en-tête qui peuvent être importés pour vos programmes. Les définitions qui
+s'y trouvent sont restreintes à l'espace de nom :code:`phs` pour éviter des
+collisions de noms avec d'autres modules. En pratique, ça veut dire que
+les objets, classes et fonctions du module sont disponibles avec le préfixe
+:code:`phs::`.
 
-Le module :file:`xphs1903.h` fournit la fonction :c:func:`set_PF` qui permet de régler la fréquence
-d'acquisition du Arduino. Pour un exemple de son utilisation, allez voir :menuselection:`Fichier --> Exemples --> xphs1903 --> phsblink`. Ce programme fonctionne de paire avec :file:`demo.py` qui utilise le module Python.
+.. toctree::
 
-
-----------------------------
-Implémentation
-----------------------------
-
-
+   arduino/serie
+   arduino/broche
+   arduino/chrono
+   arduino/fft
+   arduino/int_fft
+   arduino/adc
 

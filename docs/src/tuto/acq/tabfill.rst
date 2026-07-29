@@ -176,4 +176,6 @@ L'échantillonage à haute fréquence
 
 Il est possible d'échantilloner à des fréquences plus élevées avec certaines
 contraintes. Si vous pensez en avoir besoin pour votre projet, consultez
-Émile Jetzer.
+Émile Jetzer. Si c'est absolument nécessaire, vous aurez besoin de
+structurer votre code différement et pourriez devoir utiliser des fonctions
+de plus bas niveau pour optimiser votre programme.

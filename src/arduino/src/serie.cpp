@@ -1,5 +1,11 @@
 #include "serie.h"
 
+/**
+ * Objet de communication par la ligne série
+ *
+ * Permet de déclarer le débit de communication à la compilation,
+ * et simplifie l'utilisation de la ligne série.
+ */
 phs::LigneSerie::LigneSerie () : _baudrate (9600) {}
 
 phs::LigneSerie::LigneSerie (uint32_t baudrate) : _baudrate (baudrate) {}
