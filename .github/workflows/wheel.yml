@@ -2,9 +2,6 @@ name: Build everything
 run-name: Build everything from ${{ github.ref_name }} by @${{ github.actor }}
 description: Assembler tous les paquets et la documentation au format html et pdf
 
-on:
-  push:
-    branches: [ "main" ]
 
 jobs:
   build:
