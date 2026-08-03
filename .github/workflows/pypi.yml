@@ -26,17 +26,15 @@ jobs:
         with:
           python-version: '3.14'
 
-      - name: Install pipenv
+      - name: Install prerequisites
         id: pip-env
-        run: python -m pip install pipenv
+        run: |
+          python -m pip install setuptools
+          python -m pip install twine
 
       - name: Checkout
         uses: actions/checkout@v4
         if: ${{ always() }}
-
-      - name: Install virtual environment
-        id: venv
-        run: python -m pipenv install
 
       - name: Create build directory
         id: dotbuild
@@ -44,7 +42,8 @@ jobs:
 
       - name: Build release distributions
         run: |
-          make sdist wheel
+          python -m build --sdist --outdir=.build/sdist
+          python -m build --wheel --outdir=.build/wheel
 
       - name: Upload distributions (source)
         uses: actions/upload-artifact@v4
