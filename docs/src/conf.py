@@ -7,10 +7,10 @@ Pour la liste complète des valeurs de configurations incluses, voir la
 documentation: <https://www.sphinx-doc.org/en/master/usage/configuration.html>
 """
 
+import logging
 import os
 import os.path
 import sys
-import logging
 from pathlib import Path
 
 import pygit2 as pygit
@@ -35,19 +35,18 @@ __logger.info('Répertoire git: %s', repo_path)
 
 try:
     import pygit2 as pygit
+
     repo = pygit.Repository(repo_path)
     reference = repo.describe(dirty_suffix='+')
 except (ImportError, pygit.GitError) as err:
     __logger.warning('Erreur avec PyGit2', exc_info=err)
 
-    import subprocess
+    import subprocess  # noqa: S404
+
     reference = subprocess.run(
-        [
-            'git',
-            'describe',
-            '--always'
-        ],
-        capture_output=True
+        ['/usr/bin/git', 'describe', '--always'],
+        capture_output=True,
+        check=True,
     ).stdout.decode('utf-8')
 finally:
     release = reference.lstrip('v')
@@ -83,40 +82,54 @@ autodoc_inherit_docstrings = False
 napoleon_include_init_with_doc = False
 
 # Ajout du répertoire de code source au chemin Python
-sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
+sys.path.insert(0, str((Path().parent.parent / 'src').resolve()))
 
 autosectionlabel_prefix_document = True
 
 # Configuration de Hawkmoth
-hawkmoth_root = Path('../..').resolve()
-arduino_libs = Path('/Volumes/data/home/emilejetzer/Library/Arduino15/packages/arduino')
+hawkmoth_root = Path().parent.parent.resolve()
+arduino_libs = (
+    Path('/')
+    / 'Volumes'
+    / 'data'
+    / 'home'
+    / 'emilejetzer'
+    / 'Library'
+    / 'Arduino15'
+    / 'packages'
+    / 'arduino'
+)
 hawkmoth_domain = 'cpp'
 hawkmoth_clang = [
-    #'-nostdinc',
-    #'-nostdlib',
-    #'-std=gnu++11',
-    '-x',
-    'C++',
     '-DHAWKMOTH',
     f'-I{hawkmoth_root}/lib/arduinoHawkmoth',
 ]
 
-dev_clang = Path('../.venv/lib/python3.14/site-packages/clang/native/libclang.dylib')
+dev_clang = (
+    Path().parent
+    / '.venv'
+    / 'lib'
+    / 'python3.14'
+    / 'site-packages'
+    / 'clang'
+    / 'native'
+    / 'libclang.dylib'
+)
 clang_file_set = False
-#
+
 if dev_clang.exists():
-   Config.set_library_file(str(dev_clang))
-   __logger.info('Using %s', dev_clang)
-   clang_file_set = True
+    Config.set_library_file(str(dev_clang))
+    __logger.info('Using %s', dev_clang)
+    clang_file_set = True
 else:
-   any_clang = Path('.').rglob('libclang.*')
-   for cl in any_clang:
-       if cl.exists():
-           Config.set_library_file(str(cl))
-           __logger.warning('Using %s', cl)
-           clang_file_set = True
-           break
-#
+    any_clang = Path().rglob('libclang.*')
+    for cl in any_clang:
+        if cl.exists():
+            Config.set_library_file(str(cl))
+            __logger.warning('Using %s', cl)
+            clang_file_set = True
+            break
+
 if not clang_file_set:
     __logger.warning('Recherche de clang...')
     readthedocs.clang_setup()
@@ -149,7 +162,6 @@ language = 'fr'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# html_theme = 'classic'
 html_theme = 'alabaster'
 html_static_path = ['_static']
 html_copy_source = True
@@ -165,7 +177,7 @@ latex_elements = {
     'preamble': r'\usepackage{unicode-math}',
     'papersize': 'letterpaper',
     'babel': r'\usepackage[french]{babel}',
-    'tableofcontents': r"\sphinxtableofcontents"
+    'tableofcontents': r'\sphinxtableofcontents',
 }
 latex_additional_files = [
     'latexmkrc',
