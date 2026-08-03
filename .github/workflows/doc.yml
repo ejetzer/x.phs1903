@@ -1,0 +1,44 @@
+name: Compile documentation to HTML
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  sphinx-doc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Python
+        id: apt-py
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install pipenv
+        id: pip-env
+        run: python -m pip install pipenv
+
+      - name: Checkout
+      - uses: actions/checkout@v4
+
+      - name: Install virtual environment
+        id: venv
+        run: python -m pipenv install
+
+      - name: Create build directory
+        id: dotbuild
+        run: mkdir -p .build
+
+      - name: Build html documentation
+        run: make htmldocs
+
+      - name: Upload docs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: htmldocs
+          path: .build/singlehtml
+
