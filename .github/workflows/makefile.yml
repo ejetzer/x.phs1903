@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.14']
 
     steps:
 
@@ -60,7 +60,7 @@ jobs:
 
       - name: compiler doc html
         id: doc-html
-        run: python -m pipenv run sphinx-build -M singlehtml docs/src .build
+        run: python -m pipenv run sphinx-build -M singlehtml docs/src .github/.build
         if: ${{ always() }}
 
       - name: charger sdist python
@@ -77,7 +77,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: xphs1903-wheel
-          path: .build/x_phs1903-*.whl
+          path: .github/.build/x_phs1903-*.whl
 
       - name: charger module arduino
         id: load-ard
@@ -85,7 +85,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: xphs1903-arduino
-          path: .build/xphs1903.zip
+          path: .github/.build/xphs1903.zip
 
       - name: charger doc
         id: load-doc
@@ -93,5 +93,4 @@ jobs:
         if: ${{ always() }}
         with:
           name: xphs1903-doc
-          path: |
-            .build/singlehtml
+          path: .github/.build/singlehtml
