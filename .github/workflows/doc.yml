@@ -37,7 +37,7 @@ jobs:
       - name: Build html documentation
         run: |
           cd docs
-          python3.14 -m pipenv run sphinx-build -M singlehtml src ../.build -v
+          python3.14 -m pipenv run python -m sphinx-build -M singlehtml src ../.build -v
 
       - name: Upload docs
         uses: actions/upload-artifact@v4
