@@ -13,9 +13,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
-    
+
     steps:
-      
+
       - name: installer python
         id: apt-py
         uses: actions/setup-python@v5
@@ -23,27 +23,11 @@ jobs:
         with:
           python-version: '3.14'
 
-      - name: installer libclang
-        id: clang
-        uses: KyleMayes/install-llvm-action@v2
-        if: ${{ always() }}
-        with:
-          version: "14.0"
-          env: true
-      
       - name: installer pipenv
         id: pip-env
-        run: python -m pip install pipenv libclang clang
+        run: python -m pip install pipenv
         if: ${{ always() }}
-      
-      - name: installer TeXlive
-        id: texlive
-        uses: zauguin/install-texlive@v4
-        if: ${{ always() }}
-        with:
-          texlive_version: 2025
-          packages: scheme-basic latexmk
-        
+
       - name: checkout repo
         id: checkout
         uses: actions/checkout@v4
@@ -53,20 +37,20 @@ jobs:
         id: venv
         run: python -m pipenv install
         if: ${{ always() }}
-        
+
       - name: créer le dossier d'assemblage
         id: dotbuild
-        run: mkdir -p .build
+        run: mkdir -p .github/.build
         if: ${{ always() }}
 
       - name: assembler sdist python
         id: sdist
-        run: python -m pipenv run python -m build --sdist .build
+        run: python -m pipenv run python -m build --sdist .github/.build
         if: ${{ always() }}
 
       - name: assembler wheel python
         id: wheel
-        run: python -m pipenv run python -m build --wheel .build
+        run: python -m pipenv run python -m build --wheel .github/.build
         if: ${{ always() }}
 
       - name: assembler module arduino
@@ -74,29 +58,9 @@ jobs:
         run: make -C .github arduino
         if: ${{ always() }}
 
-      - name: assembler les exemples python
-        id: eg-py
-        run: tar -cf .build/python-demo.zip src/xphs1903/demos/*
-        if: ${{ always() }}
-      
-      - name: assembler les exemples arduino
-        id: eg-ard
-        run: tar -cf .build/arduino-demo.zip src/arduino/examples/*
-        if: ${{ always() }}
-
       - name: compiler doc html
         id: doc-html
         run: python -m pipenv run sphinx-build -M singlehtml docs/src .build
-        if: ${{ always() }}
-
-      - name: assembler doc LaTeX
-        id: sphinx-latex
-        run: python -m pipenv run sphinx-build -M latex docs/src .build
-        if: ${{ always() }}
-
-      - name: compiler doc LaTeX
-        id: doc-latex
-        run: cd .build/latex && latexmk xph1903.tex
         if: ${{ always() }}
 
       - name: charger sdist python
@@ -123,14 +87,6 @@ jobs:
           name: xphs1903-arduino
           path: .build/xphs1903.zip
 
-      - name: charger les exemples
-        id: load-eg
-        uses: actions/upload-artifact@v4
-        if: ${{ always() }}
-        with:
-          name: xphs1903-eg
-          path: .build/*-demo.zip
-      
       - name: charger doc
         id: load-doc
         uses: actions/upload-artifact@v4
@@ -139,4 +95,3 @@ jobs:
           name: xphs1903-doc
           path: |
             .build/singlehtml
-            .build/latexpdf/*.pdf
