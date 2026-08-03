@@ -1,21 +1,25 @@
 name: Check syntax and format
 
-on:
-  push:
-    branches: [ "main" ]
+on: push
 
 permissions:
   contents: read
 
 jobs:
-  ruff:
+  ruff-check:
     runs-on: ubuntu-latest
 
     steps:
-
       - uses: actions/checkout@v6
       - uses: astral-sh/ruff-action@v4.1.0
       - run: ruff check
+
+  ruff-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/ruff-action@v4.1.0
       - run: ruff format --check --diff
 
 
