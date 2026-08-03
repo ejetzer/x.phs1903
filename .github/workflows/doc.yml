@@ -20,7 +20,7 @@ jobs:
 
       - name: Install pipenv
         id: pip-env
-        run: python -m pip install pipenv
+        run: python3.14 -m pip install pipenv
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,14 +28,16 @@ jobs:
 
       - name: Install virtual environment
         id: venv
-        run: python -m pipenv install
+        run: python3.14 -m pipenv install
 
       - name: Create build directory
         id: dotbuild
         run: mkdir -p .build
 
       - name: Build html documentation
-        run: make -C docs singlehtml
+        run: |
+          cd docs
+          python3.14 -m pipenv run sphinx-build -M singlehtml src ../.build -v
 
       - name: Upload docs
         uses: actions/upload-artifact@v4
