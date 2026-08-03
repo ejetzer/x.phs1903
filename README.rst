@@ -5,6 +5,18 @@
 Ce projet fournit un module Arduino, un module Python et quelques programmes
 d'exemples d'utilisation de ces fichiers.
 
+.. image:: https://github.com/ejetzer/x.phs1903/actions/workflows/pypi.yml/badge.svg
+   :alt: Upload Python Package
+   :target: https://github.com/ejetzer/x.phs1903/actions/workflows/pypi.yml
+
+.. image:: https://github.com/ejetzer/x.phs1903/actions/workflows/doc.yml/badge.svg
+   :alt: Compile documentation to HTML
+   :target: https://github.com/ejetzer/x.phs1903/actions/workflows/doc.yml
+
+.. image:: https://github.com/ejetzer/x.phs1903/actions/workflows/ruff.yml/badge.svg
+   :alt: Check syntax and format
+   :target: https://github.com/ejetzer/x.phs1903/actions/workflows/ruff.yml
+
 --------
 Support
 --------
