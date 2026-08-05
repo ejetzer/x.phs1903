@@ -1,0 +1,249 @@
+{
+  "count": 8,
+  "pages": 1,
+  "questions": [
+    {
+      "added_at": "1785936300",
+      "id": 11,
+      "answer_count": 0,
+      "answer_ids": [],
+      "accepted_answer_id": null,
+      "view_count": 1,
+      "score": 0,
+      "last_activity_at": "1785936300",
+      "title": "Spyder et tkinter figent?",
+      "summary": "<p>En essayant d'exécuter la fonction <code>main</code> de <code>xphs1903.outils.plot</code> et <code>xphs1903.outils.gui</code>, Spyder semblait particulièrement lent. Est-ce qu'il y a un problème avec les différentes boucles d'exécution?</p>\n",
+      "tags": [
+        "spyder",
+        "gui",
+        "tkinter"
+      ],
+      "url": "http://localhost:8000/question/11/spyder-et-tkinter-figent/",
+      "last_edited_at": "1785936300",
+      "last_edited_by": {
+        "id": 2,
+        "username": "Anonyme"
+      },
+      "author": {
+        "id": 2,
+        "username": "Anonyme"
+      },
+      "last_activity_by": {
+        "id": 2,
+        "username": "Anonyme"
+      }
+    },
+    {
+      "added_at": "1785936192",
+      "id": 10,
+      "answer_count": 0,
+      "answer_ids": [],
+      "accepted_answer_id": null,
+      "view_count": 1,
+      "score": 0,
+      "last_activity_at": "1785936192",
+      "title": "C'est quoi un «exécutable»?",
+      "summary": "<p>La documentation parle d'«exécutables». Qu'est-ce que c'est?</p>\n",
+      "tags": [
+        "lexique"
+      ],
+      "url": "http://localhost:8000/question/10/cest-quoi-un-executable/",
+      "last_edited_at": "1785936192",
+      "last_edited_by": {
+        "id": 2,
+        "username": "Anonyme"
+      },
+      "author": {
+        "id": 2,
+        "username": "Anonyme"
+      },
+      "last_activity_by": {
+        "id": 2,
+        "username": "Anonyme"
+      }
+    },
+    {
+      "added_at": "1785936093",
+      "id": 9,
+      "answer_count": 0,
+      "answer_ids": [],
+      "accepted_answer_id": null,
+      "view_count": 1,
+      "score": 0,
+      "last_activity_at": "1785936093",
+      "title": "C'est quoi un «interpréteur»?",
+      "summary": "<p>La documentation sur Read The Docs parle d'un «interpréteur» Python. Qu'est-ce que c'est?</p>\n",
+      "tags": [
+        "lexique",
+        "python"
+      ],
+      "url": "http://localhost:8000/question/9/cest-quoi-un-interpreteur/",
+      "last_edited_at": "1785936093",
+      "last_edited_by": {
+        "id": 2,
+        "username": "Anonyme"
+      },
+      "author": {
+        "id": 2,
+        "username": "Anonyme"
+      },
+      "last_activity_by": {
+        "id": 2,
+        "username": "Anonyme"
+      }
+    },
+    {
+      "added_at": "1785870692",
+      "id": 8,
+      "answer_count": 0,
+      "answer_ids": [],
+      "accepted_answer_id": null,
+      "view_count": 0,
+      "score": 0,
+      "last_activity_at": "1785870692",
+      "title": "Que veut dire le `>>>` ou `$` en début de ligne de commande?",
+      "summary": "<p>Dans les exemples les commandes sont souvent précédées d'un <code>&gt;&gt;&gt;</code> ou d'un <code>$</code>. Qu'est-ce que ça veut dire? Est-ce qu'il faut les inclure dans les commandes?</p>\n",
+      "tags": [
+        "cli",
+        "python",
+        "shell"
+      ],
+      "url": "http://localhost:8000/question/8/que-veut-dire-le-ou-en-debut-de-ligne-de-commande/",
+      "last_edited_at": "1785870692",
+      "last_edited_by": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "author": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "last_activity_by": {
+        "id": 1,
+        "username": "techjetzer"
+      }
+    },
+    {
+      "added_at": "1785870534",
+      "id": 7,
+      "answer_count": 0,
+      "answer_ids": [],
+      "accepted_answer_id": null,
+      "view_count": 0,
+      "score": 0,
+      "last_activity_at": "1785870534",
+      "title": "Utiliser l'interpréteur Python 3.14 externe avec Spyder",
+      "summary": "<p>J'ai réglé l'interpréteur Python de Spyder à Python 3.14, mais maintenant la console IPython affiche une erreur de type <code>ImportError</code> à propos d'un module <code>spyder-kernels</code>. Qu'est-ce qui se passe?</p>\n",
+      "tags": [
+        "python",
+        "spyder"
+      ],
+      "url": "http://localhost:8000/question/7/utiliser-linterpreteur-python-314-externe-avec-spyder/",
+      "last_edited_at": "1785870534",
+      "last_edited_by": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "author": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "last_activity_by": {
+        "id": 1,
+        "username": "techjetzer"
+      }
+    },
+    {
+      "added_at": "1785870409",
+      "id": 6,
+      "answer_count": 0,
+      "answer_ids": [],
+      "accepted_answer_id": null,
+      "view_count": 0,
+      "score": 0,
+      "last_activity_at": "1785870409",
+      "title": "Où est l'exécutable Python 3.14 sur Windows?",
+      "summary": "<p>Je veux changer l'interpréteur Python dans Spyder, mais je ne trouve pas où se trouve l'interpréteur Python 3.14 que j'ai installé. Où est-ce que l'installeur officiel place les exécutables?</p>\n",
+      "tags": [
+        "python",
+        "spyder"
+      ],
+      "url": "http://localhost:8000/question/6/ou-est-lexecutable-python-314-sur-windows/",
+      "last_edited_at": "1785870409",
+      "last_edited_by": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "author": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "last_activity_by": {
+        "id": 1,
+        "username": "techjetzer"
+      }
+    },
+    {
+      "added_at": "1785870223",
+      "id": 5,
+      "answer_count": 0,
+      "answer_ids": [],
+      "accepted_answer_id": null,
+      "view_count": 0,
+      "score": 0,
+      "last_activity_at": "1785870223",
+      "title": "__init__.py bloque l'importation des sous-modules de xphs1903.outils",
+      "summary": "<p>En tentant d'importer <code>xphs1903.outils.plot</code> ou <code>xphs1903.outils.gui</code> pour exécuter la fonction <code>main()</code> dans la ligne de commande Python.  Le problème est arrivé avec l'installation via <code>pip</code> dans un environnement virtuel, dans la console IPython de Spyder 6.</p>\n",
+      "tags": [
+        "spyder",
+        "venv",
+        "ipython"
+      ],
+      "url": "http://localhost:8000/question/5/__init__py-bloque-limportation-des-sous-modules-de-xphs1903outils/",
+      "last_edited_at": "1785870223",
+      "last_edited_by": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "author": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "last_activity_by": {
+        "id": 1,
+        "username": "techjetzer"
+      }
+    },
+    {
+      "added_at": "1785868376",
+      "id": 1,
+      "answer_count": 0,
+      "answer_ids": [],
+      "accepted_answer_id": null,
+      "view_count": 0,
+      "score": 0,
+      "last_activity_at": "1785868376",
+      "title": "Erreur dans le téléchargement d'un programme Arduino",
+      "summary": "<p>Au téléchargement d'un programme sur la carte Arduino Nano Every, il y a ce message d'erreur que je ne comprends pas:</p>\n<pre><code class=\"language-text\">avrdude: jtagmkII_initialize(): Cannot locate &quot;flash&quot; and &quot;boot&quot; memories in description\navrdude: jtagmkII_reset(): timeout/error communicating with programmer (status -1)\navrdude: initialization failed, rc=-1\n         Double check connections and try again, or use -F to override\n         this check.\n \navrdude: jtagmkII_close(): timeout/error communicating with programmer (status -1)\navrdude: jtagmkII_close(): timeout/error communicating with programmer (status -1)\nFailed uploading: uploading error: exit status 1\n</code></pre>\n",
+      "tags": [
+        "arduino",
+        "arduino-ide",
+        "avrdude"
+      ],
+      "url": "http://localhost:8000/question/1/erreur-dans-le-telechargement-dun-programme-arduino/",
+      "last_edited_at": "1785868376",
+      "last_edited_by": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "author": {
+        "id": 1,
+        "username": "techjetzer"
+      },
+      "last_activity_by": {
+        "id": 1,
+        "username": "techjetzer"
+      }
+    }
+  ]
+}

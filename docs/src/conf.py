@@ -30,7 +30,7 @@ __logger.info('Configuration de la document pour %s', project)
 __logger.info('Écrit par %s', author)
 __logger.info('%s', project_copyright)
 
-repo_path = (Path(__file__) / '..' / '..' / '..' / '.git').resolve()
+repo_path = (Path(__file__).parent.parent.parent / '.git').resolve()
 __logger.info('Répertoire git: %s', repo_path)
 
 try:
@@ -82,7 +82,7 @@ autodoc_inherit_docstrings = False
 napoleon_include_init_with_doc = False
 
 # Ajout du répertoire de code source au chemin Python
-sys.path.insert(0, str((Path().parent.parent / 'src').resolve()))
+sys.path.insert(0, str((Path(__file__).parent.parent.parent / 'src').resolve()))
 
 autosectionlabel_prefix_document = True
 

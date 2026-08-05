@@ -26,4 +26,5 @@
   contrib
   api
   glos
+  faq
   license

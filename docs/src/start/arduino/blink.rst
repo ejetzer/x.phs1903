@@ -27,7 +27,7 @@ Une fois l'installation terminée,
 
 Vous devriez voir une diode clignoter sur la carte Arduino. Félicitations!
 
-.. _sorties:
+.. _sorties: https://github.com/ejetzer/x.phs1903/releases
 
 Les détails
 .............

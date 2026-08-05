@@ -25,7 +25,7 @@ VARS_OLD := $(.VARIABLES) # Pour ne pas documenter les variables d'environnement
 ## par Émile Jetzer & Jacques Massicotte. Pour plus d'informations,
 ## lisez le document README.rst.
 NAME = xphs1903
-VERSION ?= $(shell git describe --always)
+VERSION = $(shell git describe --always)
 AUTHOR ?= "Émile Jetzer" "Jacques Massicotte"
 SHELL = /bin/zsh
 SOURCE ?= src
@@ -100,3 +100,4 @@ github-build:
 	$(MAKE) -C .github/ build
 
 include make/release.Makefile
+include make/faq.Makefile

@@ -2,6 +2,7 @@
 pipfile = Pipfile
 pipfile_lock = Pipfile.lock
 prerequis ?= $(BUILD)/requirements.txt
+prerequis_docs ?= docs/src/requirements.txt
 venv ?= .venv
 
 $(pipfile_lock): $(pipfile) pipenv
@@ -30,5 +31,5 @@ $(drapeau_pipenv): pip $(DIR_DRAPEAUX)
 	$(pip) install --upgrade pipenv
 	$(touch) $@
 
-$(prerequis): $(pipfile)
+$(prerequis) $(prerequis_docs): $(pipfile)
 	$(pipenv) requirements --exclude-index --no-lock|sed 's/==/~=/g' > $@
