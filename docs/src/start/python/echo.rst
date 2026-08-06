@@ -1,7 +1,7 @@
 Premier pas avec Spyder
 -------------------------
 
-#. Téléchargez le `modèle de projet`_ de la page des `sorties`_, ou:
+#. Téléchargez le modèle de projet :file:`template.zip` de la page des `sorties`_, ou:
 
    #. Créez un dossier de travail (si ce n'est pas déjà fait)
    #. Téléchargez y ce modèle de document de présentation:
@@ -25,7 +25,7 @@ Premier pas avec Spyder
       >>> venv.create('.venv', system_site_packages=True, with_pip=True)
 
 #. Dans les préférences de Spyder, changez l'interpréteur Python pour
-   ``.venv/bin/python``.
+   :file:`.venv/bin/python` (ou :file:`.venv/Scripts/python` sur Windows).
 #. Rechargez la console IPython de Spyder
 #. Dans la console IPython, entrez
 
@@ -43,9 +43,7 @@ Premier pas avec Spyder
 Vous devriez voir apparaître un invite de commande, qui vous renvoie exactement
 le texte que vous tapez quand vous appuyez sur :kbd:`<Enter>`. Bravo!
 
-.. _sorties:
-
-.. _`modèle de projet`:
+.. _sorties: https://github.com/ejetzer/x.phs1903/releases
 
 Les détails
 ..............
