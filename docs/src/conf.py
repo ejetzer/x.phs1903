@@ -82,7 +82,9 @@ autodoc_inherit_docstrings = False
 napoleon_include_init_with_doc = False
 
 # Ajout du répertoire de code source au chemin Python
-sys.path.insert(0, str((Path(__file__).parent.parent.parent / 'src').resolve()))
+sys.path.insert(
+    0, str((Path(__file__).parent.parent.parent / 'src').resolve())
+)
 
 autosectionlabel_prefix_document = True
 

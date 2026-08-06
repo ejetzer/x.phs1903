@@ -123,6 +123,7 @@ extend-select = [
 extend-ignore = [
   "PLC2401",
   "COM812",
+  "non-imperative-mood",
 ]
 fixable = [
   "W",
@@ -149,6 +150,11 @@ extend-safe-fixes = [
 
 [tool.ruff.lint.per-file-ignores]
 "docs/src/conf.py" = ["F401"]
+"template/src/main.py" = [
+  "unnecessary-placeholder",
+  "unused-import",
+  "missing-return-type-undocumented-public-function",
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"

@@ -2,7 +2,7 @@ Premier pas avec l'Arduino Nano Every
 ---------------------------------------
 
 #. Téléchargez l'archive ``zip`` du module Arduino :mod:`!xphs1903` sur la page
-   des `sorties`_.
+   des `sorties`_ du répertoire sur Github.
 #. Ouvrez l'IDE Arduino
 #. Dans la barre latérale, sélectionnez
    :guilabel:`Gestionnaire de bibliothèques`
@@ -23,7 +23,7 @@ Une fois l'installation terminée,
 #. Connectez un Arduino Nano Every à votre ordinateur avec un câble USB.
 #. Sélectionnez votre carte Arduino nouvellement apparue dans le menu de
    sélection des cartes dans la barre d'outils de l'IDE Arduino.
-#. :guilabel:`Téléchargez` le programme.
+#. :guilabel:`Téléverser` le programme.
 
 Vous devriez voir une diode clignoter sur la carte Arduino. Félicitations!
 

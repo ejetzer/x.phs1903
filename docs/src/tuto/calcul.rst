@@ -14,30 +14,7 @@ Dans ce tutoriel, vous verrez:
 #. Comment effectuer d'autres calculs avec Python;
 #. Comment sauvegarder le résultat de ces calculs.
 
-Calculs sur des données en C++
-.....................................
+.. toctree::
 
-.. admonition:: Sujets couverts
-
-   Effectuer des calcul soit
-
-   * à l'acquisition même
-   * soit juste avant l'envoi série
-
-   Et ensuite
-
-   * Utiliser le résultat des calculs pour contrôler d'autres broches
-
-Transmettre des données structurées
-.....................................
-
-.. admonition:: Sujets couverts
-
-   Transmettre un tableau soit
-
-   * Rangée par rangée,
-   * Colonne par colonne
-   * En flot d'octets
-
-   et les lire dans un :class:`~pandas.DataFrame`.
-
+   calcul/acq
+   calcul/serial

@@ -3,9 +3,10 @@
 
 from ...outils.serial import ArduinoNanoEvery
 
-def serial():
+
+def serial() -> None:
+    """Communication avec un Arduino Nano Every."""
     with ArduinoNanoEvery() as ard:
-        while ( cmd := input('>>>') ):
+        while cmd := input('>>>'):
             ard.print(cmd)
             print(next(ard))
-

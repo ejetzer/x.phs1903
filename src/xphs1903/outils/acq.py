@@ -4,7 +4,6 @@
 """Fonctions de contrôle ordiné."""
 
 import logging
-import queue
 import threading
 from typing import TYPE_CHECKING
 
@@ -29,22 +28,30 @@ type IterTraceurSerie = iter[dict[str, float]]
 
 
 class Tableau:
+    """Tableau d'acquisition de données par la ligne série."""
+
     __logger = logging.getLogger(f'{__name__}.Tableau')
     """Journal de débogage pour les objets de classe Tableau."""
 
     __logger.addHandler(logging.NullHandler())
 
     def __init__(self, _iter: IterTraceurSerie) -> None:
+        """Initialise le tableau."""
         self.__iter: IterTraceurSerie = _iter
         self.__df: pd.DataFrame = pd.DataFrame()
         self.__buffer: list[pd.Series] = []
-        self.__thread_consume: threading.Thread = threading.Thread(target=self.__run_consume)
-        self.__thread_update: threading.Thread = threading.Thread(target=self.__run_update)
+        self.__thread_consume: threading.Thread = threading.Thread(
+            target=self.__run_consume
+        )
+        self.__thread_update: threading.Thread = threading.Thread(
+            target=self.__run_update
+        )
         self.__arret: threading.Event = threading.Event()
         self.__loquet_df: threading.Lock = threading.Lock()
         self.__loquet_buffer: threading.Lock = threading.Lock()
 
     def __run_consume(self) -> None:
+        """Lit les nouvelles données."""
         self.__logger.debug('%s', self.__iter)
 
         while not self.__arret.is_set():
@@ -59,26 +66,50 @@ class Tableau:
         self.__logger.debug('len(buffer) = %s', len(self.__buffer))
 
     def __run_update(self) -> None:
+        """Concatène les DataFrame."""
         while not self.__arret.is_set():
             with self.__loquet_buffer, self.__loquet_df:
-                self.__df = pd.concat([self.__df] + self.__buffer).reset_index(drop=True)
+                self.__df = pd.concat([self.__df] + self.__buffer).reset_index(
+                    drop=True
+                )
 
     def close(self) -> None:
+        """Arrête la compilation des données."""
         self.__arret.set()
         self.__thread_consume.join()
         self.__thread_update.join()
 
     def __iter__(self) -> Self:
+        """Retourne soi-même.
+
+        Returns
+        ---------------------
+        self: Tableau
+        """
         return self
 
     def __next__(self) -> pd.DataFrame:
+        """Retourne un DataFrame à jour.
+
+        Returns
+        ---------------------
+        self.df: pandas.DataFrame
+        """
         return self.df
 
-    def start(self):
+    def start(self) -> None:
+        """Démarre l'exécution."""
         self.__thread_consume.start()
         self.__thread_update.start()
 
     def __enter__(self) -> Self:
+        """Démarre la compilation des données.
+
+        Returns
+        ---------------------
+        self: Tableau
+            Soi-même.
+        """
         self.start()
         return self
 
@@ -88,18 +119,41 @@ class Tableau:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> bool:
+        """Ferme le tableau.
+
+        Returns
+        ---------------------
+        False
+            Soulève toute exception.
+        """
         self.close()
         return False  # Re-raise the exception please
 
     @property
     def df(self) -> pd.DataFrame:
+        """Obtiens sécuritairement une copie du DataFrame interne.
+
+        Returns
+        ---------------------
+        ret: pandas.DataFrame
+            La copie du DataFrame sous-jacent.
+        """
+        ret = pd.DataFrame()
         with self.__loquet_df:
-            return self.__df.copy()
+            ret = self.__df.copy()
+        return ret  # noqa: RET504
 
 
 def aléatoire(
     *, n: int = 10, incert: float = 0.001, seed: int = 1903
 ) -> TraceurSerie:
+    """Simule du bruit aléatoire autour de courbes simples.
+
+    Returns
+    ---------------------
+    TraceurSerie
+        Une liste de dictionnaires contenant les données.
+    """
     gna = np.random.default_rng(seed=seed)
     ts: np.ndarray = np.arange(n) + gna.normal(0, incert, n)
     xs: np.ndarray = np.arange(n) + gna.normal(0, incert, n)
@@ -115,14 +169,25 @@ def aléatoire(
 def sinus(
     *, n: int = 10, incert: float = 0.001, seed: int = 1903, phase: int = 0
 ) -> TraceurSerie:
+    """Simule une onde sinusoidale envoyée par la ligne série.
+
+    Returns
+    ---------------------
+    TraceurSerie
+        Une liste de dictionnaires contenant les données.
+    """
     gna = np.random.default_rng(seed=seed)
     ts: np.ndarray = np.arange(phase, phase + n) + gna.normal(0, incert, n)
-    xs: np.ndarray = 2 * np.sin(np.arange(phase, phase + n)) + gna.normal(
-        0, incert, n
-    ) + 2.5
-    ys: np.ndarray = 2 * np.cos(np.arange(phase, phase + n)) + gna.normal(
-        0, incert, n
-    ) + 2.5
+    xs: np.ndarray = (
+        2 * np.sin(np.arange(phase, phase + n))
+        + gna.normal(0, incert, n)
+        + 2.5
+    )
+    ys: np.ndarray = (
+        2 * np.cos(np.arange(phase, phase + n))
+        + gna.normal(0, incert, n)
+        + 2.5
+    )
     lignes: TraceurSerie = [
         {'t': t, 'x': x, 'y': y} for t, x, y in zip(ts, xs, ys, strict=True)
     ]
@@ -130,12 +195,14 @@ def sinus(
 
 
 def main(*, debug: bool = True) -> None:
+    """Démonstration des outils d'acquisition."""
     import time  # noqa: PLC0415
 
     from .serial import LigneSerie  # noqa: PLC0415
 
     if debug:
-        from .logging import config, DEBUG
+        from .logging import DEBUG, config  # noqa: PLC0415
+
         config(__name__, level=DEBUG)
 
     n = 50

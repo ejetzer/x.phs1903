@@ -1,19 +1,22 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
+"""Utilitaires de dessin de graphiques."""
+
 import logging
 import tkinter as tk
 import typing
 
-import pandas as pd
 import matplotlib as mpl
+import pandas as pd
 from matplotlib import figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from .calcul import Calcul, Identite
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Callable
     from concurrent.futures import Future
     from types import TracebackType
-    from typing import Self, Callable
+    from typing import Any, Self
 
     from .acq import Tableau
 
@@ -27,7 +30,25 @@ Utile pour le débogage, ne devrait être obtenu qu'avec
 __logger.addHandler(logging.NullHandler())
 
 
+class WrongBoundaryTypeError(TypeError):
+    """Indique que les limites d'axes sont invalides."""
+
+    def __init__(self, value: Any) -> None:  # noqa: ANN401
+        """Définit le message d'erreur selon value."""
+        msg: str = f"{value=} n'est pas une limite adéquate."
+        super().__init__(msg)
+
+
+DIM_GRA: int = 2
+"""Nombre de dimensions des graphiques décrits par Graphe et Format."""
+
+N_COTES: int = 2
+"""Nombre de valeurs des limites de chaque axe."""
+
+
 class Format:
+    """Paramètres d'un Graphe."""
+
     __logger = logging.getLogger(f'{__name__}.Format')
     """Journal de débogage pour les objets de classe Format."""
 
@@ -36,13 +57,14 @@ class Format:
     def __init__(
         self,
         *,
-        callback: Callable = None,
+        callback: Callable | None = None,
         xlim: tuple | None = None,
         ylim: tuple | None = None,
         title: str = 'Graphe',
-        linestyle: str = 'dotted'
+        linestyle: str = 'dotted',
     ) -> None:
-        self.__callback = None
+        """Initialisation des paramètres."""
+        self.__callback = callback
         self.__fig = None
         self.__ax = None
         self.__bottom = None
@@ -56,7 +78,8 @@ class Format:
         self.ylim = ylim
 
     @property
-    def xlim(self):
+    def xlim(self) -> tuple[float, float]:
+        """Calcule les limites en x."""
         if self.__ax is None:
             return self.__left, self.__right
 
@@ -73,14 +96,24 @@ class Format:
         return minimum, maximum
 
     @xlim.setter
-    def xlim(self, value):
+    def xlim(self, value: tuple[float, float] | None) -> None:
+        """Valide les limites en x.
+
+        Raises
+        -----------------
+        WrongBoundaryTypeError
+            Si value n'est pas un tuple de deux éléments ou None.
+        """
         if value is None:
             self.__left = self.__right = None
-        elif len(value) == 2:
+        elif len(value) == N_COTES:
             self.__left, self.__right = value
+        else:
+            raise WrongBoundaryTypeError(value)
 
     @property
-    def ylim(self):
+    def ylim(self) -> tuple[float, float]:
+        """Calcule les limites en y."""
         if self.__ax is None:
             return self.__bottom, self.__top
 
@@ -97,21 +130,33 @@ class Format:
         return minimum, maximum
 
     @ylim.setter
-    def ylim(self, value):
+    def ylim(self, value: tuple[float, float] | None) -> None:
+        """Valide les limites en y.
+
+        Raises
+        -----------------
+        WrongBoundaryTypeError
+            Si value n'est pas un tuple de deux éléments ou None.
+        """
         if value is None:
             self.__bottom = self.__top = None
-        elif len(value) == 2:
+        elif len(value) == N_COTES:
             self.__bottom, self.__top = value
+        else:
+            raise WrongBoundaryTypeError(value)
 
     @property
-    def title(self):
+    def title(self) -> str:
+        """Retourne le titre du graphique."""
         return self.__title
 
     @title.setter
-    def title(self, value):
-        self.__title = value
+    def title(self, value: str) -> None:
+        """Change la valeur du titre."""
+        self.__title = str(value)
 
     def __call__(self, graphe: Graphe) -> None:
+        """Applique le format à l'argument graphe."""
         self.__logger.debug('')
         self.__fig = graphe.fig
         self.__ax = graphe.ax
@@ -129,6 +174,8 @@ class Format:
 
 
 class Graphe:
+    """Encapsulation d'un tableau et canvas pour afficher un graphe."""
+
     __logger = logging.getLogger(f'{__name__}.Graphe')
     """Journal de débogage pour les objets de classe Graphe."""
 
@@ -140,8 +187,9 @@ class Graphe:
         tab: Tableau,
         calcul: Calcul = None,
         *,
-        format_: Format = None
+        format_: Format = None,
     ) -> None:
+        """Initialise le graphe."""
         self.__logger.debug('')
 
         self.__root: tk.Frame = root
@@ -168,17 +216,29 @@ class Graphe:
 
     @property
     def fig(self) -> mpl.figure.Figure:
+        """Retourne l'objet mpl.figure.Figure sous-jacent."""
         return self.__figure
 
     @property
     def ax(self) -> mpl.axes.Axes:
+        """Retourne l'objet mpl.axes.Axes sous-jacent."""
         return self.__axes
 
-    def close(self):
+    def close(self) -> None:
+        """Ferme les connexions et détruit les composants gui."""
         self.__tab.close()
         self.__canvas.get_tk_widget().destroy()
 
     def func(self) -> list | None:
+        """Met à jour les données du graphe.
+
+        Returns
+        -----------------
+        self.__lignes
+            Objets Line2D décrivant les courbes du graphe.
+        None
+            Si auncun Line2D n'a été dessinée.
+        """
         self.__count += 1
         self.__logger.info('#%s', self.__count)
         try:
@@ -225,9 +285,23 @@ class Graphe:
         return self.__lignes
 
     def __iter__(self) -> Self:
+        """Retourne soi-même comme itérateur.
+
+        Returns
+        -----------------
+        self
+
+        """
         return self
 
     def __next__(self) -> pd.DataFrame:
+        """Retourne le prochain ensemble de données.
+
+        Returns
+        -----------------
+        res: pd.DataFrame
+            Les dernières données obtenues.
+        """
         if self.__res is None:
             self.__res = pd.DataFrame()
 
@@ -259,22 +333,28 @@ class Graphe:
         self.__res = res
         return res
 
-    def show(self):
+    def show(self) -> None:
+        """Affiche le graphique."""
         self.func()
         self.__canvas.get_tk_widget().pack(
             side=tk.TOP, fill=tk.BOTH, expand=True
         )
 
     def __enter__(self) -> Self:
+        """Démarre la mise à jour du graphe et l'affiche.
+
+        Returns
+        -----------------
+        self
+            Les objets Graphe implémentent __exit__.
+        """
         self.__logger.debug('')
-        self.func()
-        self.__canvas.get_tk_widget().pack(
-            side=tk.TOP, fill=tk.BOTH, expand=True
-        )
+        self.show()
         return self
 
     @property
     def canvas(self) -> FigureCanvasTkAgg | None:
+        """Retourne l'objet FigureCanvasTkAgg sous-jacent."""
         return self.__canvas
 
     def __exit__(
@@ -283,6 +363,13 @@ class Graphe:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> bool:
+        """Ferme le graphe et relève toute erreur.
+
+        Returns
+        -----------------
+        False
+            Re-soulève toute exception.
+        """
         self.close()
         self.__logger.debug('')
         return False  # Re-raise the exception please
@@ -293,11 +380,12 @@ def main(*, debug: bool = False) -> None:
     from functools import partial  # noqa: PLC0415
 
     from .acq import Tableau, sinus  # noqa: PLC0415
-    from .calcul import rectangle, FFT  # noqa: PLC0415
+    from .calcul import FFT, rectangle  # noqa: PLC0415
     from .serial import LigneSerie  # noqa: PLC0415
 
     if debug:
-        from .logging import config, DEBUG
+        from .logging import DEBUG, config  # noqa: PLC0415
+
         config(__name__, level=DEBUG)
 
     lignes = sinus(n=50)
@@ -309,14 +397,10 @@ def main(*, debug: bool = False) -> None:
     root.wm_title('Démonstration avec des données artificielles')
 
     format_fft = Format(
-        title='Transformée de Fourier',
-        xlim=(0, 0.5),
-        ylim=None
+        title='Transformée de Fourier', xlim=(0, 0.5), ylim=None
     )
 
-    format_sig = Format(
-        title='Signal artificiel'
-    )
+    format_sig = Format(title='Signal artificiel')
 
     with LigneSerie() as com:
         __logger.debug('%s', com)
@@ -345,12 +429,12 @@ def main(*, debug: bool = False) -> None:
                     __logger.debug('%s', root)
                     root.after(1000, nouvelles_données)
 
-                    def quit():
+                    def quit_app() -> None:
                         gra1.close()
                         gra2.close()
                         root.quit()
 
-                    root.protocol('WM_DELETE_WINDOW', lambda: quit())
+                    root.protocol('WM_DELETE_WINDOW', quit_app)
 
                     __logger.debug('%s', root)
                     root.mainloop()

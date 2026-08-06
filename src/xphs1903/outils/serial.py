@@ -110,7 +110,6 @@ class LigneSerie:
             Un objet :class:`threading.Event` permettant de signaler
             l'arrêt de la communication et de fermer la connexion.
         """
-
         self.__port = port
         self.__baudrate = baudrate
         self.__timeout = 0.05
@@ -129,19 +128,23 @@ class LigneSerie:
         self.__reset()
 
     @property
-    def device(self):
+    def device(self) -> str:
+        """Retourne le port série."""
         return self.__serial.port
 
     @property
-    def port(self):
+    def port(self) -> str:
+        """Retourne le port série."""
         return self.__serial.port
 
     @property
-    def baudrate(self):
+    def baudrate(self) -> int:
+        """Retourne le débit maximal de communication attendu."""
         return self.__serial.baudrate
 
     @property
-    def sending(self):
+    def sending(self) -> bool:
+        """Vérifie s'il reste des données à envoyer."""
         return not self.__input.empty()
 
     def print(
@@ -172,7 +175,9 @@ class LigneSerie:
         >>> com.print([{'A2': 120, '13': 255}])
 
         """
-        self.__logger.debug('len(data) = %s, type(data) = %s', len(data), type(data))
+        self.__logger.debug(
+            'len(data) = %s, type(data) = %s', len(data), type(data)
+        )
         if isinstance(data, list):
             self.__logger.debug('data is list')
             if all(isinstance(x, dict) for x in data):
@@ -203,6 +208,7 @@ class LigneSerie:
                     cmd: bytes = self.__input.get()
                     self.__logger.debug('len(cmd) = %s', len(cmd))
                 except queue.ShutDown as err:
+                    self.__logger.debug('self.__input fermé', exc_info=err)
                     break
                 else:
                     with self.__loquet:
@@ -229,6 +235,7 @@ class LigneSerie:
                     if len(val) > 0:
                         self.__output.put(val)
                 except queue.ShutDown as err:
+                    self.__logger.debug('self.__output fermé', exc_info=err)
                     break
 
     def __enter__(self) -> Self:
@@ -255,6 +262,7 @@ class LigneSerie:
         return self
 
     def open(self) -> None:
+        """Ouvre la connexion série."""
         self.__input: queue.Queue = queue.Queue()
         self.__output: queue.Queue = queue.Queue()
         self.__serial.open()
@@ -264,7 +272,14 @@ class LigneSerie:
         self.__open = True
 
     @property
-    def is_open(self):
+    def is_open(self) -> bool:
+        """Vérifie si la connexion est ouverte.
+
+        Returns
+        ---------------
+        self.__open: bool
+            Variable indiquant si la connexion est ouverte.
+        """
         return self.__open
 
     def __exit__(
@@ -303,6 +318,7 @@ class LigneSerie:
         return False  # Re-raise the exception please
 
     def close(self) -> None:
+        """Ferme la connexion série."""
         self.__logger.debug('')
         self.__logger.debug('%s', self.__open)
 
@@ -326,7 +342,7 @@ class LigneSerie:
         self.__logger.debug('%s', self.__open)
         self.__reset()
 
-    def __reset(self):
+    def __reset(self) -> None:
         self.__logger.debug('')
 
         self.__thread: threading.Thread = threading.Thread(
@@ -396,8 +412,10 @@ class LigneSerie:
         try:
             val: bytes = self.__output.get(timeout=0.01)
         except queue.ShutDown as err:
+            self.__logger.debug('self.__output fermé', exc_info=err)
             raise StopIteration from err
         except queue.Empty as err:
+            self.__logger.debug('self.__output vide', exc_info=err)
             return None
         else:
             self.__logger.info('len(val) = %s', len(val))
@@ -430,7 +448,10 @@ class LigneSerie:
         """
         for ligne in self:
             if ligne is not None:
-                yield {k: float(v) for k, v in (w.split(':') for w in ligne.split('\t'))}
+                yield {
+                    k: float(v)
+                    for k, v in (w.split(':') for w in ligne.split('\t'))
+                }
             else:
                 yield None
 
@@ -534,7 +555,8 @@ def main(*, debug: bool = False) -> None:
     import numpy as np  # noqa: PLC0415
 
     if debug:
-        from .logging import config, DEBUG
+        from .logging import DEBUG, config  # noqa: PLC0415
+
         config(__name__, level=DEBUG)
 
     seed = 1903
@@ -560,7 +582,7 @@ def main(*, debug: bool = False) -> None:
 
     print()
 
-    data = list(x for x in com.parse() if x is not None)
+    data = [x for x in com.parse() if x is not None]
     print('Position')
     print('===========================')
     print()

@@ -1,18 +1,19 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
+"""Utilitaires de calcul en parallèle."""
+
 import logging
 import typing
-import functools
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
 
-from .acq import Tableau
-
 if typing.TYPE_CHECKING:
     from types import TracebackType
     from typing import Final, Self
+
+    from .acq import Tableau
 
 __logger = logging.getLogger(__name__)
 """Journal de débogage interne du module.
@@ -27,6 +28,8 @@ type FonctionCalcul = Callable[pd.DataFrame, pd.DataFrame]
 
 
 class Calcul:
+    """Calcul pré-enregistré pour exécution en parallèle."""
+
     __logger = logging.getLogger(f'{__name__}.Calcul')
     """Journal de débogage pour les objets de classe Calcul."""
 
@@ -37,6 +40,7 @@ class Calcul:
         fct: FonctionCalcul = lambda x: x,
         nom: str = '',
     ) -> None:
+        """Initialisation du calcul."""
         self.__logger.debug('')
         self.__nom: Final[str] = str(nom)
         self.__fct: Final[FonctionCalcul] = fct
@@ -44,16 +48,37 @@ class Calcul:
         self.__shutdown = False
 
     @property
-    def nom(self):
+    def nom(self) -> str:
+        """Retourne le nom du calcul.
+
+        Returns
+        ---------------
+        str
+            Le nom du calcul.
+        """
         self.__logger.debug('')
         return self.__nom
 
     @property
-    def fct(self):
+    def fct(self) -> Callable[pd.DataFrame, pd.DataFrame]:
+        """Retourne la fonction sous-jacente.
+
+        Returns
+        ---------------
+        Callable[pandas.DataFrame, pandas.DataFrame]
+            La fonction sous-jacente.
+        """
         self.__logger.debug('')
         return self.__fct
 
     def __call__(self, tab: Tableau) -> Future:
+        """Appelle __run dans un fil parallèle.
+
+        Returns
+        ---------------
+        Future
+            Le processus en cours d'exécution.
+        """
         self.__logger.debug('')
         if not self.__shutdown:
             future = self.__executor.submit(self.__run, tab)
@@ -62,14 +87,28 @@ class Calcul:
         self.__logger.debug('%s', future)
         return future
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Affichage du DataFrame sous-jacent.
+
+        Returns
+        ---------------
+        str(self.df): str
+        """
         return str(self.df)
 
     def __run(self, tab: Tableau) -> pd.DataFrame:
+        """Exécute self.fct avec l'argument tab.df.
+
+        Returns
+        ---------------
+        pandas.DataFrame
+            Résultat du calcul.
+        """
         self.__logger.debug('')
         return self.fct(tab.df)
 
     def __enter__(self) -> None:
+        """Ne fait rien."""
         self.__logger.debug('')
         return self
 
@@ -79,16 +118,44 @@ class Calcul:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> bool:
+        """Arrête les opérations de calcul.
+
+        Returns
+        ---------------
+        False
+            Soulève tout le temps l'erreur forçant la fin de l'exécution.
+        """
         self.__logger.debug('')
         self.shutdown()
         return False  # Re-raise the exception please
 
     def shutdown(self) -> None:
+        """Arrête les opérations de calcul."""
         self.__logger.debug('')
         self.__executor.shutdown(wait=True, cancel_futures=True)
         self.__shutdown = True
 
     def __matmul__(self, other: Self) -> Self:
+        """Compose un calcul par un autre.
+
+        L'opérateur fonctionne ainsi:
+
+        .. code:: python
+
+            (f @ g)(x)
+
+        est équivalent à
+
+        .. code:: python
+
+            f(g(x))
+
+
+        Returns
+        ---------------
+        Calcul
+            L'objet Calcul résultant.
+        """
         self.__logger.debug('')
         if not isinstance(other, Calcul):
             return NotImplemented
@@ -100,6 +167,13 @@ class Calcul:
         return type(self)(fct, f'{self.nom} @ {other.nom}')
 
     def __add__(self, other: Self) -> Self:
+        """Additionne le résultat d'un calcul à celui d'un autre.
+
+        Returns
+        ---------------
+        Calcul
+            L'objet Calcul résultant.
+        """
         self.__logger.debug('')
         if not isinstance(other, Calcul):
             return NotImplemented
@@ -110,6 +184,13 @@ class Calcul:
         return type(self)(fct)
 
     def __mul__(self, other: Self) -> Self:
+        """Multiplie le résultat d'un calcul par celui d'un autre.
+
+        Returns
+        ---------------
+        Calcul
+            L'objet Calcul résultant.
+        """
         self.__logger.debug('')
         if not isinstance(other, Calcul):
             return NotImplemented
@@ -120,6 +201,13 @@ class Calcul:
         return type(self)(fct)
 
     def __sub__(self, other: Self) -> Self:
+        """Soustrait le résultat d'un calcul d'un autre.
+
+        Returns
+        ---------------
+        Calcul
+            L'objet Calcul résultant.
+        """
         self.__logger.debug('')
         if not isinstance(other, Calcul):
             return NotImplemented
@@ -131,18 +219,35 @@ class Calcul:
 
 
 def _i(df: pd.DataFrame) -> pd.DataFrame:
+    """Retourne df.
+
+    Returns
+    ---------------
+    df: pandas.DataFrame
+        Aucune action.
+    """
     __logger.debug('')
     return df
 
 
 class Identite(Calcul):
+    """Identité."""
+
     def __init__(
         self, fct: FonctionCalcul = _i, nom: str = 'identite'
     ) -> None:
+        """Initialisation du calcul."""
         super().__init__(fct, nom)
 
 
 def _moyenne(df: pd.DataFrame) -> pd.DataFrame:
+    """Calcule la moyenne de chaque colonne de df.
+
+    Returns
+    ---------------
+    res: pandas.DataFrame
+        La moyenne.
+    """
     __logger.debug('')
     res: pd.Series = df.aggregate('mean', 'index')
     res.name = 'moyenne'
@@ -151,27 +256,51 @@ def _moyenne(df: pd.DataFrame) -> pd.DataFrame:
 
 
 class Moyenne(Calcul):
+    """Calcul de la moyenne d'une distribution."""
+
     def __init__(
         self, fct: FonctionCalcul = _moyenne, nom: str = 'moyenne'
     ) -> None:
+        """Initialisation du calcul."""
         super().__init__(fct, nom)
 
+
 def _describe(df: pd.DataFrame) -> pd.DataFrame:
+    """Décrit la distribution de df.
+
+    Returns
+    ---------------
+    res: pandas.DataFrame
+        La description du DataFrame.
+    """
     __logger.debug('')
     try:
         res: pd.DataFrame = df.describe()
     except ValueError:
+        # Probablement un DataFrame vide.
         return df
 
     return res
 
+
 class Description(Calcul):
+    """Description statistique de données."""
+
     def __init__(
         self, fct: FonctionCalcul = _describe, nom: str = 'description'
     ) -> None:
+        """Initialisation du calcul."""
         super().__init__(fct, nom)
 
+
 def _fft(df: pd.DataFrame) -> pd.DataFrame:
+    """Calcule la transformée de Fourier de df[1:] en fonction de df[0].
+
+    Returns
+    ---------------
+    df.copy(): pandas.DataFrame
+        Copie du résultat du calcul.
+    """
     __logger.debug('')
 
     items = df.items()
@@ -202,11 +331,22 @@ def _fft(df: pd.DataFrame) -> pd.DataFrame:
 
 
 class FFT(Calcul):
+    """Calcul de la transformée de Fourier de signaux."""
+
     def __init__(self, fct: FonctionCalcul = _fft, nom: str = 'fft') -> None:
+        """Initialisation du calcul."""
         super().__init__(fct, nom)
 
+
 def _pics(df: pd.DataFrame) -> pd.DataFrame:
-    import scipy.signal
+    """Trouve les pics dans les fonctions df[1:] de df[0].
+
+    Returns
+    ---------------
+    df.copy(): pandas.DataFrame
+        Copie du DataFrame contenant le résultat du calcul.
+    """
+    import scipy.signal  # noqa: PLC0415
 
     __logger.debug('')
 
@@ -222,17 +362,37 @@ def _pics(df: pd.DataFrame) -> pd.DataFrame:
     pics = [scipy.signal.find_peaks(c) for c in cols]
     pics = [p for p, _ in pics]
     max_len = max(map(len, pics))
-    dico = {str(num + 1): [cols[num][p] for p in pic] + [None for n in range(max_len-len(pic))] for num, pic in enumerate(pics)}
-    dico |= {f'f{num+1}': [fs[p] for p in pic] + [None for n in range(max_len-len(pic))] for num, pic in enumerate(pics)}
+    dico = {
+        str(num + 1): [cols[num][p] for p in pic]
+        + [None for n in range(max_len - len(pic))]
+        for num, pic in enumerate(pics)
+    }
+    dico |= {
+        f'f{num + 1}': [fs[p] for p in pic]
+        + [None for n in range(max_len - len(pic))]
+        for num, pic in enumerate(pics)
+    }
     df = pd.DataFrame(dico)
 
     return df.copy()
 
+
 class Pics(Calcul):
+    """Calcul des pics d'une fonction."""
+
     def __init__(self, fct: FonctionCalcul = _pics, nom: str = 'fft') -> None:
+        """Initialisation du calcul."""
         super().__init__(fct, nom)
 
+
 def _der(df: pd.DataFrame) -> pd.DataFrame:
+    """Calcule la dérivé de df[1:] en fonction de df[0].
+
+    Returns
+    ---------------
+    df.copy(): pandas.DataFrame
+        Une copie du DataFrame contenant les résultats du calcul.
+    """
     __logger.debug('')
     items = df.items()
 
@@ -250,15 +410,27 @@ def _der(df: pd.DataFrame) -> pd.DataFrame:
 
 
 class Derivee(Calcul):
+    """Calcul de la dérivée par approximation de premier degré."""
+
     def __init__(
         self, fct: FonctionCalcul = _der, nom: str = 'dérivée'
     ) -> None:
+        """Initialisation du calcul."""
         super().__init__(fct, nom)
 
-def window(win: str = 'boxcar', n: int = 100, **kargs) -> type[Calcul]:
+
+def window(
+    win: str = 'boxcar', n: int = 100, **kargs: str | float
+) -> type[Calcul]:
+    """Retourne une sous-classe de Calcul décrivant une fenêtre.
+
+    Returns
+    ---------------
+    Window : type[Calcul]
+    """
     __logger.debug('')
 
-    import scipy.signal.windows
+    import scipy.signal.windows  # noqa: PLC0415
 
     win = scipy.signal.get_window(win, n, **kargs)
     __logger.debug('len(win) = %s', len(win))
@@ -284,35 +456,47 @@ def window(win: str = 'boxcar', n: int = 100, **kargs) -> type[Calcul]:
 
         __logger.debug('len(<cols>) = %s', list(map(len, cols)))
 
-        mask = win[:len(index)]
+        mask = win[: len(index)]
 
         __logger.debug('len(mask) = %s', len(mask))
 
         masked = [np.multiply(col, mask) for col in cols]
-        dico = {'t': index} | {(col+1): m for col, m in enumerate(masked)}
+        dico = {'t': index} | {(col + 1): m for col, m in enumerate(masked)}
         df = pd.DataFrame(dico)
         return df.copy()
 
     class Window(Calcul):
+        """Fenêtre à appliqué sur des données."""
+
         def __init__(
-            self,
-            fct: FonctionCalcul = fct,
-            nom: str = f'{win}<{n}>'
-        ):
+            self, fct: FonctionCalcul = fct, nom: str = f'{win}<{n}>'
+        ) -> None:
+            """Initialisation de la fenêtre."""
             super().__init__(fct, nom)
 
     return Window
 
+
 def rectangle(n: int = 100) -> type[Calcul]:
+    """Retourne un Calcul appliquant une fenêtre rectangulaire.
+
+    Returns
+    ----------------------
+    type[Calcul]
+        Une fenêtre rectangulaire de longueur n
+    """
     __logger.debug('')
     return window('rect', n)
 
+
 def main(*, debug: bool = False) -> None:
+    """Démonstration de calculs en parallèle."""
     from .acq import Tableau, sinus  # noqa: PLC0415
     from .serial import LigneSerie  # noqa: PLC0415
 
     if debug:
-        from .logging import config, DEBUG
+        from .logging import DEBUG, config  # noqa: PLC0415
+
         config(__name__, level=DEBUG)
 
     n = 50
@@ -323,7 +507,6 @@ def main(*, debug: bool = False) -> None:
     calcul_fft: Calcul = FFT() @ fenetre
     calcul_moyenne: Calcul = Description() @ fenetre
     calcul_pics: Calcul = Pics() @ calcul_fft
-
 
     with LigneSerie() as com:
         __logger.debug('%s', com)
