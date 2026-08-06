@@ -37,7 +37,7 @@ Documentation
 
 La documentation complète est hébergée sur `Read The Docs`_.
 
-.. _`Read The Docs`: https://xphs1903.readthedocs.io/fr/dev/
+.. _`Read The Docs`: https://xphs1903.readthedocs.io/fr/
 
 --------
 Auteurs
