@@ -29,16 +29,25 @@ def config(
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+
 def system() -> str:
-    import platform
-    import json
+    """Obtient des informations utiles sur le système.
+
+    Returns
+    ----------------------
+    str
+        Informations en JSON
+    """
+    import json  # noqa: PLC0415
+    import platform  # noqa: PLC0415
 
     ret: dict[str, str] = {
         'platform': platform.platform(),
-        'python': platform.python_implementation()+platform.python_version()
+        'python': platform.python_implementation() + platform.python_version(),
     }
 
     return json.dumps(ret)
+
 
 __all__: Final[list[str]] = [
     'CRITICAL',
@@ -47,6 +56,6 @@ __all__: Final[list[str]] = [
     'INFO',
     'WARNING',
     'config',
-    'system',
     'formatter',
+    'system',
 ]
