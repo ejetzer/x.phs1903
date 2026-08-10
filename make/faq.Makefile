@@ -9,8 +9,9 @@ faq_rst = $(docs_src)/faq.rst
 lib_dir ?= lib
 json2rst = $(pipenv) run python $(lib_dir)/askbot/json2rst.py
 
-faq:
-	$(json2rst) >$(faq_rst)
+faq: $(logs)
+	$(info Connecting to $(askbot_server)...)
+	$(json2rst) >$(faq_rst) || $(warning Could not connect.) 2> "$(LOGS)/$(notdir $@).log"
 
 .PHONY: faq
 

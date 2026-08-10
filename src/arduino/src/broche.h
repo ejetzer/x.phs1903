@@ -44,12 +44,12 @@ class BrocheAnalogique : public Broche
 public:
   BrocheAnalogique ();
   BrocheAnalogique (uint8_t numero);
-  using Broche::regler;
-  using Broche::loop;
-  using Broche::valeur;
-  using Broche::numero;
-  using Broche::mode;
   using Broche::_valeur;
+  using Broche::loop;
+  using Broche::mode;
+  using Broche::numero;
+  using Broche::regler;
+  using Broche::valeur;
   void setup ();
   uint16_t sonde ();
   uint16_t potentiel () const;
@@ -68,13 +68,13 @@ public:
 class BrochePWM : public Broche
 {
 public:
-  using Broche::sonde;
-  using Broche::valeur;
-  using Broche::loop;
-  using Broche::setup;
   using Broche::_valeur;
+  using Broche::loop;
   using Broche::mode;
   using Broche::numero;
+  using Broche::setup;
+  using Broche::sonde;
+  using Broche::valeur;
   void regler (uint8_t val);
 };
 
@@ -89,44 +89,41 @@ public:
   uint8_t curri = 0;
   std::vector<uint16_t> _temps;
   std::vector<uint16_t> _valeurs;
-  void setup();
-  void loop();
+  void setup ();
+  void loop ();
   using Broche::regler;
-  uint16_t sonde();
-  uint8_t pos(uint8_t);
-  uint8_t pos() const;
-  uint8_t move();
-  uint8_t move(uint8_t);
-  uint16_t valeur(uint8_t) const;
-  uint16_t valeur() const;
+  uint16_t sonde ();
+  uint8_t pos (uint8_t);
+  uint8_t pos () const;
+  uint8_t move ();
+  uint8_t move (uint8_t);
+  uint16_t valeur (uint8_t) const;
+  uint16_t valeur () const;
   uint16_t temps (uint8_t) const;
   uint16_t temps () const;
   uint8_t begin () const;
   uint8_t end () const;
   uint8_t next () const;
-  bool is_full() const;
-  void empty();
+  bool is_full () const;
+  void empty ();
   virtual size_t
-    phs::ListeBroche::printTo (Print &p) const
+  phs::ListeBroche::printTo (Print &p) const
   {
     size_t n = p.print ("t_");
     n += p.print (this->numero);
     n += p.print (':');
-    uint16_t t = this->temps();
+    uint16_t t = this->temps ();
     n += p.print (t);
     n += p.print ('\t');
     n += p.print ("broche_");
     n += p.print (this->numero);
     n += p.print (':');
-    uint16_t v = this->valeur();
+    uint16_t v = this->valeur ();
     n += p.print (v);
     return n;
   }
 };
 
-
-
 }
-
 
 #endif

@@ -40,6 +40,9 @@ pandastable = "*"
 libclang = "*"
 pandoc = "*"
 sphinx = "*"
+"x.phs1903" = {path = ".", editable = true}
+
+[scripts]
+"version" = "python lib/version.py"
 
 [dev-packages]
-"x.phs1903" = {editable = true, path = "."}

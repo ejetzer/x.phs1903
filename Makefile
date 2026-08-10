@@ -25,15 +25,23 @@ VARS_OLD := $(.VARIABLES) # Pour ne pas documenter les variables d'environnement
 ## par Émile Jetzer & Jacques Massicotte. Pour plus d'informations,
 ## lisez le document README.rst.
 NAME = xphs1903
-VERSION = $(shell git describe --always)
+VERSION := $(shell python3 -m pipenv run version)
 AUTHOR ?= "Émile Jetzer" "Jacques Massicotte"
 SHELL = /bin/zsh
 SOURCE ?= src
 README ?= README.rst
 BUILD ?= .build
 CONFIG ?= cfg
+LOGS ?= logs
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ##
+
+$(info $(NAME) $(VERSION))
+$(info Building to $(BUILD))
+$(info Logs are in $(LOGS)/)
+
+version:
+	@echo $(VERSION)
 
 # Pour les fichiers d'état
 DIR_DRAPEAUX ?= .drapeaux
@@ -43,7 +51,7 @@ include make/pipenv.Makefile
 
 # Raccourcis pratiques
 dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)\
-	$(arduino_prebuild) $(arduino_prebuild)/src
+	$(arduino_prebuild) $(arduino_prebuild)/src $(LOGS)
 
 ## INSTALLATION
 ##
@@ -70,34 +78,34 @@ include make/tests.Makefile
 include make/template.Makefile
 
 init: Pipfile.lock $(MAKE)
-	$(MAKE) -C $(dir_docs) init
 	$(git) config include.path cfg/gitconfig
 
 ## Tout compiler et installer, puis rouler les tests. Un peu excessif.
-all: install alldocs tests
+all: install tests
 
 clean:
-	-$(rm) -rf $(BUILD)/* $(DIR_DRAPEAUX)/*
-	$(MAKE) -C $(dir_docs) clean
+	-$(rm) $(BUILD)/**/*(.)
+	-$(rm) -r $(BUILD)/**/*(/)
+	-$(rm) $(DIR_DRAPEAUX)/**/*(.)
+	-$(rm) -rf build
+	-$(rm) -rf src/*.egg-info
 
 ## Installer tous les modules et la documentation
-install: arduino python alldocs
+install: arduino-install python alldocs
 
 ## Compiler tous les modules et la documentation
-build: develop $(arduino_package) $(sdist) $(wheel) alldocs $(demos)
+build: develop arduino python alldocs modele
 
 ## Créer un environnement virtuel pour le développement des modules
 develop: pipenv $(arduino-cli)
 
 ## Publier le module Python et l'archive Arduino
-twine = $(pipenv) run python -m twine
+twine ?= $(pipenv) run python -m twine
 publish: $(sdist) $(wheel)
 	$(twine) upload --verbose $(sdist)/* $(wheel)/*
 
 include make/demos.Makefile
-
-github-build:
-	$(MAKE) -C .github/ build
-
 include make/release.Makefile
 include make/faq.Makefile
+
+

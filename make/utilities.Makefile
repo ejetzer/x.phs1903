@@ -28,15 +28,15 @@ arduinoFFT_prebuild = $(BUILD)
 arduinoFFT_pkg = $(arduinoFFT_prebuild)/arduinoFFT.zip
 arduino_config ?= $(CONFIG)/arduino.yaml
 $(arduinoFFT): $(git)
-	$(git) submodule init && $(git) submodule update
+	$(git) submodule init && $(git) submodule update 2> "$(LOGS)/$(notdir $@).log"
 
 $(arduinoFFT_pkg): $(arduinoFFT_prebuild) $(arduinoFFT) $(tar) $(cp) $(rm)
 	$(rm) -rf $@ || echo 'Rien à effacer pour' $@
 	$(cp) -r $(arduinoFFT) $(arduinoFFT_prebuild)
-	cd $(arduinoFFT_prebuild) && (([[ -e arduinoFFT.zip ]] && $(tar) -u -f arduinoFFT.zip arduinoFFT/*) || $(tar) -c -f arduinoFFT.zip arduinoFFT/*)
+	{cd $(arduinoFFT_prebuild) && (([[ -e arduinoFFT.zip ]] && $(tar) -u -f arduinoFFT.zip arduinoFFT/*) || $(tar) -c -f arduinoFFT.zip arduinoFFT/*)} 2> "$(LOGS)/$(notdir $@).log"
 
 arduinoFFT: $(arduinoFFT_pkg) $(arduino-cli)
-	$(arduino-cli) lib install --config-file $(arduino_config) --zip-path $<
+	$(arduino-cli) lib install --config-file $(arduino_config) --zip-path $< 2> "$(LOGS)/$(notdir $@).log"
 
 arduinoSTL = $(dir_outils)/ArduinoSTL
 arduinoSTL_prebuild = $(BUILD)
@@ -47,7 +47,7 @@ $(arduinoSTL): $(git)
 $(arduinoSTL_pkg): $(arduinoSTL_prebuild) $(arduinoSTL) $(tar) $(cp) $(rm)
 	$(rm) -rf $@ || echo 'Rien à effacer pour' $@
 	$(cp) -r $(arduinoSTL) $(arduinoSTL_prebuild)
-	cd $(arduinoSTL_prebuild) && (([[ -e arduinoSTL.zip ]] && $(tar) -u -f arduinoSTL.zip arduinoSTL/*) || $(tar) -c -f arduinoSTL.zip arduinoSTL/*)
+	{cd $(arduinoSTL_prebuild) && (([[ -e arduinoSTL.zip ]] && $(tar) -u -f arduinoSTL.zip arduinoSTL/*) || $(tar) -c -f arduinoSTL.zip arduinoSTL/*)} 2> "$(LOGS)/$(notdir $@).log"
 
 arduinoSTL: $(arduinoSTL_pkg) $(arduino-cli)
-	$(arduino-cli) lib install --config-file $(arduino_config) --zip-path $<
+	$(arduino-cli) lib install --config-file $(arduino_config) --zip-path $< 2> "$(LOGS)/$(notdir $@).log"

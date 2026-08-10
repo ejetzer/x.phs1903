@@ -47,9 +47,9 @@ Question #11: Spyder et tkinter figent?
 
 
 .. index::
-   single: spyder
-   single: gui
    single: tkinter
+   single: gui
+   single: spyder
 
 
 En essayant d'exécuter la fonction ``main`` de ``xphs1903.outils.plot``
@@ -83,8 +83,8 @@ Question #8: Que veut dire le `>>>` ou `$` en début de ligne de commande?
 
 
 .. index::
-   single: shell
    single: cli
+   single: shell
    single: python
 
 
@@ -102,8 +102,8 @@ Question #7: Utiliser l'interpréteur Python 3.14 externe avec Spyder
 
 
 .. index::
-   single: spyder
    single: python
+   single: spyder
 
 
 J'ai réglé l'interpréteur Python de Spyder à Python 3.14, mais
@@ -120,8 +120,8 @@ Question #6: Où est l'exécutable Python 3.14 sur Windows?
 
 
 .. index::
-   single: spyder
    single: python
+   single: spyder
 
 
 Je veux changer l'interpréteur Python dans Spyder, mais je ne trouve pas
@@ -138,9 +138,9 @@ Question #5: __init__.py bloque l'importation des sous-modules de xphs1903.outil
 
 
 .. index::
-   single: spyder
    single: venv
    single: ipython
+   single: spyder
 
 
 En tentant d'importer ``xphs1903.outils.plot`` ou
@@ -160,8 +160,8 @@ Question #1: Erreur dans le téléchargement d'un programme Arduino
 
 .. index::
    single: arduino
-   single: arduino-ide
    single: avrdude
+   single: arduino-ide
 
 
 Au téléchargement d'un programme sur la carte Arduino Nano Every, il y a

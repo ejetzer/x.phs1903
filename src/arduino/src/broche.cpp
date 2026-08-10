@@ -63,113 +63,145 @@ phs::BrocheAnalogique::potentiel () const
   return res;
 }
 
-
-phs::ListeBroche::ListeBroche () {
+phs::ListeBroche::ListeBroche ()
+{
   this->numero = 13;
   this->size = 100;
 }
 
-phs::ListeBroche::ListeBroche (uint8_t numero) {
+phs::ListeBroche::ListeBroche (uint8_t numero)
+{
   this->numero = numero;
   this->size = 100;
 }
 
-phs::ListeBroche::ListeBroche (uint8_t numero, uint8_t size) {
+phs::ListeBroche::ListeBroche (uint8_t numero, uint8_t size)
+{
   this->numero = numero;
   this->size = size;
 }
 
 void
-  phs::ListeBroche::setup ()
+phs::ListeBroche::setup ()
 {
-  this->_valeurs.resize(this->size);
-  this->_temps.resize(this->size);
-  this->begin();
+  this->_valeurs.resize (this->size);
+  this->_temps.resize (this->size);
+  this->begin ();
 
   pinMode (this->numero, INPUT_PULLUP);
   this->regler (LOW);
 }
 
 void
-  phs::ListeBroche::loop ()
+phs::ListeBroche::loop ()
 {
-  this->sonde();
-  this->move();
+  this->sonde ();
+  this->move ();
 }
 
-uint16_t phs::ListeBroche::sonde () {
-  uint8_t i = this->pos();
-  uint16_t v = analogRead(this->numero);
-  uint16_t t = millis();
+uint16_t
+phs::ListeBroche::sonde ()
+{
+  uint8_t i = this->pos ();
+  uint16_t v = analogRead (this->numero);
+  uint16_t t = millis ();
   this->_temps[i] = t;
   this->_valeurs[i] = v;
-  return this->valeur();
+  return this->valeur ();
 }
 
-uint8_t phs::ListeBroche::pos() const {
+uint8_t
+phs::ListeBroche::pos () const
+{
   return this->curri;
 }
 
-uint8_t phs::ListeBroche::pos(uint8_t i) {
+uint8_t
+phs::ListeBroche::pos (uint8_t i)
+{
   this->curri = i;
   this->curri %= this->size;
   return this->curri;
 }
 
-uint8_t phs::ListeBroche::move() {
-  this->pos(this->next());
-  return this->pos();
+uint8_t
+phs::ListeBroche::move ()
+{
+  this->pos (this->next ());
+  return this->pos ();
 }
 
-uint8_t phs::ListeBroche::move(uint8_t n) {
-  uint8_t i = this->pos();
-  this->pos(i+n);
-  return this->pos();
+uint8_t
+phs::ListeBroche::move (uint8_t n)
+{
+  uint8_t i = this->pos ();
+  this->pos (i + n);
+  return this->pos ();
 }
 
-uint16_t phs::ListeBroche::valeur () const {
-  uint8_t i = this->pos();
+uint16_t
+phs::ListeBroche::valeur () const
+{
+  uint8_t i = this->pos ();
   uint16_t v = this->_valeurs[i];
   return v;
 }
 
-uint16_t phs::ListeBroche::valeur (uint8_t i) const {
+uint16_t
+phs::ListeBroche::valeur (uint8_t i) const
+{
   uint16_t v = this->_valeurs[i];
   return v;
 }
 
-uint16_t phs::ListeBroche::temps() const {
-  uint8_t i = this->pos();
+uint16_t
+phs::ListeBroche::temps () const
+{
+  uint8_t i = this->pos ();
   uint16_t v = this->_temps[i];
   return v;
 }
 
-uint16_t phs::ListeBroche::temps(uint8_t i) const {
+uint16_t
+phs::ListeBroche::temps (uint8_t i) const
+{
   uint16_t v = this->_temps[i];
   return v;
 }
 
-uint8_t phs::ListeBroche::begin() const {
+uint8_t
+phs::ListeBroche::begin () const
+{
   return 0;
 }
 
-uint8_t phs::ListeBroche::end() const {
+uint8_t
+phs::ListeBroche::end () const
+{
   return this->size - 1;
 }
 
-uint8_t phs::ListeBroche::next() const {
-  return this->pos() + 1;
+uint8_t
+phs::ListeBroche::next () const
+{
+  return this->pos () + 1;
 }
 
-bool phs::ListeBroche::is_full() const {
-  if (this->next() == this->end()) {
-    return true;
-  } else {
-    return false;
-  }
+bool
+phs::ListeBroche::is_full () const
+{
+  if (this->next () == this->end ())
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
 }
 
 void
-  phs::ListeBroche::empty() {
-    this->pos(this->begin());
-  }
+phs::ListeBroche::empty ()
+{
+  this->pos (this->begin ());
+}

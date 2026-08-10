@@ -18,6 +18,17 @@ from clang.cindex import Config
 from hawkmoth.util import readthedocs
 
 __logger = logging.getLogger(__name__)
+__handler = logging.StreamHandler()
+__formatter = logging.Formatter(
+    '%(name)s:'
+    '%(levelname)s\t'
+    '%(threadName)s\t'
+    '%(funcName)s (%(lineno)s)\t'
+    '%(message)s'
+)
+__logger.setLevel(logging.INFO)
+__handler.setFormatter(__formatter)
+__logger.addHandler(__handler)
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -30,28 +41,36 @@ __logger.info('Configuration de la document pour %s', project)
 __logger.info('Écrit par %s', author)
 __logger.info('%s', project_copyright)
 
-repo_path = (Path(__file__).parent.parent.parent / '.git').resolve()
-__logger.info('Répertoire git: %s', repo_path)
+sys.path.insert(
+    0, str((Path(__file__).parent.parent.parent / 'lib').resolve())
+)
+import version as mkversion
+version = mkversion.vstring()
+print(version)
 
-try:
-    import pygit2 as pygit
+if not version:
+    repo_path = (Path(__file__).parent.parent.parent / '.git').resolve()
+    __logger.info('Répertoire git: %s', repo_path)
 
-    repo = pygit.Repository(repo_path)
-    reference = repo.describe(dirty_suffix='+')
-except (ImportError, pygit.GitError) as err:
-    __logger.warning('Erreur avec PyGit2', exc_info=err)
+    try:
+        import pygit2 as pygit
 
-    import subprocess  # noqa: S404
+        repo = pygit.Repository(repo_path)
+        reference = repo.describe(dirty_suffix='+')
+    except (ImportError, pygit.GitError) as err:
+        __logger.warning('Erreur avec PyGit2', exc_info=err)
 
-    reference = subprocess.run(
-        ['/usr/bin/git', 'describe', '--always'],
-        capture_output=True,
-        check=True,
-    ).stdout.decode('utf-8')
-finally:
-    release = reference.lstrip('v')
-    version = release
-    __logger.info('Version %s', release)
+        import subprocess  # noqa: S404
+
+        reference = subprocess.run(
+            ['/usr/bin/git', 'describe', '--always'],
+            capture_output=True,
+            check=True,
+        ).stdout.decode('utf-8')
+    finally:
+        release = reference.lstrip('v')
+        version = release
+        __logger.info('Version %s', release)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

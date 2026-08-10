@@ -9,11 +9,10 @@ template_archive ?= $(BUILD)/template.zip
 modele: $(template_archive)
 
 $(template_archive): $(template_build_files)
-	cd $(BUILD) && ( ( [[ -e template.zip ]] && $(tar) -uf template.zip template/* ) || $(tar) -cf template.zip template/* )
+	{cd $(BUILD) && ( ( [[ -e template.zip ]] && $(tar) -uf template.zip template/* ) || $(tar) -cf template.zip template/* )} 2> "$(LOGS)/$(notdir $@).log"
 
 $(template_build_files): $(template_build)/%: $(template_dir)/% $(template_build)
-	-rm -rf $@
-	cp -r $< $@
+	cp -rf $< $@
 
 $(template_build): $(BUILD)
 	mkdir -p $@

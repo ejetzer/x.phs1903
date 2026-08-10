@@ -3,19 +3,27 @@ dir_source_python = $(SOURCE)/xphs1903
 # Configuration de module Python
 pyproject = pyproject.toml
 
+sdist_name ?= x_phs1903-$(VERSION).tar.gz
+wheel_name ?= x_phs1903-$(VERSION)-py3-none-any.whl
 sdist = $(BUILD)/sdist
 wheel = $(BUILD)/wheel
 
+build_requirements ?= $(BUILD)/requirements.txt
+
 ## Compiler et installer le module Python
-python: $(dir_source_python) $(pyproject) pipenv
-	$(pipenv) install .
+python: $(wheel)/$(wheel_name)
+	$(pipenv) install -e . 2> "$(LOGS)/$(notdir $@).log"
 
-$(sdist): $(dir_source_python) $(pyproject)
-	$(pipenv) run python -m build --sdist --outdir=$@
+$(sdist)/$(sdist_name): $(dir_source_python) $(pyproject) $(BUILD)/requirements.txt
+	-$(rm) $(sdist)/*.tar.gz
+	$(pipenv) run python -m build --sdist --outdir=$(sdist) . 2> "$(LOGS)/$(notdir $@).log"
+	mv $(sdist)/x_phs1903-*.tar.gz "$@"
 
-sdist: $(sdist)
+sdist: $(sdist)/$(sdist_name)
 
-$(wheel): $(python_build)
-	$(pipenv) run python -m build --wheel --outdir=$@
+$(wheel)/$(wheel_name): $(dir_source_python) $(pyproject) $(python_build) $(BUILD)/requirements.txt
+	-$(rm) $(wheel)/*.whl
+	$(pipenv) run python -m build --wheel --outdir=$(wheel) . 2> "$(LOGS)/$(notdir $@).log"
+	mv $(wheel)/x_phs1903-*.whl "$@"
 
-wheel: $(wheel)
+wheel: $(wheel)/$(wheel_name)

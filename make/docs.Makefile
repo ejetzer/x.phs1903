@@ -1,23 +1,26 @@
 # Documentation
 dir_docs = docs
 dir_docs_source = $(dir_docs)/src
-prerequis_docs ?= docs/src/requirements.txt
+prerequis_docs ?= $(BUILD)/requirements.txt
 
 SPHINXOPTS    ?= -v
 SPHINXBUILD   ?= $(pipenv) run sphinx-build
 SOURCEDIR     = docs/src
 BUILDDIR      = $(BUILD)
 
-docs_prereqs = $(dir_docs_source)/requirements.txt
+docs_prereqs = $(BUILD)/requirements.txt
 dir_docs_build = $(BUILD)
 readthedocs = .readthedocs.yaml
 
+html_dir ?= $(BUILD)/singlehtml
+html_names ?= index.html objects.inv _downloads _static
+html_files ?= $(addprefix $(html_dir)/,$(html_names))
 
 helpdocs:
-	$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2> "$(LOGS)/$(notdir $@).log"
 
 cleandocs:
-	$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2> "$(LOGS)/$(notdir $@).log"
 
 ## Compiler la documentation sous tous les formats
 alldocs: pdfdocs htmldocs texdocs mandocs
@@ -26,12 +29,22 @@ alldocs: pdfdocs htmldocs texdocs mandocs
 tousdocs: alldocs
 
 ## Compiler la documentation au format PDF
-pdfdocs latexpdf: $(prerequis_docs)
-	$(SPHINXBUILD) -M latex "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
+pdfdocs latexpdf: $(BUILD)/$(NAME).pdf
+
+$(BUILD)/latex/$(NAME).tex: $(prerequis_docs)
+	$(SPHINXBUILD) -M latex "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0) 2> "$(LOGS)/$(notdir $@).log"
+
+$(BUILD)/latex/%.pdf: $(BUILD)/latex/%.tex
 	cd $(BUILDDIR)/latex && latexmk
 
+$(BUILD)/%.pdf: $(BUILD)/latex/%.pdf
+	cp -rf $< $(dir $@)
+
 ## Compiler la documentation au format HTML
-htmldocs: singlehtml
+htmldocs singlehtml: $(html_files)
+
+$(html_files): $(prerequis_docs)
+	$(SPHINXBUILD) -M singlehtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2> "$(LOGS)/$(notdir $@).log"
 
 ## Compiler la documentation au format TeXinfo
 texdocs: texinfo
@@ -39,5 +52,5 @@ texdocs: texinfo
 ## Compiler la documentation au format man
 mandocs: man
 
-singlehtml man texinfo: $(prerequis_docs)
-	$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+man texinfo: $(prerequis_docs)
+	$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2> "$(LOGS)/$(notdir $@).log"

@@ -46,7 +46,7 @@ Auteurs
 Les techniciens du cours de PHS1903 sont les principaux auteurs de ce module.
 Le gros du code est écrit par Émile Jetzer, suivant les conseils de Jacques
 Massicotte, la coordination de Camila Rizzi et sous la responsabilité de
-Caroline Boudoux et Jérémie Villeneuve.
+Caroline Boudoux, Jérémie Villeneuve et Guillaume Ramadier.
 
 ---------
 Licence
