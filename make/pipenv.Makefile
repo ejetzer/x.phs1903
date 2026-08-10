@@ -31,5 +31,5 @@ $(drapeau_pipenv): pip $(DIR_DRAPEAUX)
 	$(pip) install --upgrade pipenv 2> "$(LOGS)/$(notdir $@).log"
 	$(touch) $@
 
-$(prerequis) $(prerequis_docs): $(pipfile)
+$(prerequis_docs): $(pipfile)
 	$(pipenv) requirements --exclude-index --no-lock|sed 's/==/~=/g' > $@ 2> "$(LOGS)/$(notdir $@).log"

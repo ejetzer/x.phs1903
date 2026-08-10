@@ -12,7 +12,7 @@ build_requirements ?= $(BUILD)/requirements.txt
 
 ## Compiler et installer le module Python
 python: $(wheel)/$(wheel_name)
-	$(pipenv) install -e . 2> "$(LOGS)/$(notdir $@).log"
+	$(pip) install . 2> "$(LOGS)/$(notdir $@).log"
 
 $(sdist)/$(sdist_name): $(dir_source_python) $(pyproject) $(BUILD)/requirements.txt
 	-$(rm) $(sdist)/*.tar.gz
