@@ -44,7 +44,8 @@ __logger.info('%s', project_copyright)
 sys.path.insert(
     0, str((Path(__file__).parent.parent.parent / 'lib').resolve())
 )
-import version as mkversion
+import version as mkversion  # noqa: E402
+
 version = mkversion.vstring()
 print(version)
 

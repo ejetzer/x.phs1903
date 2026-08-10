@@ -1,7 +1,7 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
 """Small script to get the version for compatible with Python wheels."""
 
-from datetime import date as D
+from datetime import date
 from subprocess import run
 from pathlib import Path
 
@@ -26,13 +26,13 @@ def version(repo_path: Path = DEFAULT_REPO):
 
     return version, commit
 
-def date():
-    d = D.today()
+def currdate():
+    d = date.today()
     return f'.d{d:%Y%m%d}'
 
 def vstring():
     v, c = version()
-    d = date()
+    d = currdate()
 
     if c:
         return f'{v}{c}{d}'

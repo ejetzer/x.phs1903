@@ -12,13 +12,13 @@ twinetest: python $(sdist) $(wheel)
 
 ruff = $(pipenv) run ruff
 ruffcheck: pipenv
-	$(ruff) check 2> "$(LOGS)/$(notdir $@).log"
+	$(ruff) check . 2> "$(LOGS)/$(notdir $@).log"
 
 rufflint: pipenv
-	$(ruff) check --fix 2> "$(LOGS)/$(notdir $@).log"
+	$(ruff) check --fix . 2> "$(LOGS)/$(notdir $@).log"
 
 ruffformat: pipenv
-	$(ruff) format 2> "$(LOGS)/$(notdir $@).log"
+	$(ruff) format . 2> "$(LOGS)/$(notdir $@).log"
 
 clangformat: $(clangformat)
 	$(clangformat) -i $(ard_src)/**/*.{ino,h,cpp} 2> "$(LOGS)/$(notdir $@).log"

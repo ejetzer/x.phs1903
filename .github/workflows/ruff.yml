@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: astral-sh/ruff-action@v4.1.0
       - run: ruff check
+        args: --config pyproject.toml
 
   ruff-format:
     runs-on: ubuntu-latest
@@ -21,6 +22,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: astral-sh/ruff-action@v4.1.0
       - run: ruff format --check --diff
+        args: --config pyproject.toml
 
 
 
