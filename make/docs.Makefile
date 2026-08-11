@@ -8,6 +8,7 @@ SPHINXBUILD   ?= $(pipenv) run sphinx-build
 SOURCEDIR     = docs/src
 BUILDDIR      = $(BUILD)
 
+conf_py = $(SOURCEDIR)/conf.py
 docs_prereqs = $(BUILD)/requirements.txt
 dir_docs_build = $(BUILD)
 readthedocs = .readthedocs.yaml
@@ -31,7 +32,7 @@ tousdocs: alldocs
 ## Compiler la documentation au format PDF
 pdfdocs latexpdf: $(BUILD)/$(NAME).pdf
 
-$(BUILD)/latex/$(NAME).tex: $(prerequis_docs)
+$(BUILD)/latex/$(NAME).tex: $(prerequis_docs) $(conf_py)
 	$(SPHINXBUILD) -M latex "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0) 2> "$(LOGS)/$(notdir $@).log"
 
 $(BUILD)/latex/%.pdf: $(BUILD)/latex/%.tex
@@ -43,7 +44,7 @@ $(BUILD)/%.pdf: $(BUILD)/latex/%.pdf
 ## Compiler la documentation au format HTML
 htmldocs singlehtml: $(html_files)
 
-$(html_files): $(prerequis_docs)
+$(html_files): $(prerequis_docs) $(conf_py)
 	$(SPHINXBUILD) -M singlehtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2> "$(LOGS)/$(notdir $@).log"
 
 ## Compiler la documentation au format TeXinfo
@@ -52,5 +53,5 @@ texdocs: texinfo
 ## Compiler la documentation au format man
 mandocs: man
 
-man texinfo: $(prerequis_docs)
+man texinfo: $(prerequis_docs) $(conf_py)
 	$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2> "$(LOGS)/$(notdir $@).log"

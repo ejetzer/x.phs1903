@@ -184,7 +184,7 @@ language = 'fr'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+html_theme = 'classic'
 html_static_path = ['_static']
 html_copy_source = True
 html_show_sourcelink = True
@@ -192,6 +192,36 @@ html_logo = 'logo-noir.png'
 html_use_index = True
 html_show_copyright = True
 html_search_language = 'fr'
+
+# Couleurs du thème
+# Basé sur le logotype de Polytechnique
+couleur_rouge = '#ed1c24'
+couleur_orange = '#f15a22'
+couleur_vert = '#25b34b'
+couleur_bleu = '#00bdf2'
+couleur_blanc = '#ffffff'
+couleur_noir = '#000000'
+
+footerbgcolor = couleur_rouge
+footertextcolor = couleur_noir
+sidebarbgcolor = couleur_blanc
+sidebarbtncolor = couleur_noir
+sidebartextcolor = couleur_noir
+sidebarlinkcolor = couleur_bleu
+relbarbgcolor = couleur_blanc
+relbartextcolor = couleur_noir
+relbarlinkcolor = couleur_bleu
+bgcolor = couleur_blanc
+textcolor = couleur_noir
+linkcolor = couleur_bleu
+visitedlinkcolor = couleur_rouge
+headbgcolor = couleur_blanc
+headtextcolor = couleur_noir
+headlinkcolor = couleur_noir
+codebgcolor = couleur_blanc
+codetextcolor = couleur_noir
+bodyfont = 'Arial'
+headfont = 'Impact'
 
 # Options pour la sortie LaTeX et PDF
 latex_engine = 'lualatex'

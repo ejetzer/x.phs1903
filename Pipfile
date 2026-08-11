@@ -40,6 +40,10 @@ pandastable = "*"
 libclang = "*"
 pandoc = "*"
 sphinx = "*"
+python-docs-theme = "*"
+pydata-sphinx-theme = "*"
 
 [scripts]
 "version" = "python lib/version.py"
+
+[dev-packages]
