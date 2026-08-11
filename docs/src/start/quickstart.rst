@@ -10,6 +10,7 @@
 
   arduino/blink
   python/echo
+  python/spyder-kernels
   arduino/echo
   serial/echo
 

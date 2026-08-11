@@ -8,10 +8,16 @@ faq_json = $(docs_src)/faq.json
 faq_rst = $(docs_src)/faq.rst
 lib_dir ?= lib
 json2rst = $(pipenv) run python $(lib_dir)/askbot/json2rst.py
+github2rst = $(pipenv) run python $(lib_dir)/github/issues2rst.py
+issues_rst = $(docs_src)/issues.rst
 
 faq: $(logs)
 	$(info Connecting to $(askbot_server)...)
-	$(json2rst) >$(faq_rst) || $(warning Could not connect.) 2> "$(LOGS)/$(notdir $@).log"
+	$(json2rst) >$(faq_rst) 2> "$(LOGS)/$(notdir $@).log"
 
-.PHONY: faq
+issues: $(logs)
+	$(info Connecting to GitHub...)
+	$(github2rst) >$(issues_rst) 2> "$(LOGS)/$(notdir $@).log"
+
+.PHONY: faq issues
 

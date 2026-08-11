@@ -27,4 +27,7 @@
   api
   glos
   faq
+  issues
   license
+  modindex
+  genindex

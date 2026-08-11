@@ -17,6 +17,8 @@ Premier pas avec Spyder
    nouveau projet à partir de votre répertoire de travail.
 #. Dans les réglages de Spyder, réglez l'interpréteur Python à
    l'interpréteur Python 3.14 que vous avez installé dans :doc:`../install`.
+#. Spyder devrait vous avertir que vous n'avez pas le modules :mod:`spyder-kernels` quand vous démarrez
+   une nouvelle console. Pour l'installer, suivez les instructions appropriées dans :doc:`spyder-kernels`.
 #. Dans la console IPython de Spyder, entrez les commandes:
 
    .. code:: python
