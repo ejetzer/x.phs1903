@@ -25,7 +25,7 @@ VARS_OLD := $(.VARIABLES) # Pour ne pas documenter les variables d'environnement
 ## par Émile Jetzer & Jacques Massicotte. Pour plus d'informations,
 ## lisez le document README.rst.
 NAME = xphs1903
-VERSION = $(shell python3 -m pipenv run version)
+VERSION = $(shell python3 -m pipenv -q run version)
 AUTHOR ?= "Émile Jetzer" "Jacques Massicotte"
 SHELL = /bin/zsh
 SOURCE ?= src
