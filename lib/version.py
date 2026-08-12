@@ -111,29 +111,35 @@ def upverse(repo_path: Path = DEFAULT_REPO, fichiers_version: tuple[Path] = FICH
         mini += 1
         tag = f'v{major}.{minor}.{mini}'
         commentaire = input('>>>')
-        run(  # noqa: S603
+        ps = run(  # noqa: S603
             ['/usr/bin/git', '-C', str(repo_path), 'tag', tag, '-m', commentaire],
             capture_output=True,
             check=True,
         )
+        print(ps.stdout.decode('utf-8'))
 
         cfgver()
 
-        run(
+        ps = run(
             ['/usr/bin/git', '-C', str(repo_path), 'add', '-f'] + list(map(str, fichiers_version)),
             capture_output=True,
             check=True,
         )
-        run(
+        print(ps.stdout.decode('utf-8'))
+
+        ps = run(
             ['/usr/bin/git', '-C', str(repo_path), 'commit', '-m', commentaire],
             capture_output=True,
             check=True,
         )
-        run(  # noqa: S603
+        print(ps.stdout.decode('utf-8'))
+
+        ps = run(  # noqa: S603
             ['/usr/bin/git', '-C', str(repo_path), 'tag', '-f', tag, '-m', commentaire],
             capture_output=True,
             check=True,
         )
+        print(ps.stdout.decode('utf-8'))
 
 def main() -> None:
     """Affiche la version du projet."""
