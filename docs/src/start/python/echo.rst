@@ -1,6 +1,23 @@
 Premier pas avec Spyder
 -------------------------
 
+.. info::
+
+   Les invites de commande sont des caractères utilisés en début de ligne pour indiquer
+   qu'une entrée est attendue de l'utilisateur. Ils ne font pas partie de la commande
+   elle même. En Python, ``>>>`` et ``...`` sont couramment utilisés, comme dans cet
+   exemple:
+
+   >>> def f():
+   ...     return 1
+   ...
+   >>> f()
+   1
+
+   Les trois chevrons indiquent qu'on peut entrer le début d'une nouvelle instruction,
+   et l'ellipse indique qu'on peut continuer une instruction ou un bloc. Dans les *shell*
+   comme bash ou PowerShell, ``$`` et ``#`` sont plus couramment utilisés.
+
 #. Téléchargez le modèle de projet :file:`template.zip` de la page des `sorties`_, ou:
 
    #. Créez un dossier de travail (si ce n'est pas déjà fait)
@@ -28,6 +45,9 @@ Premier pas avec Spyder
 
 #. Dans les préférences de Spyder, changez l'interpréteur Python pour
    :file:`.venv/bin/python` (ou :file:`.venv/Scripts/python` sur Windows).
+   Vous devez utiliser un chemin absolu. La manière la plus simple est
+   probablement d'utiliser le sélecteur de fichier et d'y naviguer jusqu'à
+   votre interpréteur.
 #. Rechargez la console IPython de Spyder
 #. Dans la console IPython, entrez
 

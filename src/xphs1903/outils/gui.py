@@ -10,10 +10,11 @@ from typing import Self
 import pandas as pd
 import pandastable as pt
 import serial.tools.list_ports
+from serial import SerialException
 
 from .acq import Tableau
 from .calcul import Calcul, Identite
-from .plot import Graphe
+from .plot import Graphe, Format
 from .serial import LigneSerie
 
 __logger = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ class SelectionPortSerie(ttk.Frame):
             yscrollcommand=self.defil.set,
             exportselection=False,
         )
-        self.liste.bind('<<ListboxSelect>>', self.__selection)
+
         self.defil['command'] = self.liste.yview
 
         self.conn = ttk.Button(
@@ -173,9 +174,16 @@ class SelectionPortSerie(ttk.Frame):
         if len(sel) > 0:
             self.ligne_serie = LigneSerie(self.selection[0])
             self.__parent.lignes_series.append(self.ligne_serie)
-            self.ligne_serie.open()
-            self.disc.state(('!disabled',))
-        else:
+
+            try:
+                self.ligne_serie.open()
+            except SerialException:
+                pass
+
+            if self.is_open:
+                self.disc.state(('!disabled',))
+
+        if not self.is_open:
             self.conn.state(('!disabled',))
 
     def __disconnect_serial(self) -> None:
@@ -429,37 +437,77 @@ class TableauSerie(tk.Frame):
 class TraceurSerie(tk.Frame):
     """Affiche les données transmises via la ligne série."""
 
-    def __init__(self, parent: tk.Frame, sersel: SelectionPortSerie) -> None:
+    def __init__(self, parent: tk.Frame, sersel: SelectionPortSerie, fmt: Format | None = None) -> None:
         """Initialise le traceur série."""
         super().__init__(parent)
         self.__parent = parent
         self.__sersel = sersel
         self.__tab = None
         self.__fig = None
-        self.__build()
+        self.__fmt = fmt
+        self._build()
 
-    def __build(self) -> None:
+    @property
+    def fmt(self) -> Format:
+        pass
+
+    @property
+    def sersel(self) -> SelectionPortSerie:
+        return self.__sersel
+
+    @property
+    def fig(self) -> Graphe:
+        return self.__fig
+
+    @fig.setter
+    def fig(self, val: Graphe) -> None:
+        if isinstance(val, Graphe):
+            self.__fig = val
+        else:
+            msg = f'{val!r} is not of type Graphe.'
+            raise TypeError(msg)
+
+    @property
+    def tab(self) -> Tableau:
+        return self.__tab
+
+    @tab.setter
+    def tab(self, val: Tableau) -> None:
+        if isinstance(val, Tableau):
+            self.__tab = val
+        else:
+            msg = f'{val!r} is not of type Tableau.'
+            raise TypeError(msg)
+
+    @property
+    def is_open(self) -> bool:
+        return self.__sersel.is_open
+
+    def _build(self) -> None:
         """Construit les composants graphiques."""
 
-    def __update(self) -> None:
+    def _update(self) -> None:
         """Vérifie que le graphe est correctement configuré."""
-        if self.__sersel.is_open:
-            if self.__fig is None:
-                self.__tab = Tableau(self.__sersel.ligne_serie.parse())
-                self.__fig = Graphe(self, self.__tab)
-                self.__tab.start()
-                self.__fig.show()
-        elif self.__fig is not None:
-            self.__fig.close()
-            self.__tab.close()
-            self.__tab = None
-            self.__fig = None
+        if self.is_open:
+            if self.fig is None:
+                self.tab = Tableau(self.sersel.ligne_serie.parse())
+                self.fig = Graphe(self, self.tab, format_=self.fmt)
+                self.tab.start()
+                self.fig.show()
+        elif self.fig is not None:
+            self.close()
 
-        self.after(500, self.__update)
+        self.after(500, self._update)
+
+    def close(self) -> None:
+        self.__fig.close()
+        self.__tab.close()
+        self.__tab = None
+        self.__fig = None
 
     def show(self) -> None:
         """Affiche le traceur série."""
-        self.__update()
+        self._update()
 
     def pack(self, **kargs: str | int) -> None:
         """Affiche avec pack."""
@@ -476,30 +524,26 @@ class TraceurCalcul(TraceurSerie):
     """Affiche le résultat d'un calcul dans un graphique."""
 
     def __init__(
-        self, parent: tk.Frame, sersel: SelectionPortSerie, calcul: Calcul
+        self, parent: tk.Frame, sersel: SelectionPortSerie, calcul: Calcul, fmt: Format | None = None
     ) -> None:
         """Initialise le traceur série."""
-        super().__init__(parent, sersel)
+        super().__init__(parent, sersel, fmt=fmt)
         self.__calcul = calcul
-        self.__build()
 
-    def __update(self) -> None:
+    def _update(self) -> None:
         """Vérifie que le graphe est correctement configuré."""
-        if self.__sersel.is_open:
-            if self.__fig is None:
-                self.__tab = Tableau(self.__sersel.ligne_serie.parse())
-                self.__fig = Graphe(
-                    self, self.__tab, self.__calcul @ Identite()
+        if self.is_open:
+            if self.fig is None:
+                self.tab = Tableau(self.sersel.ligne_serie.parse())
+                self.fig = Graphe(
+                    self, self.tab, self.__calcul @ Identite(), format_=self.fmt
                 )
-                self.__tab.start()
-                self.__fig.show()
-        elif self.__fig is not None:
-            self.__fig.close()
-            self.__tab.close()
-            self.__tab = None
-            self.__fig = None
+                self.tab.start()
+                self.fig.show()
+        elif self.fig is not None:
+            self.close()
 
-        self.after(500, self.__update)
+        self.after(500, self._update)
 
 
 class APropos(tk.Toplevel):
@@ -610,6 +654,8 @@ def main(*, debug: bool = False) -> None:
 
         config(__name__, level=DEBUG)
 
+        config('src.xphs1903.outils.plot', level=DEBUG)
+
     __logger.debug('%s', __name__)
     app = Application('xphs1903', title='Démonstration')
     ser = SelectionPortSerie(app)
@@ -617,7 +663,7 @@ def main(*, debug: bool = False) -> None:
     #   - widget = MoniteurSerie(app, ser)
     #   - widget = TableauSerie(app, ser)
     #   - widget = TraceurSerie(app, ser)
-    widget = TraceurCalcul(app, ser, FFT() @ rectangle(500)())
+    widget = TraceurCalcul(app, ser, FFT() @ rectangle(500)(), fmt=Format())
 
     ser.pack(side=tk.LEFT)
     widget.pack(side=tk.RIGHT)

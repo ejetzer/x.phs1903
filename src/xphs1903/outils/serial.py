@@ -448,12 +448,17 @@ class LigneSerie:
         """
         for ligne in self:
             if ligne is not None:
-                yield {
-                    k: float(v)
-                    for k, v in (w.split(':') for w in ligne.split('\t'))
-                }
-            else:
-                yield None
+                if '\t' in ligne:
+                    items = ligne.split('\t')
+
+                    if all((':' in mot) for mot in items):
+                        yield {
+                            k: float(v)
+                            for k, v in (mot.split(':') for mot in items)
+                        }
+                        continue
+
+            yield None
 
     def __str__(self) -> str:
         """Retourne une :class:`str` représentant l'objet."""  # noqa: DOC201

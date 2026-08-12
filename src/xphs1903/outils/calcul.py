@@ -87,14 +87,14 @@ class Calcul:
         self.__logger.debug('%s', future)
         return future
 
-    def __str__(self) -> str:
-        """Affichage du DataFrame sous-jacent.
+    def __repr__(self) -> str:
+        """Représentation du calcul sous-jacent.
 
         Returns
         ---------------
-        str(self.df): str
+        str
         """
-        return str(self.df)
+        return repr(self.fct)
 
     def __run(self, tab: Tableau) -> pd.DataFrame:
         """Exécute self.fct avec l'argument tab.df.

@@ -27,6 +27,24 @@ Une fois l'installation terminée,
 
 Vous devriez voir une diode clignoter sur la carte Arduino. Félicitations!
 
+.. warning::
+
+   Vous pourriez voir le message
+
+   .. code:: txt
+
+      avrdude: jtagmkII_initialiaze(): Cannot locate "flash" and "boot" memories in description
+
+   lors du téléversement. Le message est normal pour les cartes Arduino Nano Every, vous pouvez
+   l'ignorer.
+
+.. warning::
+
+   Sur MacOS, vous pourriez voir apparaître une alerte vous demandant d'installer
+   les outils de développement en ligne de commande (XCode). L'IDE Arduino en a
+   besoin pour compiler vos programmes. Suivez les instructions lors de l'installation.
+   Vous devrez avoir les droits d'administrateur sur votre machine.
+
 .. _sorties: https://github.com/ejetzer/x.phs1903/releases
 
 Les détails

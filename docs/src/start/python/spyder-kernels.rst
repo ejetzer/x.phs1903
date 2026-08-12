@@ -2,7 +2,7 @@ Installation du module ``spyder-kernels``
 -------------------------------------------
 
 Le module :mod:`spyder-kernels` permet à Spyder d'interagir avec un interpréteur Python.
-Il doit être installé pour qu'un interpréteur puisse ^tre utilisé dans Spyder.
+Il doit être installé pour qu'un interpréteur puisse être utilisé dans Spyder.
 
 Installation sur MacOS
 ........................
