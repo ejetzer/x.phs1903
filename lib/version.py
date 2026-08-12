@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from subprocess import run  # noqa: S404
 
-DEFAULT_REPO = (Path(__file__).parent.parent / '.git').resolve()
+DEFAULT_REPO = (Path(__file__).parent.parent).resolve()
 
 
 def version(repo_path: Path = DEFAULT_REPO) -> tuple[str, str]:
@@ -102,7 +102,7 @@ def cfgver(fichiers: tuple[Path] = FICHIERS_VERSION) -> None:
         else:
             raise ValueError('Type de fichier invalide')
 
-def upverse(repo_path: Path = DEFAULT_REPO) -> None:
+def upverse(repo_path: Path = DEFAULT_REPO, fichiers_version: tuple[Path] = FICHIERS_VERSION) -> None:
     v, c = version()
     s = vstring()
 
@@ -110,8 +110,15 @@ def upverse(repo_path: Path = DEFAULT_REPO) -> None:
         major, minor, mini = map(int, v.split('.'))
         mini += 1
         tag = f'v{major}.{minor}.{mini}'
+        commentaire = input('>>>')
         reference = run(  # noqa: S603
-            ['/usr/bin/git', '-C', str(repo_path), 'tag', tag, '-m', input('>>>')]
+            ['/usr/bin/git', '-C', str(repo_path), 'tag', tag, '-m', commentaire]
+        )
+        run(
+            ['/usr/bin/git', '-C', str(repo_path), 'add', '-f'] + list(map(str, fichiers_version))
+        )
+        run(
+            ['/usr/bin/git', '-C', str(repo_path), 'commit', '-m', commentaire]
         )
 
 def main() -> None:
