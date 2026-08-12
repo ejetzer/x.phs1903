@@ -2,12 +2,15 @@
 """Script d'exportation des rapports de bogue de Github."""
 
 import argparse
-import json
 import pathlib
 import urllib.parse
+from typing import TYPE_CHECKING
 
 import pandoc
 import requests
+
+if TYPE_CHECKING:
+    from typing import Final
 
 __prog__ = "Export d'Issues Github à reST pour Sphinx"
 __description__ = """
@@ -26,43 +29,72 @@ args = argparse.ArgumentParser(
 
 
 class InvalidEndpointError(ValueError):
-    def __init__(self, endpoint: str):
+    """Mauvais appel d'API."""
+
+    def __init__(self, endpoint: str) -> None:
+        """Mauvais appel d'API."""
         msg: str = f'Endpoint {endpoint:r} is not valid.'
         super().__init__(msg)
 
 
 class Github:
+    """Interactions avec l'API de GitHub."""
+
     API_URL: Final[str] = 'https://api.github.com'
+    """URL de l'API GitHub."""
+
     ENDPOINTS: tuple[str] = ('issues',)
+    """Appels d'API gérés par la classe."""
 
     def __init__(self, token: str) -> None:
+        """Création d'une :class:`requests.Session`."""
         self.session = requests.Session()
         self.session.headers['Accept'] = 'application/vnd.github+json'
         self.session.headers['X-GitHub-Api-Version'] = '2026-03-10'
         self.session.headers['Authorization'] = f'Bearer {token}'
 
-    def url(self, endpoint: str, **kargs) -> str:
+    def url(self, endpoint: str, **kargs: int | str) -> str:
+        """Calcule l'URL d'appel d'API.
+
+        Returns
+        ----------------
+        str
+            L'URL complète pour l'appel d'API.
+
+        Raises
+        ----------------
+        InvalidEndpointError
+            Si l'appel est invalide ou non-géré par la classe.
+        """
         if endpoint in self.ENDPOINTS:
             params = ''
             if len(kargs) > 0:
                 params = '?' + urllib.parse.urlencode(kargs)
 
             return f'{self.API_URL}/{endpoint}{params}'
-        else:
-            raise InvalidEndpointError(endpoint)
 
-    def api(self, endpoint: str, **kargs) -> dict:
+        raise InvalidEndpointError(endpoint)
+
+    def api(self, endpoint: str, **kargs: int | str) -> dict | None:
+        """Appelle l'API GitHub.
+
+        Returns
+        ----------------
+        dict
+            Le résultat de la requête, produit à partir du JSON.
+        """
         req = self.session.get(self.url(endpoint, **kargs))
 
         if req.ok:
             return req.json()
-        else:
-            req.raise_for_status()
 
-    def issues(
+        req.raise_for_status()
+        return None
+
+    def issues(  # noqa: PLR0913
         self,
         *,
-        filter: str = 'assigned',
+        filter: str = 'assigned',  # noqa: A002
         state: str = 'open',
         sort: str = 'created',
         labels: list[str] | None = None,
@@ -75,6 +107,13 @@ class Github:
         per_page: int = 30,
         page: int = 1,
     ) -> list[Issue]:
+        """Liste les rapports de problèmes accessibles pour l'utilisateur.
+
+        Returns
+        ----------------
+        list[Issue]
+            La liste des rapports disponibles.
+        """
         kargs = {
             'filter': filter,
             'state': state,
@@ -98,66 +137,75 @@ class Github:
             kargs['pulls'] = str(int(pulls))
 
         rep = self.api('issues', **kargs)
-        rep = [Issue(self, **issue) for issue in rep]
 
-        return rep
+        return [Issue(self, **issue) for issue in rep]
 
-    def __repr__(self):
-        return '<github>'
+    def __repr__(self) -> str:
+        """Représente l'objet :class:`GitHub`.
+
+        Returns
+        ----------------
+        str
+            <API GitHub>
+        """
+        return '<API GitHub>'
 
 
 class User:
+    """Description d'un utilisateur de GitHub."""
+
     def __init__(
         self,
         parent: Github,
         /,
         login: str,
-        id: int,
+        id: int,  # noqa: A002
         node_id: str,
-        avatar_url: str,
-        gravatar_id: str,
         url: str,
-        html_url: str,
-        followers_url: str,
-        following_url: str,
-        gists_url: str,
-        starred_url: str,
-        subscriptions_url: str,
-        organizations_url: str,
-        repos_url: str,
-        events_url: str,
-        received_events_url: str,
-        type: str,
-        site_admin: bool,
-        **kargs: str | int | bool | None,
+        **kargs: str | int | bool | None,  # noqa: ARG002
     ) -> None:
+        """Analyse des paramètres."""
         self.parent: Final[Github] = parent
         self.id: Final[int] = id
         self.node_id: Final[str] = node_id
         self.login: Final[str] = login
         self.url: Final[str] = url
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Représente un User.
+
+        Returns
+        ----------------
+        str
+        """
         return f'<User#{self.id} from {self.parent!r}>'
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Affiche un User.
+
+        Returns
+        ----------------
+        str
+        """
         return f'{self.login}#{self.id}'
 
 
 class Repository:
-    def __init__(
+    """Description d'un répertoire GitHub."""
+
+    def __init__(  # noqa: PLR0913
         self,
         parent: Github,
-        /,
-        id: int,
+        *,
+        id: int,  # noqa: A002
         node_id: str,
         name: str,
         full_name: str,
         owner: dict,
-        private: bool,
         html_url: str,
-        **kargs,
+        **kargs: str | int | bool | None,  # noqa: ARG002
     ) -> None:
+        """Analyse des paramètres."""
         self.parent = parent
         self.id = id
         self.node_id = node_id
@@ -168,40 +216,23 @@ class Repository:
 
 
 class Issue:
-    def __init__(
+    """Description d'un rapport de problème."""
+
+    def __init__(  # noqa: PLR0913
         self,
         parent: Github,
-        /,
-        id: int,
+        *,
+        id: int,  # noqa: A002
         node_id: str,
         url: str,
-        repository_url: str,
-        labels_url: str,
-        comments_url: str,
-        events_url: str,
         html_url: str,
-        number: int,
-        state: str,
         title: str,
         body: str,
         user: dict[str, str | int],
-        pinned_comment: str | None,
-        labels: list[dict],
-        assignees: list[dict],
-        milestone: dict,
-        locked: bool,
-        active_lock_reason: str,
-        comments: int,
-        closed_at: str | None,
-        created_at: str,
-        updated_at: str,
         repository: dict,
-        author_association: str,
-        *,
-        assignee: dict | None = None,
-        pull_request: dict | None = None,
-        **kargs: str | int | bool | None,
+        **kargs: str | int | bool | None,  # noqa: ARG002
     ) -> None:
+        """Analyse des paramètres."""
         self.parent: Final[Github] = parent
         self.id: Final[int] = id
         self.node_id: Final[str] = node_id
@@ -218,18 +249,42 @@ class Issue:
         self.repository: Final[Repository] = Repository(parent, **repository)
 
     @property
-    def body(self):
+    def body(self) -> str:
+        """Converti le contenu en reST.
+
+        Returns
+        ----------------
+        rst: str
+            Le texte converti.
+        """
         mod = pandoc.read(self.__body, format='gfm')
-        rst = pandoc.write(mod, format='rst')
-        return rst
+        return pandoc.write(mod, format='rst')
 
     def __repr__(self) -> str:
+        """Représente une Issue.
+
+        Returns
+        ----------------
+        str
+        """
         return f'<Issue#{self.id} by {self.user} from {self.parent}>'
 
     def __str__(self) -> str:
+        """Affiche une description de l'Issue.
+
+        Returns
+        ----------------
+        str
+        """
         return f'Issue#{self.id} by {self.user}'
 
     def to_rst(self) -> str:
+        """Converti en reST.
+
+        Returns
+        ----------------
+        str
+        """
         title: str = self.title
         title_line: str = '.' * (len(title) + 2)
         ret: str = f"""
@@ -244,7 +299,8 @@ Voir en ligne: {self.html_url}.
         return ret
 
 
-def main():
+def main() -> None:
+    """Affiche une section reST des rapports de problème."""
     token = (
         (pathlib.Path.home() / '.config' / 'github' / 'tokens' / 'issues.txt')
         .read_text()
