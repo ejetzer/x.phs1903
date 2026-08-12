@@ -65,15 +65,24 @@ def vstring() -> str:
 
     return v
 
+
 base = Path(__file__).parent.parent.resolve()
 FICHIERS_VERSION = (
-        base / 'cfg' / 'library.json',
-        base / 'cfg' / 'library.properties',
-        base / 'template' / 'requirements.txt'
-    )
+    base / 'cfg' / 'library.json',
+    base / 'cfg' / 'library.properties',
+    base / 'template' / 'requirements.txt',
+)
+
 
 def cfgver(fichiers: tuple[Path] = FICHIERS_VERSION) -> None:
-    v, c = version()
+    """Mets à jour la version dans des documents de configuration.
+
+    Raises
+    ------------------
+    ValueError
+        Si le type de fichier n'est pas reconnu.
+    """
+    v, _ = version()
 
     for fichier in fichiers:
         nom = fichier.stem
@@ -81,7 +90,8 @@ def cfgver(fichiers: tuple[Path] = FICHIERS_VERSION) -> None:
 
         if ext == 'json':
             # Fichier de description de librairie Arduino
-            import json
+            import json  # noqa: PLC0415
+
             doc = json.loads(fichier.read_text())
             doc['version'] = v
             fichier.write_text(json.dumps(doc, indent=2, ensure_ascii=False))
@@ -96,14 +106,20 @@ def cfgver(fichiers: tuple[Path] = FICHIERS_VERSION) -> None:
             doc = fichier.read_text().split('\n')
             for idx, ligne in enumerate(doc):
                 if ligne.startswith('x.phs1903'):
-                    doc[idx] = f'x.phs1903=={v}; python_version == \'3.14\''
+                    doc[idx] = f"x.phs1903=={v}; python_version == '3.14'"
             doc = '\n'.join(doc)
             fichier.write_text(doc)
         else:
-            raise ValueError('Type de fichier invalide')
+            msg = 'Type de fichier invalide'
+            raise ValueError(msg)
 
-def upverse(repo_path: Path = DEFAULT_REPO, fichiers_version: tuple[Path] = FICHIERS_VERSION) -> None:
-    v, c = version()
+
+def upverse(
+    repo_path: Path = DEFAULT_REPO,
+    fichiers_version: tuple[Path] = FICHIERS_VERSION,
+) -> None:
+    """Mets à jour la micro-version du projet."""
+    v, _ = version()
     s = vstring()
 
     if v != s:
@@ -112,7 +128,15 @@ def upverse(repo_path: Path = DEFAULT_REPO, fichiers_version: tuple[Path] = FICH
         tag = f'v{major}.{minor}.{mini}'
         commentaire = input('>>>')
         ps = run(  # noqa: S603
-            ['/usr/bin/git', '-C', str(repo_path), 'tag', tag, '-m', commentaire],
+            [
+                '/usr/bin/git',
+                '-C',
+                str(repo_path),
+                'tag',
+                tag,
+                '-m',
+                commentaire,
+            ],
             capture_output=True,
             check=True,
         )
@@ -120,30 +144,48 @@ def upverse(repo_path: Path = DEFAULT_REPO, fichiers_version: tuple[Path] = FICH
 
         cfgver()
 
-        ps = run(
-            ['/usr/bin/git', '-C', str(repo_path), 'add', '-f'] + list(map(str, fichiers_version)),
-            capture_output=True,
-            check=True,
-        )
-        print(ps.stdout.decode('utf-8'))
-
-        ps = run(
-            ['/usr/bin/git', '-C', str(repo_path), 'commit', '-m', commentaire],
+        ps = run(  # noqa: S603
+            ['/usr/bin/git', '-C', str(repo_path), 'add', '-f']
+            + list(map(str, fichiers_version)),
             capture_output=True,
             check=True,
         )
         print(ps.stdout.decode('utf-8'))
 
         ps = run(  # noqa: S603
-            ['/usr/bin/git', '-C', str(repo_path), 'tag', '-f', tag, '-m', commentaire],
+            [
+                '/usr/bin/git',
+                '-C',
+                str(repo_path),
+                'commit',
+                '-m',
+                commentaire,
+            ],
             capture_output=True,
             check=True,
         )
         print(ps.stdout.decode('utf-8'))
 
+        ps = run(  # noqa: S603
+            [
+                '/usr/bin/git',
+                '-C',
+                str(repo_path),
+                'tag',
+                '-f',
+                tag,
+                '-m',
+                commentaire,
+            ],
+            capture_output=True,
+            check=True,
+        )
+        print(ps.stdout.decode('utf-8'))
+
+
 def main() -> None:
     """Affiche la version du projet."""
-    import sys
+    import sys  # noqa: PLC0415
 
     if len(sys.argv) > 1 and sys.argv[1] == '--upverse':
         upverse()

@@ -21,7 +21,7 @@ release_files = $(release_arduino) $(release_template) $(release_wheel) $(releas
 $(release_dir) $(release_dir)/singlehtml:
 	mkdir -p $@
 
-release build: $(release_dir).zip
+release build: upverse $(release_dir).zip
 
 $(release_dir).zip: $(release_files)
 	{cd $(BUILD) && ( ( [[ -e $(release_name).zip ]] && $(tar) -uf $(release_name).zip $(release_name)/* ) || $(tar) -cf $(release_name).zip $(release_name)/* )} 2> "$(LOGS)/$(notdir $@).log"

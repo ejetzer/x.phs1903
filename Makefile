@@ -101,7 +101,7 @@ develop: pipenv $(arduino-cli)
 
 ## Publier le module Python et l'archive Arduino
 twine ?= $(pipenv) run python -m twine
-publish: build
+publish: export
 	$(twine) upload --verbose $(sdist)/* $(wheel)/*
 
 include make/demos.Makefile
