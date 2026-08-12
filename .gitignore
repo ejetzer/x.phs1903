@@ -1,5 +1,7 @@
 .DS_Store
+*/.DS_Store
 .drapeaux
 .build
+build
 .ruff_cache
-.DS_Store
+*.zip
