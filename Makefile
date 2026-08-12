@@ -65,6 +65,7 @@ version:
 
 upverse:
 	$(pipenv) run version --upverse
+	touch $(firstword $(MAKEFILE_LIST))
 
 .PHONY: help all install arduino python develop alldocs\
 	pdfdocs htmldocs publish build clean
