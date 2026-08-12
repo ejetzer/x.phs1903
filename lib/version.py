@@ -65,9 +65,63 @@ def vstring() -> str:
 
     return v
 
+base = Path(__file__).parent.parent.resolve()
+FICHIERS_VERSION = (
+        base / 'cfg' / 'library.json',
+        base / 'cfg' / 'library.properties',
+        base / 'template' / 'requirements.txt'
+    )
+
+def cfgver(fichiers: tuple[Path] = FICHIERS_VERSION) -> None:
+    v, c = version()
+
+    for fichier in fichiers:
+        nom = fichier.stem
+        ext = fichier.suffix.strip('.')
+
+        if ext == 'json':
+            # Fichier de description de librairie Arduino
+            import json
+            doc = json.loads(fichier.read_text())
+            doc['version'] = v
+            fichier.write_text(json.dumps(doc, indent=2, ensure_ascii=False))
+        elif ext == 'properties':
+            doc = fichier.read_text().split('\n')
+            for idx, ligne in enumerate(doc):
+                if ligne.startswith('version='):
+                    doc[idx] = f'version={v}'
+            doc = '\n'.join(doc)
+            fichier.write_text(doc)
+        elif nom == 'requirements':
+            doc = fichier.read_text().split('\n')
+            for idx, ligne in enumerate(doc):
+                if ligne.startswith('x.phs1903'):
+                    doc[idx] = f'x.phs1903=={v}; python_version == \'3.14\''
+            doc = '\n'.join(doc)
+            fichier.write_text(doc)
+        else:
+            raise ValueError('Type de fichier invalide')
+
+def upverse(repo_path: Path = DEFAULT_REPO) -> None:
+    v, c = version()
+    s = vstring()
+
+    if v != s:
+        major, minor, mini = map(int, v.split('.'))
+        mini += 1
+        tag = f'v{major}.{minor}.{mini}'
+        reference = run(  # noqa: S603
+            ['/usr/bin/git', '-C', str(repo_path), 'tag', tag, '-m', input('>>>')]
+        )
 
 def main() -> None:
     """Affiche la version du projet."""
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == '--upverse':
+        upverse()
+
+    cfgver()
     print(vstring())
 
 

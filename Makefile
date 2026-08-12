@@ -40,9 +40,6 @@ $(info $(NAME) $(VERSION))
 $(info Building to $(BUILD))
 $(info Logs are in $(LOGS)/)
 
-version:
-	@echo $(VERSION)
-
 # Pour les fichiers d'état
 DIR_DRAPEAUX ?= .drapeaux
 
@@ -62,6 +59,12 @@ dirs = $(DIR_DRAPEAUX) $(dir_docs_build) $(dir_outils) $(BUILD)\
 ##
 
 include make/help.Makefile
+
+version:
+	@echo $(VERSION)
+
+upverse:
+	$(pipenv) run version --upverse
 
 .PHONY: help all install arduino python develop alldocs\
 	pdfdocs htmldocs publish build clean
@@ -93,15 +96,12 @@ clean:
 ## Installer tous les modules et la documentation
 install: arduino-install python alldocs
 
-## Compiler tous les modules et la documentation
-build: develop arduino python alldocs modele
-
 ## Créer un environnement virtuel pour le développement des modules
 develop: pipenv $(arduino-cli)
 
 ## Publier le module Python et l'archive Arduino
 twine ?= $(pipenv) run python -m twine
-publish: $(sdist) $(wheel)
+publish: build
 	$(twine) upload --verbose $(sdist)/* $(wheel)/*
 
 include make/demos.Makefile

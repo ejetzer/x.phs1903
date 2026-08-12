@@ -3,33 +3,29 @@
 
 import argparse
 import json
-import requests
 import pathlib
-import pandoc
 import urllib.parse
 
-__prog__ = 'Export d\'Issues Github à reST pour Sphinx'
-__description__ = \
-'''
+import pandoc
+import requests
+
+__prog__ = "Export d'Issues Github à reST pour Sphinx"
+__description__ = """
 Télécharge les rapports de bogues de Github
 pour les exporter dans un format reST
 acceptable pour être intégré à de la
 documentation Sphinx.
-'''
-__epilog__ = \
-'''
+"""
+__epilog__ = """
 Par Émile Jetzer, pour le module x.phs1903
-'''
+"""
 
 args = argparse.ArgumentParser(
-    prog=__prog__,
-    description=__description__,
-    epilog=__epilog__
+    prog=__prog__, description=__description__, epilog=__epilog__
 )
 
 
 class InvalidEndpointError(ValueError):
-
     def __init__(self, endpoint: str):
         msg: str = f'Endpoint {endpoint:r} is not valid.'
         super().__init__(msg)
@@ -37,9 +33,7 @@ class InvalidEndpointError(ValueError):
 
 class Github:
     API_URL: Final[str] = 'https://api.github.com'
-    ENDPOINTS: tuple[str] = (
-        'issues',
-    )
+    ENDPOINTS: tuple[str] = ('issues',)
 
     def __init__(self, token: str) -> None:
         self.session = requests.Session()
@@ -49,7 +43,6 @@ class Github:
 
     def url(self, endpoint: str, **kargs) -> str:
         if endpoint in self.ENDPOINTS:
-
             params = ''
             if len(kargs) > 0:
                 params = '?' + urllib.parse.urlencode(kargs)
@@ -80,7 +73,7 @@ class Github:
         owned: bool | None = None,
         pulls: bool | None = None,
         per_page: int = 30,
-        page: int = 1
+        page: int = 1,
     ) -> list[Issue]:
         kargs = {
             'filter': filter,
@@ -114,7 +107,6 @@ class Github:
 
 
 class User:
-
     def __init__(
         self,
         parent: Github,
@@ -137,7 +129,7 @@ class User:
         received_events_url: str,
         type: str,
         site_admin: bool,
-        **kargs: str | int | bool | None
+        **kargs: str | int | bool | None,
     ) -> None:
         self.parent: Final[Github] = parent
         self.id: Final[int] = id
@@ -151,8 +143,8 @@ class User:
     def __str__(self):
         return f'{self.login}#{self.id}'
 
-class Repository:
 
+class Repository:
     def __init__(
         self,
         parent: Github,
@@ -164,7 +156,7 @@ class Repository:
         owner: dict,
         private: bool,
         html_url: str,
-        **kargs
+        **kargs,
     ) -> None:
         self.parent = parent
         self.id = id
@@ -174,8 +166,8 @@ class Repository:
         self.html_url = html_url
         self.owner = User(parent, **owner)
 
-class Issue:
 
+class Issue:
     def __init__(
         self,
         parent: Github,
@@ -232,27 +224,32 @@ class Issue:
         return rst
 
     def __repr__(self) -> str:
-        return f"<Issue#{self.id} by {self.user} from {self.parent}>"
+        return f'<Issue#{self.id} by {self.user} from {self.parent}>'
 
     def __str__(self) -> str:
-        return f"Issue#{self.id} by {self.user}"
+        return f'Issue#{self.id} by {self.user}'
 
     def to_rst(self) -> str:
         title: str = self.title
-        title_line: str = '.' * (len(title)+2)
-        ret: str = f'''
+        title_line: str = '.' * (len(title) + 2)
+        ret: str = f"""
 {title}
 {title_line}
 
 Voir en ligne: {self.html_url}.
 
 {self.body}
-        '''
+        """
 
         return ret
 
+
 def main():
-    token = (pathlib.Path.home() / '.config' / 'github' / 'tokens' / 'issues.txt').read_text().strip()
+    token = (
+        (pathlib.Path.home() / '.config' / 'github' / 'tokens' / 'issues.txt')
+        .read_text()
+        .strip()
+    )
     gh = Github(token)
     issues = gh.issues()
 
@@ -263,6 +260,7 @@ def main():
     for issue in issues:
         if issue.repository.name == 'x.phs1903':
             print(issue.to_rst())
+
 
 if __name__ == '__main__':
     main()
