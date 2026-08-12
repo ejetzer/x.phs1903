@@ -111,14 +111,28 @@ def upverse(repo_path: Path = DEFAULT_REPO, fichiers_version: tuple[Path] = FICH
         mini += 1
         tag = f'v{major}.{minor}.{mini}'
         commentaire = input('>>>')
-        reference = run(  # noqa: S603
-            ['/usr/bin/git', '-C', str(repo_path), 'tag', tag, '-m', commentaire]
+        run(  # noqa: S603
+            ['/usr/bin/git', '-C', str(repo_path), 'tag', tag, '-m', commentaire],
+            capture_output=True,
+            check=True,
+        )
+
+        cfgver()
+
+        run(
+            ['/usr/bin/git', '-C', str(repo_path), 'add', '-f'] + list(map(str, fichiers_version)),
+            capture_output=True,
+            check=True,
         )
         run(
-            ['/usr/bin/git', '-C', str(repo_path), 'add', '-f'] + list(map(str, fichiers_version))
+            ['/usr/bin/git', '-C', str(repo_path), 'commit', '-m', commentaire],
+            capture_output=True,
+            check=True,
         )
-        run(
-            ['/usr/bin/git', '-C', str(repo_path), 'commit', '-m', commentaire]
+        run(  # noqa: S603
+            ['/usr/bin/git', '-C', str(repo_path), 'tag', '-f', tag, '-m', commentaire],
+            capture_output=True,
+            check=True,
         )
 
 def main() -> None:
