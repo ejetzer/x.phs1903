@@ -41,7 +41,8 @@ class Tableau:
         self.__df: pd.DataFrame = pd.DataFrame()
         self.__buffer: list[pd.Series] = []
         self.__thread_consume: threading.Thread = threading.Thread(
-            target=self.__run_consume
+            target=self.__run_consume,
+            daemon=True
         )
         self.__thread_update: threading.Thread = threading.Thread(
             target=self.__run_update
@@ -56,9 +57,6 @@ class Tableau:
 
         while not self.__arret.is_set():
             ser = next(self.__iter)
-
-            if ser is None:
-                continue
 
             with self.__loquet_buffer:
                 self.__buffer.append(pd.Series(ser).to_frame().T)
@@ -76,8 +74,8 @@ class Tableau:
     def close(self) -> None:
         """Arrête la compilation des données."""
         self.__arret.set()
-        self.__thread_consume.join()
         self.__thread_update.join()
+        self.__thread_consume.join()
 
     def __iter__(self) -> Self:
         """Retourne soi-même.

@@ -132,8 +132,20 @@ class Calcul:
     def shutdown(self) -> None:
         """Arrête les opérations de calcul."""
         self.__logger.debug('')
-        self.__executor.shutdown(wait=True, cancel_futures=True)
+        self.__executor.shutdown(wait=False, cancel_futures=True)
         self.__shutdown = True
+
+    @property
+    def pending(self) -> int:
+        return self.__executor._work_queue.qsize()
+
+    @property
+    def running(self) -> int:
+        return len(self.__executor._threads)
+
+    @property
+    def computing(self) -> bool:
+        return self.pending + self.running > 0
 
     def __matmul__(self, other: Self) -> Self:
         """Compose un calcul par un autre.
@@ -517,20 +529,20 @@ def main(*, debug: bool = False) -> None:
 
             pending_moy, pending_fft, res = None, None, None
             while True:
-                print('.', end='')
                 phase += n
                 lignes = sinus(n=n, phase=phase)
                 com.print(lignes)
 
-                if pending_fft is None:
+                fft_para, pending_fft = pending_fft, None
+                if fft_para is None:
                     fft_para = calcul_pics(tab)
-                else:
-                    fft_para, pending_fft = pending_fft, None
 
-                if pending_moy is None:
+                moy_para, pending_moy = pending_moy, None
+                if moy_para is None:
                     moy_para = calcul_moyenne(tab)
-                else:
-                    moy_para, pending_moy = pending_moy, None
+
+                print(f'FFT: {calcul_pics.running} calculs en cours, {calcul_pics.pending} en attente.')
+                print(f'Moyenne: {calcul_moyenne.running} calculs en cours, {calcul_moyenne.pending} en attente.')
 
                 try:
                     res = fft_para.result(timeout=1e-9)

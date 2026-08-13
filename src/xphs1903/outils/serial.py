@@ -53,6 +53,8 @@ immédiatement être lu avec la fonction :func:`next`.
 import logging
 import queue
 import threading
+import multiprocessing
+import time
 import typing
 
 import serial
@@ -93,7 +95,7 @@ class LigneSerie:
         port: str = 'loop://',
         baudrate: BaudRateType = 115_200,
         *,
-        stop_event: threading.Event | None = None,
+        stop_event: multiprocessing.Event | None = None,
     ) -> None:
         """Initialise un lien série.
 
@@ -114,13 +116,13 @@ class LigneSerie:
         self.__baudrate = baudrate
         self.__timeout = 0.05
 
-        self.__arret: threading.Event = (
-            threading.Event() if stop_event is None else stop_event
+        self.__arret: multiprocessing.Event = (
+            multiprocessing.Event() if stop_event is None else stop_event
         )
         """Signal d'arrêt pour la ligne série."""
 
         self.__logger.debug('%s', self.__arret)
-        self.__loquet: threading.Lock = threading.Lock()
+        self.__loquet: multiprocessing.Lock = multiprocessing.Lock()
         """Loquet de synchronisation pour la ligne série."""
 
         self.__logger.debug('%s', self.__loquet)
@@ -130,17 +132,17 @@ class LigneSerie:
     @property
     def device(self) -> str:
         """Retourne le port série."""
-        return self.__serial.port
+        return self.__port
 
     @property
     def port(self) -> str:
         """Retourne le port série."""
-        return self.__serial.port
+        return self.__port
 
     @property
     def baudrate(self) -> int:
         """Retourne le débit maximal de communication attendu."""
-        return self.__serial.baudrate
+        return self.__baudrate
 
     @property
     def sending(self) -> bool:
@@ -148,7 +150,7 @@ class LigneSerie:
         return not self.__input.empty()
 
     def print(
-        self, data: str | list[dict[str, int | str]], *, end: str = '\n'
+        self, data: str | list[dict[str, int | str]], *, end: str = '\n', block: bool = True
     ) -> None:
         """Envoyer :obj:`!data` via la ligne série.
 
@@ -190,53 +192,66 @@ class LigneSerie:
                     )
 
         if isinstance(data, str):
-            self.__input.put((data + end).encode('utf-8'))
+            try:
+                self.__input.put((data + end).encode('utf-8'), block=block)
+            except queue.Full as err:
+                self.__logger.debug('__input full', exc_info=err)
         else:
             msg: str = f'Expected {str} or {list[dict]} but got {type(data)}.'
             raise TypeError(msg)
 
-    def __run(self) -> None:
+    @staticmethod
+    def ligne_serie_run(port, baudrate, timeout, arret, input, output, loquet) -> None:
         """Fonction exécutée dans un autre fil."""
-        self.__logger.debug('')
-        while not self.__arret.is_set():
+
+        ser = serial.serial_for_url(
+            port, do_not_open=True
+        )
+        """Objet :class:`serial.Serial` propre à cette ligne série."""
+
+        ser.baudrate = baudrate
+        ser.timeout = timeout
+        ser.open()
+
+        temp_val: bytes = b''
+        val: bytes = b''
+
+        while not arret.is_set():
             # Si on a:
             #  - quelque chose à lire
             #  - et rien en attente d'être envoyé
             # on peut envoyer la ligne suivante.
-            if not self.__input.empty() and not self.__serial.out_waiting:
+            if not input.empty() and not ser.out_waiting:
                 try:
-                    cmd: bytes = self.__input.get()
-                    self.__logger.debug('len(cmd) = %s', len(cmd))
-                except queue.ShutDown as err:
-                    self.__logger.debug('self.__input fermé', exc_info=err)
+                    cmd: bytes = input.get()
+                except (queue.ShutDown, ValueError) as err:
                     break
                 else:
-                    with self.__loquet:
-                        self.__serial.write(cmd)
-                        self.__input.task_done()
+                    ser.write(cmd)
+                    input.task_done()
 
             # Si on a:
             #  - de la place dans la file de sortie
             #  - et des données à lire
             # on lit la ligne suivante.
-            if not self.__output.full() and self.__serial.in_waiting:
-                with self.__loquet:
-                    val: bytes = self.__serial.read_until(b'\n', size=100)
-                    self.__logger.debug('len(val) = %s', len(val))
+            if len(val) > 0:
+                try:
+                    output.put(val, block=False)
+                except ValueError:
+                    break
+                else:
+                    val = b''
+            elif not output.full() and ser.in_waiting:
+                val = ser.read_until(b'\n', size=100)
 
                 if val.endswith(b'\n'):
-                    val = self.__temp_val + val
-                    self.__temp_val = b''
+                    val = temp_val + val
+                    temp_val = b''
                 else:
-                    self.__temp_val += val
+                    temp_val += val
                     val = b''
 
-                try:
-                    if len(val) > 0:
-                        self.__output.put(val)
-                except queue.ShutDown as err:
-                    self.__logger.debug('self.__output fermé', exc_info=err)
-                    break
+        ser.close()
 
     def __enter__(self) -> Self:
         """Ouvre la ligne série et démarre l'exécution du fil parallèle.
@@ -263,10 +278,26 @@ class LigneSerie:
 
     def open(self) -> None:
         """Ouvre la connexion série."""
-        self.__input: queue.Queue = queue.Queue()
-        self.__output: queue.Queue = queue.Queue()
-        self.__serial.open()
-        self.__logger.debug('%s', self.__serial)
+        self.__input: queue.Queue = multiprocessing.JoinableQueue()
+        self.__output: queue.Queue = multiprocessing.JoinableQueue()
+
+        self.__thread: multiprocessing.Process = multiprocessing.Process(
+            group=None,
+            target=self.ligne_serie_run,
+            args=(
+                self.__port,
+                self.__baudrate,
+                self.__timeout,
+                self.__arret,
+                self.__input,
+                self.__output,
+                self.__loquet
+            ),
+            name=f'{self.__port}',
+            daemon=True
+        )
+        """Objet :class:`threading.Thread` propre à cette ligne série."""
+
         self.__thread.start()
         self.__logger.debug('%s', self.__thread)
         self.__open = True
@@ -326,17 +357,15 @@ class LigneSerie:
             self.__arret.set()
             self.__logger.debug('%s', self.__arret)
 
-            self.__thread.join()
+            self.__input.close()
+            self.__output.close()
+
+            self.__thread.join(timeout=0.005)
             self.__logger.debug('%s', self.__thread)
 
-            del self.__thread
+            if self.__thread.is_alive():
+                self.__thread.interrupt()
 
-            self.__serial.close()
-            self.__logger.debug('%s', self.__serial)
-            del self.__serial
-
-            self.__input.shutdown()
-            self.__output.shutdown()
             self.__open = False
 
         self.__logger.debug('%s', self.__open)
@@ -344,26 +373,6 @@ class LigneSerie:
 
     def __reset(self) -> None:
         self.__logger.debug('')
-
-        self.__thread: threading.Thread = threading.Thread(
-            group=None,
-            target=self.__run,
-            name=f'{self.__port}',
-            daemon=None,
-            context=None,
-        )
-        """Objet :class:`threading.Thread` propre à cette ligne série."""
-
-        self.__logger.debug('%s', self.__thread)
-
-        self.__serial: serial.Serial = serial.serial_for_url(
-            self.__port, do_not_open=True
-        )
-        """Objet :class:`serial.Serial` propre à cette ligne série."""
-
-        self.__serial.baudrate = self.__baudrate
-        self.__serial.timeout = self.__timeout
-        self.__logger.debug('%s', self.__serial)
 
         self.__open = False
         self.__temp_val = b'\n'
@@ -373,6 +382,37 @@ class LigneSerie:
         self.__logger.debug('%s', self.__arret)
 
     def __next__(self) -> str:
+        return self.next()
+
+    def next(self, *, block: bool = True, timeout: float | None = None, parse: bool = False) -> dict[str, float]:
+        try:
+            val: bytes = self.__output.get(block=block, timeout=timeout)
+        except queue.Empty:
+            return None
+        except ValueError:
+            return None
+
+        val: str = val.decode('utf-8').strip()
+
+        if not parse:
+            return val
+
+        if '\t' in val:
+            items = val.split('\t')
+
+            if all((':' in mot) for mot in items):
+                return {
+                    k: float(v)
+                    for k, v in (mot.split(':') for mot in items)
+                }
+
+        raise ValueError
+
+    def __iter__(self) -> Self:
+        """Retourne self."""  # noqa: DOC201
+        return self.iter()
+
+    def iter(self, block: bool = False, timeout: int | None = None) -> iter[str]:
         """Retourne l'élément suivant reçu sur la ligne série.
 
         Returns
@@ -409,25 +449,10 @@ class LigneSerie:
         {'13': 0}
 
         """
-        try:
-            val: bytes = self.__output.get(timeout=0.01)
-        except queue.ShutDown as err:
-            self.__logger.debug('self.__output fermé', exc_info=err)
-            raise StopIteration from err
-        except queue.Empty as err:
-            self.__logger.debug('self.__output vide', exc_info=err)
-            return None
-        else:
-            self.__logger.info('len(val) = %s', len(val))
-            self.__output.task_done()
-            val: str = val.decode('utf-8').strip()
-            return val
+        while True:
+            yield self.next(block=block, timeout=timeout)
 
-    def __iter__(self) -> Self:
-        """Retourne self."""  # noqa: DOC201
-        return self
-
-    def parse(self) -> iter[dict[str, float]]:
+    def parse(self, block: bool = True, timeout: int | None = 0.001) -> iter[dict[str, float]]:
         """Renvoie un dictionnaire par ligne au format du traceur Arduino.
 
         Prends une ligne de texte au format ``A1:244 A2:32`` et retourne
@@ -446,19 +471,8 @@ class LigneSerie:
         ...     df = pandas.concat(df, pandas.Series(l))
         >>> print(df.head())
         """
-        for ligne in self:
-            if ligne is not None:
-                if '\t' in ligne:
-                    items = ligne.split('\t')
-
-                    if all((':' in mot) for mot in items):
-                        yield {
-                            k: float(v)
-                            for k, v in (mot.split(':') for mot in items)
-                        }
-                        continue
-
-            yield None
+        while True:
+            yield self.next(block=block, timeout=timeout, parse=True)
 
     def __str__(self) -> str:
         """Retourne une :class:`str` représentant l'objet."""  # noqa: DOC201
@@ -547,6 +561,58 @@ class ArduinoNanoEvery(Appareil):
         """
         super().__init__(port, baudrate, stop_event=stop_event)
 
+def no_op(*, debug: bool = False) -> None:
+    if debug:
+        from .logging import DEBUG, config  # noqa: PLC0415
+
+        config(__name__, level=DEBUG)
+
+    with LigneSerie() as com:
+        time.sleep(1)
+
+def echo(*, debug: bool = False) -> None:
+    if debug:
+        from .logging import DEBUG, config  # noqa: PLC0415
+
+        config(__name__, level=DEBUG)
+
+    with LigneSerie() as com:
+        while True:
+            try:
+                com.print(input('>>>'))
+                print(com.next(block=True))
+            except KeyboardInterrupt:
+                break
+
+def ardecho(*, debug: bool = False) -> None:
+    if debug:
+        from .logging import DEBUG, config  # noqa: PLC0415
+
+        config(__name__, level=DEBUG)
+
+    with ArduinoNanoEvery(baudrate=9600) as com:
+        while True:
+            try:
+                com.print(input('>>>'))
+                print(com.next(block=True))
+            except KeyboardInterrupt:
+                break
+
+def echodata(*, debug: bool = False) -> None:
+    pass
+
+def arddata(*, debug: bool = False) -> None:
+    if debug:
+        from .logging import DEBUG, config  # noqa: PLC0415
+
+        config(__name__, level=DEBUG)
+
+    with ArduinoNanoEvery(baudrate=9600) as com:
+        while True:
+            try:
+                print(com.next(block=True, parse=True))
+            except KeyboardInterrupt:
+                break
 
 def main(*, debug: bool = False) -> None:
     """Exemple d'écho série.
@@ -583,11 +649,13 @@ def main(*, debug: bool = False) -> None:
         com.print(lignes)
 
         while com.sending:
-            pass
+            time.sleep(0.001)
+
+        it = com.parse()
+        data = list(it)
+
 
     print()
-
-    data = [x for x in com.parse() if x is not None]
     print('Position')
     print('===========================')
     print()
@@ -596,4 +664,5 @@ def main(*, debug: bool = False) -> None:
 
 
 if __name__ == '__main__':
-    main(debug=True)
+    import sys
+    ardecho(debug=('--debug' in sys.argv))
