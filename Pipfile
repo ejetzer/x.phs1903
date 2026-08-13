@@ -42,6 +42,7 @@ pandoc = "*"
 sphinx = "*"
 python-docs-theme = "*"
 pydata-sphinx-theme = "*"
+matplotlib-inline = "*"
 
 [scripts]
 "version" = "python lib/version.py"

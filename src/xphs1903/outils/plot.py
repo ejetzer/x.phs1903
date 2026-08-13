@@ -4,13 +4,18 @@
 import inspect
 import logging
 import tkinter as tk
+import time
 import typing
+import threading
+from pathlib import Path
 
 import matplotlib as mpl
 import pandas as pd
 from matplotlib import figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from .acq import Tableau
 from .calcul import Calcul, Identite
 
 if typing.TYPE_CHECKING:
@@ -19,7 +24,6 @@ if typing.TYPE_CHECKING:
     from types import TracebackType
     from typing import Any, Self
 
-    from .acq import Tableau
 
 __logger = logging.getLogger(__name__)
 """Journal de débogage interne du module.
@@ -50,6 +54,36 @@ N_COTES: int = 2
 class Format:
     """Paramètres d'un Graphe."""
 
+    AXES_SET: Final[tuple[str]] = (
+        'xlim',
+        'ylim',
+        'title'
+    )
+
+    LINE_SET: Final[tuple[str]] = (
+        'linestyle',
+        'marker',
+    )
+
+    LINESTYLES: Final[tuple[str]] = (
+        '',  # Vide
+        '-',  # Solide
+        ':',  # Pointillé
+        '--',  # Tirets
+        '-.'  # Point-tirets
+    )
+
+    MARKERS: Final[tuple[str]] = (
+        '',  # Vide
+        '.',  # Point
+        ',',  # Pixel
+        '1',  # Étoile à trois branches
+        '+',  # Croix
+        'x',  # Croix oblique
+        '|',  # Ligne verticale
+        '_'  # Ligne horizontale
+    )
+
     __logger = logging.getLogger(f'{__name__}.Format')
     """Journal de débogage pour les objets de classe Format."""
 
@@ -62,7 +96,9 @@ class Format:
         xlim: tuple | None = None,
         ylim: tuple | None = None,
         title: str = 'Graphe',
-        linestyle: str = 'dotted',
+        linestyle: str = ':',
+        marker: str = '+',
+        legend: tuple[str] | None = None,
         **kargs
     ) -> None:
         """Initialisation des paramètres."""
@@ -70,9 +106,7 @@ class Format:
         self.__fig, self.__ax = None, None
         self.__loquet: threading.Lock = threading.Lock()
 
-        self.__kargs = {
-            'linestyle': linestyle
-        } | kargs
+        self.__kargs = kargs
         self.__bottom = None
         self.__top = None
         self.__left = None
@@ -81,6 +115,37 @@ class Format:
         self.title = title
         self.xlim = xlim
         self.ylim = ylim
+        self.linestyle = linestyle
+        self.marker = marker
+
+        self.__legend = tuple()
+        if legend is not None:
+            self.legend = legend
+
+    @property
+    def legend(self) -> tuple[str]:
+        if self.ax is None:
+            return tuple(self.__legend)
+
+        h, l = self.ax.get_legend_handles_labels()
+        if len(h) > 0 and len(l) == len(h):
+            self.__legend = tuple(l)
+
+        if self.__legend is None:
+            self.__legend = tuple()
+
+        return self.__legend
+
+    @legend.setter
+    def legend(self, val: tuple[str] | None) -> None:
+        val = tuple(val)
+        if not all(isinstance(v, str) for v in val):
+            raise TypeError
+
+        if len(self.__legend) > 0 and len(val) != len(self.__legend):
+            raise ValueError
+
+        self.__legend = val
 
     @property
     def title(self) -> str:
@@ -205,6 +270,35 @@ class Format:
     def callback(self) -> None:
         self.__callback = None
 
+    @property
+    def linestyle(self) -> str:
+        return self.__kargs.get('linestyle', '-')
+
+    @linestyle.setter
+    def linestyle(self, val: str) -> None:
+        if not isinstance(val, str):
+            raise TypeError
+
+        if val not in self.LINESTYLES:
+            raise ValueError
+
+        self.__kargs['linestyle'] = val
+
+    @property
+    def marker(self) -> str:
+        return self.__kargs.get('marker', '.')
+
+    @marker.setter
+    def marker(self, val: str) -> None:
+        if not isinstance(val, str):
+            raise TypeError
+
+        if val not in self.MARKERS:
+            raise ValueError
+
+        self.__kargs['marker'] = val
+
+
     def __enter__(self) -> Self:
         self.__loquet.acquire()
         return self
@@ -244,10 +338,13 @@ class Format:
     def ax(self) -> None:
         self.__ax = None
 
+    @property
+    def lines(self) -> list[Line2D]:
+        return self.ax.get_lines()
+
     def __call__(self, graphe: Graphe) -> None:
         """Applique le format à l'argument graphe."""
         self.__logger.debug('')
-
 
         with self:
             self.fig, self.ax = graphe.fig, graphe.ax
@@ -256,27 +353,42 @@ class Format:
             self.ax.set_ylim(*self.ylim)
             self.ax.set_title(self.title)
 
-            self.ax.set(**self.__kargs)
+            for arg, val in self.__kargs.items():
+                if arg in self.AXES_SET:
+                    getattr(self.ax, f'set_{arg}')(gettatr(self, arg))
+
+                if arg in self.LINE_SET:
+                    for line in self.lines:
+                        getattr(line, f'set_{arg}')(getattr(self, arg))
+
+            self.ax.legend(self.lines, self.legend)
 
             if self.callback is not None:
                 self.callback(self)
 
-    def __ior__(self, other: dict[str, Any]) -> None:
+    def __ior__(self, other: dict[str, Any]) -> Self:
         self.__kargs |= other
+        return self
 
 class BaseGraphe:
+    """Encapsulation d'un tableau et canvas pour afficher un graphe."""
+
+    __logger = logging.getLogger(f'{__name__}.BaseGraphe')
+    """Journal de débogage pour les objets de classe TkGraphe."""
+
+    __logger.addHandler(logging.NullHandler())
 
     def __init__(
         self,
         tab: Tableau,
         calcul: Calcul = None,
-        format: Format | None = None
+        fmt: Format | None = None
     ) -> None:
         self.tab = tab
         self.calcul = calcul
-        self.format = format
+        self.format = fmt
         self.__fig = mpl.figure.Figure()
-        self.__ax = self.__fig.add_subplot()
+        self.__ax = self.fig.add_subplot()
         self.__res, self.__pending_res = None, None
         self.__count = 0
 
@@ -331,8 +443,9 @@ class BaseGraphe:
             return null
 
         def proxy(**kargs) -> None:
-            self.__format |= kargs
-            self.__format(self)
+            if self.__format is not None:
+                self.__format |= kargs
+                self.__format(self)
 
         return proxy
 
@@ -342,10 +455,6 @@ class BaseGraphe:
             self.__format = val
         else:
             raise TypeError
-
-    @format.deleter
-    def format(self) -> None:
-        self.__format = None
 
     def close(self) -> None:
         self.tab.close()
@@ -374,7 +483,10 @@ class BaseGraphe:
         old_res = self.__res
 
         if self.__pending_res is None:
-            res: Future = self.calcul(self.tab)
+            try:
+                res: Future = self.calcul(self.tab)
+            except:
+                raise StopIteration
         else:
             res = self.__pending_res
             self.__pending_res = None
@@ -415,7 +527,129 @@ class BaseGraphe:
         for ligne, y in zip(self.lines, ys):
             ligne.set(xdata=index, ydata=y)
 
-class TkGraphe(BaseGraphe):
+        self.format()
+
+    def savefig(self, nom: pathlib.Path) -> None:
+        self.fig.savefig(str(nom))
+
+class CanvasGraphe(BaseGraphe):
+    """Encapsulation d'un tableau et canvas pour afficher un graphe."""
+
+    __logger = logging.getLogger(f'{__name__}.CanvasGraphe')
+    """Journal de débogage pour les objets de classe TkGraphe."""
+
+    __logger.addHandler(logging.NullHandler())
+
+    def __init__(
+        self,
+        tab: Tableau,
+        calcul: Calcul | None = None,
+        format: Format | None = None,
+        CanvasClass: type[FigureCanvasAgg] = FigureCanvasAgg,
+        **kargs,
+    ) -> None:
+        super().__init__(tab, calcul, format)
+        self.__canvas = None
+
+        self.canvas = CanvasClass(self.fig, **kargs)
+
+    @property
+    def canvas(self) -> FigureCanvasAgg:
+        return self.__canvas
+
+    @canvas.setter
+    def canvas(self, val: FigureCanvasAgg) -> None:
+        if not isinstance(val, FigureCanvasAgg):
+            raise TypeError
+
+        if self.__canvas is not None:
+            raise RuntimeError
+
+        self.__canvas = val
+
+    def update(self) -> None:
+        next(self)
+        self.draw()
+
+    def draw(self):
+        self.canvas.draw()
+
+    def __enter__(self) -> Self:
+        super().__enter__()
+        return self
+
+
+class InlineGraphe(CanvasGraphe):
+    """Encapsulation d'un tableau et canvas pour afficher un graphe."""
+
+    __logger = logging.getLogger(f'{__name__}.InlineGraphe')
+    """Journal de débogage pour les objets de classe TkGraphe."""
+
+    __logger.addHandler(logging.NullHandler())
+
+    def __init__(
+        self,
+        tab: Tableau,
+        calcul: Calcul | None,
+        format: Format | None
+    ) -> None:
+        super().__init__(tab, calcul, format, FigureCanvasAgg)
+
+class FichierGraphe(CanvasGraphe):
+    """Encapsulation d'un tableau et canvas pour afficher un graphe."""
+
+    __logger = logging.getLogger(f'{__name__}.InlineGraphe')
+    """Journal de débogage pour les objets de classe TkGraphe."""
+
+    __logger.addHandler(logging.NullHandler())
+
+    @typing.override
+    def __init__(
+        self,
+        name: pathlib.Path | str,
+        tab: Tableau,
+        calcul: Calcul | None,
+        format: Format | None
+    ) -> None:
+        super().__init__(tab, calcul, format, FigureCanvasAgg)
+        self.__name = Path(name)
+        self.__thread = threading.Thread(target=self.__run)
+        self.__loquet = threading.Lock()
+        self.__arret = threading.Event()
+
+    @property
+    def name(self) -> str:
+        return str(self.__name.resolve())
+
+    def __run(self) -> None:
+        """Lit les nouvelles données."""
+        for l in self:
+            if self.__arret.is_set():
+                break
+
+            with self.__loquet:
+                self.savefig(self.name)
+
+            time.sleep(0.1)
+
+    def stop(self) -> None:
+        self.__arret.set()
+
+    def join(self):
+        self.__thread.join()
+
+    def __enter__(self) -> Self:
+        super().__enter__()
+        self.__thread.start()
+        return self
+
+    def __exit__(self, *exc) -> bool:
+        self.__arret.set()
+        self.__thread.join()
+        super().__exit__()
+
+
+class TkGraphe(CanvasGraphe):
     """Encapsulation d'un tableau et canvas pour afficher un graphe."""
 
     __logger = logging.getLogger(f'{__name__}.TkGraphe')
@@ -433,50 +667,36 @@ class TkGraphe(BaseGraphe):
     ) -> None:
         """Initialise le graphe."""
         self.__logger.debug('')
-        super().__init__(tab, calcul, format)
-
+        super().__init__(tab, calcul, format, FigureCanvasTkAgg, master=root)
         self.__root: tk.Frame = root
-        self.__logger.debug('%s', self.__root)
-
-        self.__canvas = FigureCanvasTkAgg(self.fig, master=self.__root)
 
     def close(self) -> None:
         """Ferme les connexions et détruit les composants gui."""
         super().close()
-        self.__canvas.get_tk_widget().destroy()
+        self.widget.destroy()
+
+    def update(self):
+        super().update()
+        self.widget.after(1000, self.update)
 
     def show(self) -> None:
         """Affiche le graphique."""
-        self.widget().pack(
+        self.draw()
+        self.widget.pack(
             side=tk.TOP, fill=tk.BOTH, expand=True
         )
-        self.widget.after(1000, lambda: next(self))
-
-    def __enter__(self) -> Self:
-        """Démarre la mise à jour du graphe et l'affiche.
-
-        Returns
-        -----------------
-        self
-            Les objets Graphe implémentent __exit__.
-        """
-        self.__logger.debug('')
-        super().__enter__()
-        self.show()
-        return self
-
-    @property
-    def canvas(self) -> FigureCanvasTkAgg:
-        """Retourne l'objet FigureCanvasTkAgg sous-jacent."""
-        return self.__canvas
+        self.widget.after(1000, self.update)
 
     @property
     def widget(self) -> FigureCanvasTkAgg:
         return self.canvas.get_tk_widget()
 
 
+
 def main(*, debug: bool = False) -> None:
     """Affiche le spectre de fréquence d'un signal artificiel."""
+    import time
+
     from functools import partial  # noqa: PLC0415
 
     from .acq import Tableau, sinus  # noqa: PLC0415
@@ -488,59 +708,45 @@ def main(*, debug: bool = False) -> None:
 
         config(__name__, level=DEBUG)
 
-    lignes = sinus(n=50)
+    lignes = sinus(n=160)
 
     fenetre: Calcul = rectangle(153)()
     calcul_fft: Calcul = FFT() @ fenetre
 
-    root = tk.Tk()
-    root.wm_title('Démonstration avec des données artificielles')
-
     format_fft = Format(
-        title='Transformée de Fourier', xlim=(0, 0.5), ylim=None
+        title='Transformée de Fourier',
+        xlim=(0, 0.5),
+        ylim=None,
+        xlabel='Fréquence',
+        ylabel='Intensité',
+        linestyle='-',
+        marker='',
+        legend=['F[x]', 'F[y]']
     )
-
-    format_sig = Format(title='Signal artificiel')
 
     with LigneSerie() as com:
         __logger.debug('%s', com)
         com.print(lignes)
 
-        def nouvelles_données(n: int = 50, count: int = 0) -> None:
-            lignes = sinus(n=n, phase=count)
-            com.print(lignes)
-            root.after(1000, partial(nouvelles_données, n=n, count=count + n))
-
         with Tableau(com.parse()) as tab:
             __logger.debug('%s', tab)
 
-            with Graphe(root, tab, calcul_fft, format_=format_fft) as gra1:
+            with FichierGraphe('gra1.png', tab, calcul_fft, format=format_fft) as gra1:
                 __logger.debug('%s', gra1)
-                gra1.ax.set_title('Transformée de Fourier')
-                gra1.ax.set_xlabel('Fréquence')
-                gra1.ax.set_ylabel('Intensité (UA)')
-                gra1.ax.legend(['F[x]', 'F[y]'])
 
-                with Graphe(root, tab, fenetre, format_=format_sig) as gra2:
-                    gra2.ax.set_xlabel('Temps')
-                    gra2.ax.set_ylabel('Potentiel simulé')
-                    gra2.ax.legend(['x', 'y'])
+                while (a := input('?')):
+                    com.print(lignes)
 
-                    __logger.debug('%s', root)
-                    root.after(1000, nouvelles_données)
+                com.close()
 
-                    def quit_app() -> None:
-                        gra1.close()
-                        gra2.close()
-                        root.quit()
+                __logger.debug('Fini')
 
-                    root.protocol('WM_DELETE_WINDOW', quit_app)
+            __logger.debug('Fini')
 
-                    __logger.debug('%s', root)
-
-                    root.mainloop()
+        __logger.debug('Fini')
 
     __logger.debug('Fini.')
+
 
 
 if __name__ == '__main__':
