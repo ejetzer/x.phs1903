@@ -1,12 +1,16 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
 """Utilitaire de journalisation pour le débogage."""
 
+import functools
 import logging
 import sys
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from typing import Final, TextIO
 
-fmt: Final[str] = (
+from .functools import staticproperty
+
+FMT: Final[str] = (
+    '%(asctime)s:'
     '%(name)s:'
     '%(levelname)s\t'
     '%(threadName)s\t'
@@ -15,9 +19,97 @@ fmt: Final[str] = (
 )
 """Chaîne de formatage par défaut."""
 
-formatter: Final[logging.Formatter] = logging.Formatter(fmt)
+formatter: Final[logging.Formatter] = logging.Formatter(FMT)
 """Format par défaut pour les journaux."""
 
+class WithLogger:
+
+    @functools.cached_property
+    def logger(self):
+        cls = type(self)
+        mod, cls = cls.__module__, cls.__name__
+        return logging.getLogger(f'{mod}.{cls}.{id(self)}')
+
+    @staticproperty
+    def formatter():
+        return formatter
+
+    @staticproperty
+    def fstring():
+        return FMT
+
+    @staticproperty
+    def levels():
+        return {
+            'debug': logging.DEBUG,
+            'info': logging.INFO,
+            'warning': logging.WARNING,
+            'error': logging.ERROR,
+            'critical': logging.CRITICAL
+        }
+
+    def log(self, level: float, msg: str, *args, **kargs) -> None:
+        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        self.logger.log(level, msg, *args, **kargs)
+
+    def debug(self, msg: str, *args, exc_info: BaseException | None = None, **kargs):
+        if exc_info is not None:
+            kargs['exc_info'] = exc_info
+
+        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        self.log(logging.DEBUG, msg, *args, **kargs)
+
+    def info(self, msg: str, *args, exc_info: BaseException | None = None, **kargs):
+        if exc_info is not None:
+            kargs['exc_info'] = exc_info
+
+        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        self.log(logging.DEBUG, msg, *args, **kargs)
+
+    def warning(self, msg: str, *args, exc_info: BaseException | None = None, **kargs):
+        if exc_info is not None:
+            kargs['exc_info'] = exc_info
+
+        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        self.log(logging.DEBUG, msg, *args, **kargs)
+
+    def error(self, msg: str, *args, exc_info: BaseException | None = None, **kargs):
+        if exc_info is not None:
+            kargs['exc_info'] = exc_info
+
+        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        self.log(logging.DEBUG, msg, *args, **kargs)
+
+    def critical(self, msg: str, *args, exc_info: BaseException | None = None, **kargs):
+        if exc_info is not None:
+            kargs['exc_info'] = exc_info
+
+        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        self.log(logging.DEBUG, msg, *args, **kargs)
+
+    def setLevel(self, level: float | str):
+        if isinstance(level, str):
+            level = self.levels[level]
+
+        self.logger.setLevel(level)
+
+    def addHandler(self, handler: logging.Handler) -> None:
+        handler.setFormatter(self.formatter)
+        self.logger.addHandler(handler)
+
+    def log_to_stream(self, stream: TextIO) -> None:
+        handler = logging.StreamHandler(stream=stream)
+        self.addHandler(handler)
+
+    def log_to_file(self, path: Path) -> None:
+        stream = path.open()
+        self.log_to_stream(stream)
+
+    def log_to_stderr(self) -> None:
+        self.log_to_stream(sys.stderr)
+
+    def checkin(self) -> None:
+        self.debug('', stacklevel=2)
 
 def config(
     name: str, *, level: float = WARNING, stream: TextIO = sys.stderr

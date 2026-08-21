@@ -12,553 +12,494 @@ from pathlib import Path
 import matplotlib as mpl
 import pandas as pd
 from matplotlib import figure
+from matplotlib import pyplot
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
+from .logging import WithLogger
+from .serial import LigneSerie
 from .acq import Tableau
-from .calcul import Calcul, Identite
+from .calcul import TableauCalcul as CalTab
+
+
+from collections.abc import Callable, Mapping
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Callable
     from concurrent.futures import Future
     from types import TracebackType
     from typing import Any, Self
 
 
-__logger = logging.getLogger(__name__)
-"""Journal de débogage interne du module.
-
-Utile pour le débogage, ne devrait être obtenu qu'avec
-:func:`logging.getLogger`.
-"""
-
-__logger.addHandler(logging.NullHandler())
-
-
-class WrongBoundaryTypeError(TypeError):
-    """Indique que les limites d'axes sont invalides."""
-
-    def __init__(self, value: Any) -> None:  # noqa: ANN401
-        """Définit le message d'erreur selon value."""
-        msg: str = f"{value=} n'est pas une limite adéquate."
-        super().__init__(msg)
-
-
-DIM_GRA: int = 2
-"""Nombre de dimensions des graphiques décrits par Graphe et Format."""
-
-N_COTES: int = 2
-"""Nombre de valeurs des limites de chaque axe."""
-
-
-class Format:
-    """Paramètres d'un Graphe."""
-
-    AXES_SET: Final[tuple[str]] = (
-        'xlim',
-        'ylim',
-        'title'
+class BaseFormat(WithLogger, Mapping):
+    SETTINGS = (
+        'agg_filter',
+        'alpha',
+        'animated',
+        'clip_box',
+        'clip_on',
+        'clip_path',
+        'figure',
+        'gid',
+        'in_layout',
+        'label',
+        'mouseover',
+        'path_effects',
+        'picker',
+        'rasterized',
+        'sketch_params',
+        'snap',
+        'transform',
+        'url',
+        'visible',
+        'zorder'
     )
-
-    LINE_SET: Final[tuple[str]] = (
-        'linestyle',
-        'marker',
-    )
-
-    LINESTYLES: Final[tuple[str]] = (
-        '',  # Vide
-        '-',  # Solide
-        ':',  # Pointillé
-        '--',  # Tirets
-        '-.'  # Point-tirets
-    )
-
-    MARKERS: Final[tuple[str]] = (
-        '',  # Vide
-        '.',  # Point
-        ',',  # Pixel
-        '1',  # Étoile à trois branches
-        '+',  # Croix
-        'x',  # Croix oblique
-        '|',  # Ligne verticale
-        '_'  # Ligne horizontale
-    )
-
-    __logger = logging.getLogger(f'{__name__}.Format')
-    """Journal de débogage pour les objets de classe Format."""
-
-    __logger.addHandler(logging.NullHandler())
+    DEFAULTS = {}
 
     def __init__(
         self,
-        *,
-        callback: Callable | None = None,
-        xlim: tuple | None = None,
-        ylim: tuple | None = None,
-        title: str = 'Graphe',
-        linestyle: str = ':',
-        marker: str = '+',
-        legend: tuple[str] | None = None,
+        artist: mpl.artist.Artist,
         **kargs
     ) -> None:
-        """Initialisation des paramètres."""
-        self.__callback = callback
-        self.__fig, self.__ax = None, None
-        self.__loquet: threading.Lock = threading.Lock()
+        self.artist = artist
 
-        self.__kargs = kargs
-        self.__bottom = None
-        self.__top = None
-        self.__left = None
-        self.__right = None
+        self.__kargs = {}
+        for s in self.SETTINGS:
+            if kargs.get(s, None) is not None:
+                self[s] = kargs[s]
 
-        self.title = title
-        self.xlim = xlim
-        self.ylim = ylim
-        self.linestyle = linestyle
-        self.marker = marker
-
-        self.__legend = tuple()
-        if legend is not None:
-            self.legend = legend
+    def default(self, key: str) -> Any:
+        return self.DEFAULTS.get(key, None)
 
     @property
-    def legend(self) -> tuple[str]:
-        if self.ax is None:
-            return tuple(self.__legend)
+    def artist(self) -> mpl.artist.Artist:
+        return self.__artist
 
-        h, l = self.ax.get_legend_handles_labels()
-        if len(h) > 0 and len(l) == len(h):
-            self.__legend = tuple(l)
-
-        if self.__legend is None:
-            self.__legend = tuple()
-
-        return self.__legend
-
-    @legend.setter
-    def legend(self, val: tuple[str] | None) -> None:
-        val = tuple(val)
-        if not all(isinstance(v, str) for v in val):
+    @artist.setter
+    def artist(self, val: mpl.artist.Artist) -> None:
+        if not isinstance(val, mpl.artist.Artist):
             raise TypeError
 
-        if len(self.__legend) > 0 and len(val) != len(self.__legend):
-            raise ValueError
+        self.__artist = val
 
-        self.__legend = val
+    def copy(self) -> Self:
+        return type(self)(**self)
 
-    @property
-    def title(self) -> str:
-        if callable(self.__title):
-            return str(self.__title(self))
+    def __iter__(self) -> iter:
+        return self.keys()
+
+    def keys(self) -> iter:
+        return (key for key in self.SETTINGS if self[key] is not None)
+
+    def values(self) -> iter:
+        return (self[key] for key in self.keys())
+
+    def items(self) -> iter:
+        return zip(self.keys(), self.values())
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.SETTINGS
+
+    def __len__(self) -> int:
+        return len(self.SETTINGS)
+
+    def __getitem__(self, key: str) -> Any:
+        if key in self.SETTINGS and key not in self.__kargs:
+            return self.default(key)
+
+        if key in self.__kargs:
+            return self.__kargs[key]
+
+        raise KeyError
+
+    def get(self, key: str, default: Any | None = None) -> Any:
+        if key in self:
+            return self[key]
+
+        return default
+
+    def __eq__(self, other: BaseFormat) -> bool:
+        return all(a == b for a, b in zip(self.items(), other.items()))
+
+    def __neq__(self, other: BaseFormat) -> bool:
+        return not self == other
+
+    def __setitem__(self, key: str, val: Any) -> None:
+        if key not in self.SETTINGS:
+            raise KeyError
+
+        self.__kargs[key] = val
+
+    def __delitem__(self, key: str) -> None:
+        if key not in self.__kargs:
+            raise KeyError
+
+        del self.__kargs[key]
+
+    def __or__(self, other: dict[str, Any] | BaseFormat) -> Self:
+        self.checkin()
+
+        nouv = self.copy()
+        nouv |= other
+        return nouv
+
+    def __ior__(self, other: dict[str, Any] | BaseFormat) -> Self:
+        self.checkin()
+
+        if isinstance(other, type(self)):
+            self.__kargs |= other.kargs
+        elif isinstance(other, dict):
+            self.__kargs |= other
         else:
-            return str(self.__title)
-
-    @title.setter
-    def title(self, val: str | Callable) -> None:
-        if callable(val):
-            sig = inspect.signature(val)
-            args = sig.parameters
-
-            if len(args) != 1:
-                raise ValueError
-
-            self.__title = val
-        else:
-            self.__title = str(val)
-
-    @property
-    def xlim(self) -> tuple[float, float]:
-        """Calcule les limites en x."""
-        if self.__ax is None:
-            return self.__left, self.__right
-
-        minimum = self.__left
-        maximum = self.__right
-        xss = [ligne.get_data()[0] for ligne in self.__ax.get_lines()]
-
-        if len(xss) == 0 or any(len(xs) == 0 for xs in xss):
-            return 0, 1
-
-        if self.__left is None:
-            minimum = min(min(xs) for xs in xss) - 1
-
-        if self.__right is None:
-            maximum = max(max(xs) for xs in xss) + 1
-
-        return minimum, maximum
-
-    @xlim.setter
-    def xlim(self, value: tuple[float, float] | None) -> None:
-        """Valide les limites en x.
-
-        Raises
-        -----------------
-        WrongBoundaryTypeError
-            Si value n'est pas un tuple de deux éléments ou None.
-        """
-        if value is None:
-            self.__left = self.__right = None
-        elif len(value) == N_COTES:
-            self.__left, self.__right = value
-        else:
-            raise WrongBoundaryTypeError(value)
-
-    @xlim.deleter
-    def xlim(self) -> None:
-        self.__left = self.__right = None
-
-    @property
-    def ylim(self) -> tuple[float, float]:
-        """Calcule les limites en y."""
-        if self.__ax is None:
-            return self.__bottom, self.__top
-
-        minimum = self.__bottom
-        maximum = self.__top
-        yss = [ligne.get_data()[1] for ligne in self.__ax.get_lines()]
-
-        if len(yss) == 0 or any(len(ys) == 0 for ys in yss):
-            return 0, 1
-
-        if self.__left is None:
-            minimum = min(min(ys) for ys in yss) - 1
-
-        if self.__right is None:
-            maximum = max(max(ys) for ys in yss) + 1
-
-        return minimum, maximum
-
-    @ylim.setter
-    def ylim(self, value: tuple[float, float] | None) -> None:
-        """Valide les limites en y.
-
-        Raises
-        -----------------
-        WrongBoundaryTypeError
-            Si value n'est pas un tuple de deux éléments ou None.
-        """
-        if value is None:
-            self.__bottom = self.__top = None
-        elif len(value) == N_COTES:
-            self.__bottom, self.__top = value
-        else:
-            raise WrongBoundaryTypeError(value)
-
-    @ylim.deleter
-    def ylim(self) -> None:
-        self.__bottom = self.__top = None
-
-    @property
-    def callback(self) -> Callable:
-        return self.__callback
-
-    @callback.setter
-    def callback(self, val: Callable) -> None:
-        if not callable(val):
             raise TypeError
 
-        sig = inspect.signature(sig)
-        args = sig.parameters
-
-        if len(args) != 1:
-            raise ValueError
-
-        self.__callback = val
-
-    @callback.deleter
-    def callback(self) -> None:
-        self.__callback = None
-
-    @property
-    def linestyle(self) -> str:
-        return self.__kargs.get('linestyle', '-')
-
-    @linestyle.setter
-    def linestyle(self, val: str) -> None:
-        if not isinstance(val, str):
-            raise TypeError
-
-        if val not in self.LINESTYLES:
-            raise ValueError
-
-        self.__kargs['linestyle'] = val
-
-    @property
-    def marker(self) -> str:
-        return self.__kargs.get('marker', '.')
-
-    @marker.setter
-    def marker(self, val: str) -> None:
-        if not isinstance(val, str):
-            raise TypeError
-
-        if val not in self.MARKERS:
-            raise ValueError
-
-        self.__kargs['marker'] = val
-
-
-    def __enter__(self) -> Self:
-        self.__loquet.acquire()
         return self
 
-    def __exit__(self, *exc) -> bool:
-        del self.fig, self.ax
-        self.__loquet.release()
-        return False
+    def __call__(self, art: mpl.artist.Artist | None = None) -> None:
+        if art is None:
+            art = self.artist
+
+        art.set(**dict(self))
+
+
+class FigureFormat(BaseFormat):
+    SETTINGS = BaseFormat.SETTINGS + (
+        'canvas',
+        'constrained_layout',
+        'constrained_layout_pads',
+        'dpi',
+        'edgecolor',
+        'facecolor',
+        'figheight',
+        'figwidth',
+        'layout_engine',
+        'linewidth',
+        'size_inches'
+    )
 
     @property
     def fig(self) -> mpl.figure.Figure:
-        return self.__fig
+        return self.artist
 
     @fig.setter
     def fig(self, val: mpl.figure.Figure) -> None:
-        if isinstance(val, mpl.figure.Figure):
-            self.__fig = val
-        else:
+        if not isinstance(val, mpl.figure.Figure):
             raise TypeError
 
-    @fig.deleter
-    def fig(self) -> None:
-        self.__fig = None
+        self.artist = val
+
+class AxesFormat(BaseFormat):
+    SETTINGS = BaseFormat.SETTINGS + (
+        'adjustable',
+        'anchor',
+        'aspect',
+        'autoscale_on',
+        'autoscalex_on',
+        'autoscaley_on',
+        'axes_locator',
+        'axisbelow',
+        'box_aspect',
+        'facecolor',
+        'forward_navigation_events',
+        'navigate',
+        'navigate_mode',
+        'position',
+        'prop_cycle',
+        'rasterization_zorder',
+        'sublotspec',
+        'title',
+        'xbound',
+        'xinverted',
+        'xlabel',
+        'xlim',
+        'xmargin',
+        'xscale',
+        'xticklabels',
+        'xticks'
+        'ybound',
+        'yinverted',
+        'ylabel',
+        'ylim',
+        'ymargin',
+        'yscale',
+        'yticklabels',
+        'yticks',
+    )
 
     @property
     def ax(self) -> mpl.axes.Axes:
-        return self.__ax
+        return self.artist
 
     @ax.setter
     def ax(self, val: mpl.axes.Axes) -> None:
-        if isinstance(val, mpl.axes.Axes):
-            self.__ax = val
+        if not isinstance(val, mpl.axes.Axes):
+            raise TypeError
+
+        self.artist = val
+
+class LineFormat(BaseFormat):
+    SETTINGS = BaseFormat.SETTINGS + (
+        'color',
+        'dash_capstyle',
+        'dash_joinstyle',
+        'dashes',
+        'data',
+        'drawstyle',
+        'fillstyle',
+        'gapcolor',
+        'linestyle',
+        'linewidth',
+        'marker',
+        'markeredgecolor',
+        'markeredgewidth',
+        'markerfacecolor',
+        'markerfacecoloralt',
+        'markersize',
+        'markevery',
+        'pickradius',
+        'solid_capstyle',
+        'solid_joinstyle',
+        'xdata',
+        'ydata'
+    )
+
+    @property
+    def line(self) -> mpl.lines.Line2D:
+        return self.artist
+
+    @line.setter
+    def line(self, val: mpl.lines.Line2D) -> None:
+        if not isinstance(val, mpl.lines.Line2D):
+            raise TypeError
+
+        self.artist = val
+
+class BaseGraphe(CalTab):
+
+    def __init__(self, com: LigneSerie | None, fmt: Format | None = None) -> None:
+        self.checkin()
+        super().__init__(com)
+        self.__format = {}
+        self.__fig = mpl.figure.Figure()
+        self.add_format(self.fig)
+        self.__plots = {}
+
+    def add_format(self, art: mpl.artist.Artist) -> None:
+        if isinstance(art, mpl.lines.Line2D):
+            fmtcls = LineFormat
+        elif isinstance(art, mpl.axes.Axes):
+            fmtcls = AxesFormat
+        elif isinstance(art, mpl.figure.Figure):
+            fmtcls = FigureFormat
+        elif isinstance(art, mpl.artist.Artist):
+            fmtcls = BaseFormat
         else:
             raise TypeError
 
-    @ax.deleter
-    def ax(self) -> None:
-        self.__ax = None
+        self.__format[id(art)] = fmtcls(art)
 
-    @property
-    def lines(self) -> list[Line2D]:
-        return self.ax.get_lines()
+    def get_formats(self, key: int | str | None) -> list[BaseFormat]:
+        if key is None:
+            return list(self.__format.values())
 
-    def __call__(self, graphe: Graphe) -> None:
-        """Applique le format à l'argument graphe."""
-        self.__logger.debug('')
-
-        with self:
-            self.fig, self.ax = graphe.fig, graphe.ax
-
-            self.ax.set_xlim(*self.xlim)
-            self.ax.set_ylim(*self.ylim)
-            self.ax.set_title(self.title)
-
-            for arg, val in self.__kargs.items():
-                if arg in self.AXES_SET:
-                    getattr(self.ax, f'set_{arg}')(gettatr(self, arg))
-
-                if arg in self.LINE_SET:
-                    for line in self.lines:
-                        getattr(line, f'set_{arg}')(getattr(self, arg))
-
-            self.ax.legend(self.lines, self.legend)
-
-            if self.callback is not None:
-                self.callback(self)
-
-    def __ior__(self, other: dict[str, Any]) -> Self:
-        self.__kargs |= other
-        return self
-
-class BaseGraphe:
-    """Encapsulation d'un tableau et canvas pour afficher un graphe."""
-
-    __logger = logging.getLogger(f'{__name__}.BaseGraphe')
-    """Journal de débogage pour les objets de classe TkGraphe."""
-
-    __logger.addHandler(logging.NullHandler())
-
-    def __init__(
-        self,
-        tab: Tableau,
-        calcul: Calcul = None,
-        fmt: Format | None = None
-    ) -> None:
-        self.tab = tab
-        self.calcul = calcul
-        self.format = fmt
-        self.__fig = mpl.figure.Figure()
-        self.__ax = self.fig.add_subplot()
-        self.__res, self.__pending_res = None, None
-        self.__count = 0
+        objects = [self.plots[key]] + self.lines(key)
+        formats = [self.__format[id(obj)] for obj in objects]
+        return formats
 
     @property
     def fig(self) -> mpl.figure.Figure:
+        self.checkin()
         return self.__fig
 
     @property
-    def ax(self) -> mpl.axes.Axes:
-        return self.__ax
+    def axes(self) -> list[mpl.axes.Axes]:
+        self.checkin()
+        return self.fig.axes
 
     @property
-    def tab(self) -> Tableau:
-        return self.__tab
+    def plots(self) -> dict[str | int, mpl.axes.Axes]:
+        self.checkin()
+        return self.__plots
 
-    @tab.setter
-    def tab(self, val: Tableau) -> None:
-        if isinstance(val, Tableau):
-            self.__tab = val
-        else:
+    def add_plot(self, key: int | str, ax: mpl.axes.Axes) -> None:
+        self.checkin()
+        self.__plots[key] = ax
+
+    def lines(self, key: int | str) -> list[mpl.artist.Line2D]:
+        self.checkin()
+        lines = self.__plots[key].get_lines()
+        self.debug('lines = %s', lines)
+        return lines
+
+    def add_subplot(self, which: tuple[int | str], where: tuple = (1,1,1), **kargs) -> mpl.axes.Axes:
+        self.checkin()
+        self.debug('which = %s, where = %s', which, where)
+        self.debug('kargs = %s', kargs)
+
+        if not isinstance(which, tuple):
+            which = (which,)
+
+        ax = self.fig.add_subplot(*where, **kargs)
+        self.add_format(ax)
+
+        for w in which:
+            self.add_plot(w, ax)
+
+            self.debug('plot = %s', self.plots[w])
+        self.frame()
+        return ax
+
+    def update(self) -> None:
+        self.checkin()
+
+        if self.updated:
+            self.debug('updated = True')
+            self.frame()
+
+        self.updated = False
+
+    def add_input(self) -> list[mpl.axes.Axes]:
+        self.checkin()
+        num = len(self.df.columns) // 2
+
+        shape = (3, 3)
+        if not num % 2:
+            shape = (2, num//2)
+
+        for i in range(1, num+1):
+            where = shape + (i,)
+            self.add_subplot(i, where)
+
+    @property
+    def updated(self) -> bool:
+        self.checkin()
+        return self._updated.is_set()
+
+    @updated.setter
+    def updated(self, val: bool) -> None:
+        self.checkin()
+        self.debug('val = %s', val)
+
+        if not isinstance(val, bool):
             raise TypeError
 
-    @property
-    def df(self) -> pd.DataFrame:
-        return self.tab.df
+        if val and not self._updated.is_set():
+            self._updated.set()
+        elif not val and self._updated.is_set():
+            self._updated.clear()
 
-    @property
-    def calcul(self) -> Calcul:
-        if self.__calcul is None:
-            return Identité()
-        else:
-            return self.__calcul
+    def frame(self, *, block: bool = False, timeout: float | None = None) -> None:
+        self.checkin()
 
-    @calcul.setter
-    def calcul(self, val: Calcul) -> None:
-        if isinstance(val, Calcul) or val is None:
-            self.__calcul = val
-        else:
-            raise TypeError
+        for key in self.__plots:
+            self.debug('key = %s', key)
+            lines = self.lines(key)
+            df = self[key]
 
-    @calcul.deleter
-    def calcul(self) -> None:
-        self.__calcul = None
+            if df is not None:
+                self.debug('df.size = %s', df.size)
 
-    @property
-    def format(self) -> Callable:
+            if len(lines) == 0 and df is not None and not df.empty:
+                n = len(df.columns)
+                self.debug('n = %s', n)
+                ts, xs = df.iloc[:, 0].to_numpy(), df.iloc[:, 1].to_numpy()
+                ax = self.plots[key]
+                lines = ax.plot(ts, xs)
 
-        def null(**kargs) -> None:
-            pass
+                for line in lines:
+                    self.add_format(line)
 
-        if self.__format is None:
-            return null
+                continue
 
-        def proxy(**kargs) -> None:
-            if self.__format is not None:
-                self.__format |= kargs
-                self.__format(self)
-
-        return proxy
-
-    @format.setter
-    def format(self, val: Format) -> None:
-        if isinstance(val, Format) or val is None:
-            self.__format = val
-        else:
-            raise TypeError
-
-    def close(self) -> None:
-        self.tab.close()
-
-    def __enter__(self) -> Self:
-        return self
-
-    def __exit__(self, *exc) -> bool:
-        self.close()
-        return False
-
-    def __iter__(self) -> Self:
-        return self
-
-    def __next__(self) -> None:
-        """Retourne le prochain ensemble de données.
-
-        Returns
-        -----------------
-        res: pandas.DataFrame
-            Les dernières données obtenues.
-        """
-        if self.__res is None:
-            self.__res = pd.DataFrame()
-
-        old_res = self.__res
-
-        if self.__pending_res is None:
-            try:
-                res: Future = self.calcul(self.tab)
-            except:
-                raise StopIteration
-        else:
-            res = self.__pending_res
-            self.__pending_res = None
-
-        try:
-            res: pd.DataFrame = res.result(timeout=0.1)
-        except TimeoutError as err:
-            self.__logger.debug('', exc_info=err)
-            self.__pending_res = res
-            res = old_res
-        except Exception as err:
-            self.__logger.debug('', exc_info=err)
-            raise
-        else:
-            self.plot(res)
-            self.__count += 1
-
-        self.__logger.debug('%s', type(res))
-        self.__res = res
-        return res
-
-    @property
-    def lines(self) -> list[mpl.artist.Line2D]:
-        return self.ax.get_lines()
-
-    def plot(self, df: pandas.DataFrame) -> None:
-        if df.size == 0:
-            return
-
-        items = df.items()
-        _, index = next(items)
-        ys = [y for _, y in items]
-
-        if self.__count == 0:
-            for y in ys:
-                self.ax.plot(index, y)
-
-        for ligne, y in zip(self.lines, ys):
-            ligne.set(xdata=index, ydata=y)
+            if lines is not None:
+                for i, line in enumerate(lines):
+                    ts, xs = df.iloc[:,2*i].to_numpy(), df.iloc[:, 2*i+1].to_numpy()
+                    line.set_data(ts, xs)
 
         self.format()
 
-    def savefig(self, nom: pathlib.Path) -> None:
-        self.fig.savefig(str(nom))
+    def save(self, path: pathlib.Path) -> None:
+        self.checkin()
+        self.debug('path = %s', path)
+        self.frame()
+        self.fig.savefig(str(path))
+
+    def format(self, key: tuple[int | str] | None = None, **kargs) -> None:
+        self.checkin()
+        if isinstance(key, tuple):
+            fmts = self.get_formats(key[0])
+            fmt = fmts[key[1]]
+            fmt |= kargs
+
+        for fmt in self.__format.values():
+            fmt()
+
+    def wait(self) -> None:
+        super().wait()
+        self.frame(block=True)
+
+
+class PyPlotGraphe(BaseGraphe):
+
+    def __init__(self, com: LigneSerie, fmt: Format | None = None) -> None:
+        self.checkin()
+        super().__init__(com, fmt=fmt)
+        pyplot.figure(id(self))
+
+    @property
+    def fig(self) -> mpl.figure.Figure:
+        return pyplot.figure(id(self))
+
+    def add_subplot(self, which: tuple[int | str], where: tuple = (1,1,1), **kargs) -> mpl.axes.Axes:
+        self.checkin()
+        self.debug('which = %s, where = %s', which, where)
+        self.debug('kargs = %s', kargs)
+
+        if not isinstance(which, tuple):
+            which = (which,)
+
+        ax = pyplot.subplot(*where, **kargs)
+
+        for w in which:
+            self.add_plot(w, ax)
+
+            self.debug('plot = %s', self.plots[w])
+
+        self.frame()
+        return ax
+
+    def show(self) -> None:
+        self.checkin()
+        self.frame()
+        pyplot.draw()
+        pyplot.show()
 
 class CanvasGraphe(BaseGraphe):
     """Encapsulation d'un tableau et canvas pour afficher un graphe."""
 
-    __logger = logging.getLogger(f'{__name__}.CanvasGraphe')
-    """Journal de débogage pour les objets de classe TkGraphe."""
-
-    __logger.addHandler(logging.NullHandler())
-
     def __init__(
         self,
-        tab: Tableau,
-        calcul: Calcul | None = None,
-        format: Format | None = None,
+        com: LigneSerie | None,
+        fmt: Format | None = None,
+        *,
         CanvasClass: type[FigureCanvasAgg] = FigureCanvasAgg,
         **kargs,
     ) -> None:
-        super().__init__(tab, calcul, format)
+        self.checkin()
+        self.debug('CanvasClass = %s', CanvasClass.__name__)
+        self.debug('kargs = %s', kargs)
+        super().__init__(com, fmt=fmt)
         self.__canvas = None
 
         self.canvas = CanvasClass(self.fig, **kargs)
 
     @property
     def canvas(self) -> FigureCanvasAgg:
+        self.checkin()
         return self.__canvas
 
     @canvas.setter
     def canvas(self, val: FigureCanvasAgg) -> None:
+        self.checkin()
         if not isinstance(val, FigureCanvasAgg):
             raise TypeError
 
@@ -568,50 +509,27 @@ class CanvasGraphe(BaseGraphe):
         self.__canvas = val
 
     def update(self) -> None:
-        next(self)
+        self.checkin()
+        super().update()
         self.draw()
 
     def draw(self):
+        self.checkin()
         self.canvas.draw()
-
-    def __enter__(self) -> Self:
-        super().__enter__()
-        return self
-
-
-class InlineGraphe(CanvasGraphe):
-    """Encapsulation d'un tableau et canvas pour afficher un graphe."""
-
-    __logger = logging.getLogger(f'{__name__}.InlineGraphe')
-    """Journal de débogage pour les objets de classe TkGraphe."""
-
-    __logger.addHandler(logging.NullHandler())
-
-    def __init__(
-        self,
-        tab: Tableau,
-        calcul: Calcul | None,
-        format: Format | None
-    ) -> None:
-        super().__init__(tab, calcul, format, FigureCanvasAgg)
 
 class FichierGraphe(CanvasGraphe):
     """Encapsulation d'un tableau et canvas pour afficher un graphe."""
 
-    __logger = logging.getLogger(f'{__name__}.InlineGraphe')
-    """Journal de débogage pour les objets de classe TkGraphe."""
-
-    __logger.addHandler(logging.NullHandler())
-
     @typing.override
     def __init__(
         self,
-        name: pathlib.Path | str,
-        tab: Tableau,
-        calcul: Calcul | None,
-        format: Format | None
+        com: LigneSerie,
+        *,
+        fmt: Format | None = None,
+        name: str | pathlib.Path = 'graphe.png'
     ) -> None:
-        super().__init__(tab, calcul, format, FigureCanvasAgg)
+        self.checkin()
+        super().__init__(com, fmt, CanvasClass=FigureCanvasAgg)
         self.__name = Path(name)
         self.__thread = threading.Thread(target=self.__run)
         self.__loquet = threading.Lock()
@@ -619,138 +537,272 @@ class FichierGraphe(CanvasGraphe):
 
     @property
     def name(self) -> str:
+        self.checkin()
         return str(self.__name.resolve())
+
+    def save(self, *, name: str | pathlib.Path | None = None) -> None:
+        self.checkin()
+        if name is None:
+            name = self.name
+
+        super().save(name)
 
     def __run(self) -> None:
         """Lit les nouvelles données."""
-        for l in self:
-            if self.__arret.is_set():
-                break
+        self.checkin()
+        try:
+            while True:
+                if self.__arret.is_set():
+                    break
 
-            with self.__loquet:
-                self.savefig(self.name)
+                self.update()
 
-            time.sleep(0.1)
+                with self.__loquet:
+                    self.save()
 
-    def stop(self) -> None:
+                time.sleep(0.1)
+        except Exception as err:
+            self.error('', exc_info=err)
+        finally:
+            if not self.__arret.is_set():
+                self.__arret.set()
+
+    def close(self) -> None:
+        self.checkin()
+        super().close()
         self.__arret.set()
-
-    def join(self):
         self.__thread.join()
 
-    def __enter__(self) -> Self:
-        super().__enter__()
+    def start(self) -> None:
+        self.checkin()
+        super().start()
         self.__thread.start()
-        return self
-
-    def __exit__(self, *exc) -> bool:
-        self.__arret.set()
-        self.__thread.join()
-        super().__exit__()
 
 
 class TkGraphe(CanvasGraphe):
     """Encapsulation d'un tableau et canvas pour afficher un graphe."""
 
-    __logger = logging.getLogger(f'{__name__}.TkGraphe')
-    """Journal de débogage pour les objets de classe TkGraphe."""
-
-    __logger.addHandler(logging.NullHandler())
-
     @typing.override
     def __init__(
         self,
+        com: LigneSerie | None,
+        *,
         root: tk.Frame,
-        tab: Tableau,
-        calcul: Calcul | None = None,
-        format: Format | None = None,
+        fmt: Format | None = None,
     ) -> None:
         """Initialise le graphe."""
-        self.__logger.debug('')
-        super().__init__(tab, calcul, format, FigureCanvasTkAgg, master=root)
+        self.checkin()
+        super().__init__(com, fmt=fmt, CanvasClass=FigureCanvasTkAgg, master=root)
         self.__root: tk.Frame = root
+        self.__toolbar = None
+
+    @property
+    def root(self) -> tk.Frame:
+        return self.__root
+
+    @property
+    def master(self) -> tk.Frame:
+        return self.__root
 
     def close(self) -> None:
         """Ferme les connexions et détruit les composants gui."""
+        self.checkin()
         super().close()
-        self.widget.destroy()
+
+        try:
+            self.widget.destroy()
+        except tk.TclError:
+            pass
 
     def update(self):
+        self.checkin()
         super().update()
+        if self.__toolbar is not None:
+            self.toolbar.update()
         self.widget.after(1000, self.update)
 
     def show(self) -> None:
         """Affiche le graphique."""
+        self.checkin()
         self.draw()
-        self.widget.pack(
-            side=tk.TOP, fill=tk.BOTH, expand=True
+        self.widget.grid(
+            column=0, row=0, sticky=tk.N+tk.S+tk.W+tk.E
         )
-        self.widget.after(1000, self.update)
+        self.widget.after(100, self.update)
 
     @property
-    def widget(self) -> FigureCanvasTkAgg:
+    def widget(self) -> tk.Frame:
+        self.checkin()
         return self.canvas.get_tk_widget()
 
+    @property
+    def toolbar(self) -> NavigationToolbar2Tk:
+        if self.__toolbar is None:
+            self.__toolbar = NavigationToolbar2Tk(self.canvas, self.root, pack_toolbar=False)
+            self.__toolbar.update()
+
+        return self.__toolbar
 
 
-def main(*, debug: bool = False) -> None:
-    """Affiche le spectre de fréquence d'un signal artificiel."""
+def interactive_echo_pyplot_plot(*, debug: bool = False) -> None:
     import time
+    from matplotlib import pyplot as plt
+    from .acq import sinus
+    from .calcul import fft
 
-    from functools import partial  # noqa: PLC0415
-
-    from .acq import Tableau, sinus  # noqa: PLC0415
-    from .calcul import FFT, rectangle  # noqa: PLC0415
-    from .serial import LigneSerie  # noqa: PLC0415
-
-    if debug:
-        from .logging import DEBUG, config  # noqa: PLC0415
-
-        config(__name__, level=DEBUG)
-
-    lignes = sinus(n=160)
-
-    fenetre: Calcul = rectangle(153)()
-    calcul_fft: Calcul = FFT() @ fenetre
-
-    format_fft = Format(
-        title='Transformée de Fourier',
-        xlim=(0, 0.5),
-        ylim=None,
-        xlabel='Fréquence',
-        ylabel='Intensité',
-        linestyle='-',
-        marker='',
-        legend=['F[x]', 'F[y]']
-    )
-
+    lignes = sinus()
     with LigneSerie() as com:
-        __logger.debug('%s', com)
-        com.print(lignes)
+        tab = PyPlotGraphe(com)
 
-        with Tableau(com.parse()) as tab:
-            __logger.debug('%s', tab)
+        if debug:
+            tab.log_to_stderr()
+            tab.setLevel('debug')
 
-            with FichierGraphe('gra1.png', tab, calcul_fft, format=format_fft) as gra1:
-                __logger.debug('%s', gra1)
+        tab.register(fft)
+        tab.add_subplot('fft', (1, 2, 2))
+        tab.add_subplot(0, (1, 2, 1))
 
-                while (a := input('?')):
-                    com.print(lignes)
+        with tab:
+            for i in range(100):
+                com.print(next(lignes))
 
-                com.close()
+            tab.wait()
 
-                __logger.debug('Fini')
+            tab.show()
 
-            __logger.debug('Fini')
+def static_echo_image_plot(*, debug: bool = False) -> None:
+    import time  # noqa: PLC0415
+    from .acq import sinus
+    from .calcul import fft
 
-        __logger.debug('Fini')
+    lignes = sinus()
+    with LigneSerie() as com:
+        tab = BaseGraphe(com)
 
-    __logger.debug('Fini.')
+        if debug:
+            tab.log_to_stderr()
+            tab.setLevel('debug')
 
+        tab.register(fft)
+        tab.add_subplot('fft', (1, 2, 2))
+        tab.add_subplot(0, (1, 2, 1))
 
+        with tab:
+            for i in range(100):
+                com.print(next(lignes))
+            tab.wait()
+            tab.save('graphe.png')
 
-if __name__ == '__main__':
-    import sys
+def dynamic_echo_image_plot(*, debug: bool = False) -> None:
+    import time  # noqa: PLC0415
+    from .acq import sinus
+    from .calcul import fft
 
-    debug = '--debug' in sys.argv
-    main(debug=debug)
+    lignes = sinus()
+    with LigneSerie() as com:
+        tab = FichierGraphe(com)
+
+        if debug:
+            tab.log_to_stderr()
+            tab.setLevel('debug')
+
+        tab.register(fft)
+        tab.add_subplot(0, (1, 2, 1))
+        tab.add_subplot('fft', (1, 2, 2))
+
+        with tab:
+            for i in range(100):
+                com.print(next(lignes))
+            tab.wait()
+
+def static_echo_tk_plot(*, debug: bool = False) -> None:
+    import time  # noqa: PLC0415
+    from .acq import sinus
+    from .calcul import fft
+
+    root = tk.Tk()
+    lignes = sinus()
+    with LigneSerie() as com:
+        tab = TkGraphe(com, root=root)
+
+        if debug:
+            tab.log_to_stderr()
+            tab.setLevel('debug')
+
+        tab.register(fft)
+        tab.add_subplot(0, (1, 2, 1))
+        tab.add_subplot('fft', (1, 2, 2))
+
+        with tab:
+            for i in range(100):
+                com.print(next(lignes))
+
+            tab.show()
+            tab.wait()
+            root.mainloop()
+
+def dynamic_echo_tk_plot(*, debug: bool = False) -> None:
+    import time  # noqa: PLC0415
+    from .acq import sinus
+    from .calcul import fft
+
+    root = tk.Tk()
+    lignes = sinus()
+    with LigneSerie() as com:
+        tab = TkGraphe(com, root=root)
+
+        if debug:
+            tab.log_to_stderr()
+            tab.setLevel('debug')
+
+        tab.register(fft)
+        tab.add_subplot(0, (1, 2, 1))
+        tab.add_subplot('fft', (1, 2, 2))
+        tab.show()
+
+        with tab:
+            for i in range(100):
+                com.print(next(lignes))
+
+            root.mainloop()
+
+def interactive_echo_tk_plot(*, debug: bool = False) -> None:
+    import time  # noqa: PLC0415
+    from .acq import sinus
+    from .calcul import fft
+
+    root = tk.Tk()
+    lignes = sinus()
+    with LigneSerie() as com:
+        tab = TkGraphe(com, root=root)
+
+        if debug:
+            tab.log_to_stderr()
+            tab.setLevel('debug')
+
+        tab.register(fft)
+        tab.add_subplot(0, (1, 2, 1))
+        tab.add_subplot('fft', (1, 2, 2))
+        tab.show()
+        tab.toolbar.grid(column=0, row=1, sticky=tk.W+tk.E)
+
+        with tab:
+            for i in range(100):
+                com.print(next(lignes))
+
+            root.mainloop()
+
+def static_arduino_image_plot(*, debug: bool = False) -> None:
+    pass
+
+def dynamic_arduino_image_plot(*, debug: bool = False) -> None:
+    pass
+
+def static_arduino_tk_plot(*, debug: bool = False) -> None:
+    pass
+
+def dynamic_arduino_tk_plot(*, debug: bool = False) -> None:
+    pass
+
+def interactive_arduino_tk_plot(*, debug: bool = False) -> None:
+    pass

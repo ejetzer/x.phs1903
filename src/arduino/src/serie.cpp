@@ -26,6 +26,22 @@ phs::LigneSerie::read ()
   return res;
 }
 
+String phs::LigneSerie::cmd ()
+{
+  String res = "";
+  while (this->available()) {
+    char c = this->read();
+
+    if (c == '\n') {
+      break;
+    }
+
+    res += c;
+  }
+
+  return res;
+}
+
 size_t
 phs::LigneSerie::write (uint8_t octet)
 {

@@ -1,13 +1,23 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
 """Utilitaires de calcul en parallèle."""
 
+import itertools
+import functools
 import logging
+import threading
+import queue
 import typing
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 
+import scipy
 import numpy as np
 import pandas as pd
+
+from .acq import Tableau as AcqTab
+from .logging import WithLogger
+from .serial import LigneSerie, ArduinoNanoEvery
+from .exceptions import WrongWindowTypeError
 
 if typing.TYPE_CHECKING:
     from types import TracebackType
@@ -15,558 +25,244 @@ if typing.TYPE_CHECKING:
 
     from .acq import Tableau
 
-__logger = logging.getLogger(__name__)
-"""Journal de débogage interne du module.
 
-Utile pour le débogage, ne devrait être obtenu qu'avec
-:func:`logging.getLogger`.
-"""
-
-__logger.addHandler(logging.NullHandler())
-
-type FonctionCalcul = Callable[pd.DataFrame, pd.DataFrame]
-
-
-class Calcul:
-    """Calcul pré-enregistré pour exécution en parallèle."""
-
-    __logger = logging.getLogger(f'{__name__}.Calcul')
-    """Journal de débogage pour les objets de classe Calcul."""
-
-    __logger.addHandler(logging.NullHandler())
-
-    def __init__(
-        self,
-        fct: FonctionCalcul = lambda x: x,
-        nom: str = '',
-    ) -> None:
-        """Initialisation du calcul."""
-        self.__logger.debug('')
-        self.__nom: Final[str] = str(nom)
-        self.__fct: Final[FonctionCalcul] = fct
-        self.__executor: ThreadPoolExecutor = ThreadPoolExecutor()
-        self.__shutdown = False
-
-    @property
-    def nom(self) -> str:
-        """Retourne le nom du calcul.
-
-        Returns
-        ---------------
-        str
-            Le nom du calcul.
-        """
-        self.__logger.debug('')
-        return self.__nom
-
-    @property
-    def fct(self) -> Callable[pd.DataFrame, pd.DataFrame]:
-        """Retourne la fonction sous-jacente.
-
-        Returns
-        ---------------
-        Callable[pandas.DataFrame, pandas.DataFrame]
-            La fonction sous-jacente.
-        """
-        self.__logger.debug('')
-        return self.__fct
-
-    def __call__(self, tab: Tableau) -> Future:
-        """Appelle __run dans un fil parallèle.
-
-        Returns
-        ---------------
-        Future
-            Le processus en cours d'exécution.
-        """
-        self.__logger.debug('')
-        if not self.__shutdown:
-            future = self.__executor.submit(self.__run, tab)
-        else:
-            future = None
-        self.__logger.debug('%s', future)
-        return future
-
-    def __repr__(self) -> str:
-        """Représentation du calcul sous-jacent.
-
-        Returns
-        ---------------
-        str
-        """
-        return repr(self.fct)
-
-    def __run(self, tab: Tableau) -> pd.DataFrame:
-        """Exécute self.fct avec l'argument tab.df.
-
-        Returns
-        ---------------
-        pandas.DataFrame
-            Résultat du calcul.
-        """
-        self.__logger.debug('')
-        return self.fct(tab.df)
-
-    def __enter__(self) -> None:
-        """Ne fait rien."""
-        self.__logger.debug('')
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
-    ) -> bool:
-        """Arrête les opérations de calcul.
-
-        Returns
-        ---------------
-        False
-            Soulève tout le temps l'erreur forçant la fin de l'exécution.
-        """
-        self.__logger.debug('')
-        self.shutdown()
-        return False  # Re-raise the exception please
-
-    def shutdown(self) -> None:
-        """Arrête les opérations de calcul."""
-        self.__logger.debug('')
-        self.__executor.shutdown(wait=False, cancel_futures=True)
-        self.__shutdown = True
-
-    @property
-    def pending(self) -> int:
-        return self.__executor._work_queue.qsize()
-
-    @property
-    def running(self) -> int:
-        return len(self.__executor._threads)
-
-    @property
-    def computing(self) -> bool:
-        return self.pending + self.running > 0
-
-    def __matmul__(self, other: Self) -> Self:
-        """Compose un calcul par un autre.
-
-        L'opérateur fonctionne ainsi:
-
-        .. code:: python
-
-            (f @ g)(x)
-
-        est équivalent à
-
-        .. code:: python
-
-            f(g(x))
-
-
-        Returns
-        ---------------
-        Calcul
-            L'objet Calcul résultant.
-        """
-        self.__logger.debug('')
-        if not isinstance(other, Calcul):
-            return NotImplemented
-
-        def fct(df: pd.DataFrame) -> pd.DataFrame:
-            self.__logger.debug('')
-            return self.fct(other.fct(df))
-
-        return type(self)(fct, f'{self.nom} @ {other.nom}')
-
-    def __add__(self, other: Self) -> Self:
-        """Additionne le résultat d'un calcul à celui d'un autre.
-
-        Returns
-        ---------------
-        Calcul
-            L'objet Calcul résultant.
-        """
-        self.__logger.debug('')
-        if not isinstance(other, Calcul):
-            return NotImplemented
-
-        def fct(df: pd.DataFrame) -> pd.DataFrame:
-            return self.fct(df) + other.fct(df)
-
-        return type(self)(fct)
-
-    def __mul__(self, other: Self) -> Self:
-        """Multiplie le résultat d'un calcul par celui d'un autre.
-
-        Returns
-        ---------------
-        Calcul
-            L'objet Calcul résultant.
-        """
-        self.__logger.debug('')
-        if not isinstance(other, Calcul):
-            return NotImplemented
-
-        def fct(df: pd.DataFrame) -> pd.DataFrame:
-            return self.fct(df) * other.fct(df)
-
-        return type(self)(fct)
-
-    def __sub__(self, other: Self) -> Self:
-        """Soustrait le résultat d'un calcul d'un autre.
-
-        Returns
-        ---------------
-        Calcul
-            L'objet Calcul résultant.
-        """
-        self.__logger.debug('')
-        if not isinstance(other, Calcul):
-            return NotImplemented
-
-        def fct(df: pd.DataFrame) -> pd.DataFrame:
-            return self.fct(df) - other.fct(df)
-
-        return type(self)(fct)
-
-
-def _i(df: pd.DataFrame) -> pd.DataFrame:
-    """Retourne df.
-
-    Returns
-    ---------------
-    df: pandas.DataFrame
-        Aucune action.
-    """
-    __logger.debug('')
-    return df
-
-
-class Identite(Calcul):
-    """Identité."""
-
-    def __init__(
-        self, fct: FonctionCalcul = _i, nom: str = 'identite'
-    ) -> None:
-        """Initialisation du calcul."""
-        super().__init__(fct, nom)
-
-
-def _moyenne(df: pd.DataFrame) -> pd.DataFrame:
-    """Calcule la moyenne de chaque colonne de df.
-
-    Returns
-    ---------------
-    res: pandas.DataFrame
-        La moyenne.
-    """
-    __logger.debug('')
-    res: pd.Series = df.aggregate('mean', 'index')
-    res.name = 'moyenne'
-    res: pd.DataFrame = res.to_frame()
-    return res
-
-
-class Moyenne(Calcul):
-    """Calcul de la moyenne d'une distribution."""
-
-    def __init__(
-        self, fct: FonctionCalcul = _moyenne, nom: str = 'moyenne'
-    ) -> None:
-        """Initialisation du calcul."""
-        super().__init__(fct, nom)
-
-
-def _describe(df: pd.DataFrame) -> pd.DataFrame:
-    """Décrit la distribution de df.
-
-    Returns
-    ---------------
-    res: pandas.DataFrame
-        La description du DataFrame.
-    """
-    __logger.debug('')
-    try:
-        res: pd.DataFrame = df.describe()
-    except ValueError:
-        # Probablement un DataFrame vide.
-        return df
-
-    return res
-
-
-class Description(Calcul):
-    """Description statistique de données."""
-
-    def __init__(
-        self, fct: FonctionCalcul = _describe, nom: str = 'description'
-    ) -> None:
-        """Initialisation du calcul."""
-        super().__init__(fct, nom)
-
-
-def _fft(df: pd.DataFrame) -> pd.DataFrame:
-    """Calcule la transformée de Fourier de df[1:] en fonction de df[0].
-
-    Returns
-    ---------------
-    df.copy(): pandas.DataFrame
-        Copie du résultat du calcul.
-    """
-    __logger.debug('')
-
-    items = df.items()
-
-    try:
-        _, index = next(items)
-    except StopIteration:
-        return df
-
-    index = index.to_numpy()
-    index = np.subtract(index, index[0])
-    __logger.debug('index[0] = %s', index[0])
-    __logger.debug('index[-1] = %s', index[-1])
-    __logger.debug('len(index) = %s', len(index))
-
-    dt = np.mean(np.subtract(index[1:], index[:-1]))
-    __logger.debug('dt = %s', dt)
-
-    cols = [v.to_numpy() for _, v in items]
-    ffts = [np.fft.rfft(col) for col in cols]
-    ffts = [np.multiply(fft, fft.conjugate()) for fft in ffts]
-    ffts = [np.sqrt(fft.real) for fft in ffts]
-    fs = np.fft.rfftfreq(len(index), dt)
-    dico = {'f': fs} | {(col + 1): fft for col, fft in enumerate(ffts)}
-    df = pd.DataFrame(dico)
-
-    return df.copy()
-
-
-class FFT(Calcul):
-    """Calcul de la transformée de Fourier de signaux."""
-
-    def __init__(self, fct: FonctionCalcul = _fft, nom: str = 'fft') -> None:
-        """Initialisation du calcul."""
-        super().__init__(fct, nom)
-
-
-def _pics(df: pd.DataFrame) -> pd.DataFrame:
-    """Trouve les pics dans les fonctions df[1:] de df[0].
-
-    Returns
-    ---------------
-    df.copy(): pandas.DataFrame
-        Copie du DataFrame contenant le résultat du calcul.
-    """
-    import scipy.signal  # noqa: PLC0415
-
-    __logger.debug('')
-
-    items = df.items()
-
-    try:
-        _, fs = next(items)
-    except StopIteration:
-        return df
-
-    fs = fs.to_numpy()
-    cols = [v.to_numpy() for _, v in items]
-    pics = [scipy.signal.find_peaks(c) for c in cols]
-    pics = [p for p, _ in pics]
-    max_len = max(map(len, pics))
-    dico = {
-        str(num + 1): [cols[num][p] for p in pic]
-        + [None for n in range(max_len - len(pic))]
-        for num, pic in enumerate(pics)
-    }
-    dico |= {
-        f'f{num + 1}': [fs[p] for p in pic]
-        + [None for n in range(max_len - len(pic))]
-        for num, pic in enumerate(pics)
-    }
-    df = pd.DataFrame(dico)
-
-    return df.copy()
-
-
-class Pics(Calcul):
-    """Calcul des pics d'une fonction."""
-
-    def __init__(self, fct: FonctionCalcul = _pics, nom: str = 'fft') -> None:
-        """Initialisation du calcul."""
-        super().__init__(fct, nom)
-
-
-def _der(df: pd.DataFrame) -> pd.DataFrame:
-    """Calcule la dérivé de df[1:] en fonction de df[0].
-
-    Returns
-    ---------------
-    df.copy(): pandas.DataFrame
-        Une copie du DataFrame contenant les résultats du calcul.
-    """
-    __logger.debug('')
-    items = df.items()
-
-    try:
-        _, index = next(items)
-    except StopIteration:
-        return df
-
-    index = index.to_numpy()
-    cols = [v.to_numpy() for _, v in items]
-    ders = [np.gradient(col, index) for col in cols]
-    dico = {'t': index} | {(col + 1): der for col, der in enumerate(ders)}
-    df = pd.DataFrame(dico)
-    return df.copy()
-
-
-class Derivee(Calcul):
-    """Calcul de la dérivée par approximation de premier degré."""
-
-    def __init__(
-        self, fct: FonctionCalcul = _der, nom: str = 'dérivée'
-    ) -> None:
-        """Initialisation du calcul."""
-        super().__init__(fct, nom)
-
-
-def window(
-    win: str = 'boxcar', n: int = 100, **kargs: str | float
-) -> type[Calcul]:
-    """Retourne une sous-classe de Calcul décrivant une fenêtre.
-
-    Returns
-    ---------------
-    Window : type[Calcul]
-    """
-    __logger.debug('')
-
-    import scipy.signal.windows  # noqa: PLC0415
-
-    win = scipy.signal.get_window(win, n, **kargs)
-    __logger.debug('len(win) = %s', len(win))
-
-    def fct(df: pd.DataFrame) -> pd.DataFrame:
-        __logger.debug('')
-        __logger.debug('df.size = %s', df.size)
-        __logger.debug('win.size = %s', win.size)
-
-        tail = df.tail(n)
-        items = tail.items()
-
+class TableauCalcul(AcqTab):
+
+    def __init__(self, ser: LigneSerie | None) -> None:
+        self.checkin()
+        super().__init__(ser)
+
+        self.__sync_thread = threading.Thread(target=self.__syncing, name=type(self).__name__)
+        self.__f_threads = {}
+        self.__in_queues = {}
+        self.__loquets = {}
+        self.__results = {}
+        self.__updates = {}
+        self.__arret = threading.Event()
+        self.__executor = ThreadPoolExecutor()
+
+    def start(self, *, ser: LigneSerie | None = None) -> None:
+        self.checkin()
+        super().start(ser=ser)
+
+        self.__sync_thread.start()
+        for thread in self.__f_threads.values():
+            thread.start()
+
+    def close(self) -> None:
+        self.checkin()
+        self.__arret.set()
+        for thread in self.__f_threads.values():
+            thread.join()
+
+        self.__sync_thread.join()
+        self.__executor.shutdown()
+        super().close()
+
+    def __syncing(self) -> None:
+        self.checkin()
         try:
-            _, index = next(items)
-        except StopIteration:
-            return df
+            while not self.__arret.is_set():
+                if self._updated.is_set():
+                    self.checkin()
+                    nouv = self.df
+                    self._updated.clear()
+                    for q in self.__in_queues.values():
+                        q.put(nouv)
+        except Exception as err:
+            self.error('', exc_info=err)
+        finally:
+            if not self.__arret.is_set():
+                self.__arret.set()
 
-        index = index.to_numpy()
+            for q in self.__in_queues.values():
+                q.shutdown()
 
-        __logger.debug('len(index) = %s', len(index))
+    def wrap(self, f: Callable) -> Callable:
+        self.checkin()
+        name = f.__name__
+        self.__in_queues[name] = queue.Queue()
+        self.__loquets[name] = threading.Lock()
+        self.__results[name] = None
+        self.__updates[name] = threading.Event()
 
-        cols = [v.to_numpy() for _, v in items]
+        @functools.wraps(f)
+        def func() -> None:
+            self.checkin()
 
-        __logger.debug('len(<cols>) = %s', list(map(len, cols)))
+            self.debug('arret = %s', self.__arret)
+            try:
+                while not self.__arret.is_set():
+                    entree = self.__in_queues[name].get()
+                    self.debug('entree = %r', entree)
+                    res = f(entree, executor=self.__executor, logger=self.logger)
+                    self.__in_queues[name].task_done()
 
-        mask = win[: len(index)]
+                    with self.__loquets[name]:
+                        self.__results[name] = res
+                    self.__updates[name].set()
+            except Exception as err:
+                self.error('', exc_info=err)
+            finally:
+                if not self.__arret.is_set():
+                    self.__arret.set()
 
-        __logger.debug('len(mask) = %s', len(mask))
+                for q in self.__in_queues.values():
+                    q.shutdown()
 
-        masked = [np.multiply(col, mask) for col in cols]
-        dico = {'t': index} | {(col + 1): m for col, m in enumerate(masked)}
-        df = pd.DataFrame(dico)
-        return df.copy()
+        return func
 
-    class Window(Calcul):
-        """Fenêtre à appliqué sur des données."""
+    def register(self, f: Callable):
+        self.checkin()
+        self.__f_threads[f.__name__] = threading.Thread(target=self.wrap(f), name=f.__name__, daemon=True)
 
-        def __init__(
-            self, fct: FonctionCalcul = fct, nom: str = f'{win}<{n}>'
-        ) -> None:
-            """Initialisation de la fenêtre."""
-            super().__init__(fct, nom)
+    def __getitem__(self, key: int | str) -> pd.DataFrame:
+        self.checkin()
+        if isinstance(key, int):
+            return super().__getitem__(key)
 
-    return Window
+        if not isinstance(key, str):
+            raise TypeError
 
+        return self.get(key)
 
-def rectangle(n: int = 100) -> type[Calcul]:
-    """Retourne un Calcul appliquant une fenêtre rectangulaire.
+    def get(self, key: str, *, default: Any = None, timeout: float | None = None, wait: bool = False):
+        self.checkin()
 
-    Returns
-    ----------------------
-    type[Calcul]
-        Une fenêtre rectangulaire de longueur n
-    """
-    __logger.debug('')
-    return window('rect', n)
+        self.debug('wait = %s, timeout = %s', wait, timeout)
+        self.debug('updates[%s] = %s', key, self.__updates[key])
+        self.debug('threads[%s] = %s', key, self.__f_threads[key])
+        if wait or timeout is not None:
+            self.__updates[key].wait(timeout=timeout)
 
+        if self.__updates[key].is_set():
+            self.__updates[key].clear()
 
-def main(*, debug: bool = False) -> None:
-    """Démonstration de calculs en parallèle."""
-    from .acq import Tableau, sinus  # noqa: PLC0415
-    from .serial import LigneSerie  # noqa: PLC0415
+        res = self.__results.get(key, default)
+        self.debug('res = %r', res)
 
-    if debug:
-        from .logging import DEBUG, config  # noqa: PLC0415
+        return res
 
-        config(__name__, level=DEBUG)
+    def wait(self) -> None:
+        super().wait()
 
-    n = 50
-    phase = 0
-    lignes = sinus(n=50, phase=phase)
+        while not all(map(queue.Queue.empty, self.__in_queues.values())):
+            continue
 
-    fenetre: Calcul = rectangle(50)()
-    calcul_fft: Calcul = FFT() @ fenetre
-    calcul_moyenne: Calcul = Description() @ fenetre
-    calcul_pics: Calcul = Pics() @ calcul_fft
+def rfftfreq(t: np.ndarray) -> np.ndarray:
+    dt = np.mean(t[1:] - t[:-1])
+    return np.fft.rfftfreq(len(t), dt)
 
+def rfft(x: np.ndarray) -> np.ndarray:
+    res = np.fft.rfft(x)
+    return np.real(np.sqrt(np.multiply(res, res.conjugate())))
+
+def fft(df: pd.DataFrame, *, executor: Executor | None = None, logger: logging.Logger | None = None) -> pd.DataFrame:
+    if logger is None:
+        logger = logging.getLogger(f'{__name__}.fft')
+
+    logger.debug('df =\n%r', df)
+    ts, xs = zip(
+        *(
+            (
+                df.iloc[:, i].to_numpy(),
+                df.iloc[:, i+1].to_numpy()
+            )
+            for i in range(0, len(df.columns), 2)
+        )
+    )
+
+    logger.debug('len(ts), len(xs) = %s, %s', len(ts), len(xs))
+
+    if executor is not None:
+        results = list(itertools.chain(
+            executor.map(rfftfreq, ts),
+            executor.map(rfft, xs)
+        ))
+    else:
+        results = list(itertools.chain(
+            [rfftfreq(t) for t in ts],
+            [rfft(x) for x in xs]
+        ))
+
+    logger.debug('results = %r', results)
+
+    num = len(df.columns) // 2
+    cols = [pd.Series(r) for r in  itertools.chain(*zip(results[:num], results[num:]))]
+    logger.debug('len(cols) = %s', len(cols))
+    return pd.concat(cols, axis='columns')
+
+def parallellize(f: Callable[[pd.DataFrame], pd.DataFrame]) -> Callable:
+
+    @wraps(f)
+    def fct(df: pd.DataFrame, *, executor: Executor | None = None, logger: logging.Logger | None = None) -> pd.DataFrame:
+        if logger is None:
+            logger = logging.getLogger(f'{__name__}.{f.__name__}')
+
+        logger.debug('df.size = %s', df.size)
+        ts, xs = zip(
+            *(
+                (
+                    df.iloc[:, i].to_numpy(),
+                    df.iloc[:, i+1].to_numpy()
+                )
+                for i in range(0, len(df.columns), 2)
+            )
+        )
+
+        logger.debug('len(ts), len(xs) = %s, %s', len(ts), len(xs))
+
+        if executor is not None:
+            results = list(executor.map(f, ts, xs))
+        else:
+            results = [f(t, x) for t, x in zip(ts, xs)]
+
+        logger.debug('results = %r', results)
+
+        cols = [pd.Series(r) for r in itertools.chain(*zip(ts, results))]
+        logger.debug('len(cols) = %s', len(cols))
+        return pd.concat(cols, axis='columns')
+
+    return fct
+
+def no_op(*, debug: bool = False) -> None:
+    import time
+
+    with LigneSerie as com:
+        with TableauCalcul(com) as tab:
+            time.sleep(1)
+
+def echocalc(*, debug: bool = False) -> None:
+    import time  # noqa: PLC0415
+    from .acq import sinus
+
+    lignes = sinus()
     with LigneSerie() as com:
-        __logger.debug('%s', com)
-        com.print(lignes)
+        tab = TableauCalcul(com)
+        tab.register(fft)
 
-        with Tableau(com.parse()) as tab:
-            __logger.debug('%s', tab)
+        if debug:
+            tab.log_to_stderr()
+            tab.setLevel('debug')
 
-            pending_moy, pending_fft, res = None, None, None
+        with tab as tab:
             while True:
-                phase += n
-                lignes = sinus(n=n, phase=phase)
-                com.print(lignes)
-
-                fft_para, pending_fft = pending_fft, None
-                if fft_para is None:
-                    fft_para = calcul_pics(tab)
-
-                moy_para, pending_moy = pending_moy, None
-                if moy_para is None:
-                    moy_para = calcul_moyenne(tab)
-
-                print(f'FFT: {calcul_pics.running} calculs en cours, {calcul_pics.pending} en attente.')
-                print(f'Moyenne: {calcul_moyenne.running} calculs en cours, {calcul_moyenne.pending} en attente.')
-
                 try:
-                    res = fft_para.result(timeout=1e-9)
-                except TimeoutError:
-                    pending_fft = fft_para
-                else:
-                    print()
-                    print(res)
-                    print()
+                    com.print(next(lignes))
+                    print(tab.get('fft', timeout=5))
+                except KeyboardInterrupt:
+                    break
 
+def ardcalc(*, debug: bool = False) -> None:
+    import time  # noqa: PLC0415
+
+    with ArduinoNanoEvery(baudrate=9600) as com:
+        tab = TableauCalcul(com)
+        tab.register(fft)
+        with tab:
+            while True:
                 try:
-                    res = moy_para.result(timeout=1e-9)
-                except TimeoutError:
-                    pending_moy = moy_para
-                else:
-                    print()
-                    print(res)
-                    print()
+                    print(tab.get('fft', timeout=5))
+                except KeyboardInterrupt:
+                    break
 
-            com.close()
-
-
-if __name__ == '__main__':
-    import sys
-
-    debug = '--debug' in sys.argv
-    main(debug=debug)

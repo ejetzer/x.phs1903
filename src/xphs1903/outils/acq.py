@@ -3,21 +3,15 @@
 # https://stackoverflow.com/a/63967448
 """Fonctions de contrôle ordiné."""
 
-import logging
 import threading
 from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
-__logger = logging.getLogger(__name__)
-"""Journal de débogage interne du module.
-
-Utile pour le débogage, ne devrait être obtenu qu'avec
-:func:`logging.getLogger`.
-"""
-
-__logger.addHandler(logging.NullHandler())
+from .logging import WithLogger
+from .dummy import signal, noise
+from .serial import LigneSerie, ArduinoNanoEvery
 
 if TYPE_CHECKING:
     from types import TracebackType
@@ -27,17 +21,12 @@ type TraceurSerie = list[dict[str, float]]
 type IterTraceurSerie = iter[dict[str, float]]
 
 
-class Tableau:
+class Tableau(WithLogger):
     """Tableau d'acquisition de données par la ligne série."""
 
-    __logger = logging.getLogger(f'{__name__}.Tableau')
-    """Journal de débogage pour les objets de classe Tableau."""
-
-    __logger.addHandler(logging.NullHandler())
-
-    def __init__(self, _iter: IterTraceurSerie) -> None:
+    def __init__(self, ser: LigneSerie | None) -> None:
         """Initialise le tableau."""
-        self.__iter: IterTraceurSerie = _iter
+        self.__iter: LigneSerie | None = ser
         self.__df: pd.DataFrame = pd.DataFrame()
         self.__buffer: list[pd.Series] = []
         self.__thread_consume: threading.Thread = threading.Thread(
@@ -50,29 +39,65 @@ class Tableau:
         self.__arret: threading.Event = threading.Event()
         self.__loquet_df: threading.Lock = threading.Lock()
         self.__loquet_buffer: threading.Lock = threading.Lock()
+        self._updated: threading.Event = threading.Event()
+
+    @property
+    def connection(self) -> LigneSerie | None:
+        return self.__iter
+
+    @connection.setter
+    def connection(self, val: LigneSerie | None) -> None:
+        if val is not None and not isinstance(val, LigneSerie):
+            raise TypeError
+
+        self.__iter = val
 
     def __run_consume(self) -> None:
         """Lit les nouvelles données."""
-        self.__logger.debug('%s', self.__iter)
+        self.checkin()
 
-        while not self.__arret.is_set():
-            ser = next(self.__iter)
+        try:
+            while not self.__arret.is_set():
+                ser = None
+                if self.__iter is not None:
+                    ser = self.__iter.next(block=False, parse=True)
 
-            with self.__loquet_buffer:
-                self.__buffer.append(pd.Series(ser).to_frame().T)
-
-        self.__logger.debug('len(buffer) = %s', len(self.__buffer))
+                if ser is not None:
+                    self.debug('ser = %r', ser)
+                    with self.__loquet_buffer:
+                        self.__buffer.append(pd.Series(ser).to_frame().T)
+                        self.debug('len(buffer) = %s', len(self.__buffer))
+        except Exception as err:
+            self.error('', exc_info=err)
+        finally:
+            if not self.__arret.is_set():
+                self.__arret.set()
 
     def __run_update(self) -> None:
         """Concatène les DataFrame."""
-        while not self.__arret.is_set():
-            with self.__loquet_buffer, self.__loquet_df:
-                self.__df = pd.concat([self.__df] + self.__buffer).reset_index(
-                    drop=True
-                )
+        self.checkin()
+
+        try:
+            while not self.__arret.is_set():
+                if len(self.__buffer) > 0:
+                    self.debug('len(buffer) = %s', len(self.__buffer))
+                    with self.__loquet_buffer, self.__loquet_df:
+                        self.__df = pd.concat([self.__df] + self.__buffer).reset_index(
+                            drop=True
+                        )
+                        self.__buffer = []
+
+                        if not self._updated.is_set():
+                            self._updated.set()
+        except Exception as err:
+            self.error('', exc_info=err)
+        finally:
+            if not self.__arret.is_set():
+                self.__arret.set()
 
     def close(self) -> None:
         """Arrête la compilation des données."""
+        self.checkin()
         self.__arret.set()
         self.__thread_update.join()
         self.__thread_consume.join()
@@ -84,6 +109,7 @@ class Tableau:
         ---------------------
         self: Tableau
         """
+        self.checkin()
         return self
 
     def __next__(self) -> pd.DataFrame:
@@ -93,10 +119,18 @@ class Tableau:
         ---------------------
         self.df: pandas.DataFrame
         """
+        self.checkin()
         return self.df
 
-    def start(self) -> None:
+    def start(self, *, ser: LigneSerie | None = None) -> None:
         """Démarre l'exécution."""
+        self.checkin()
+
+        if ser is not None and self.__iter is not None:
+            raise ValueError
+        elif ser is not None:
+            self.__iter = ser
+
         self.__thread_consume.start()
         self.__thread_update.start()
 
@@ -108,6 +142,7 @@ class Tableau:
         self: Tableau
             Soi-même.
         """
+        self.checkin()
         self.start()
         return self
 
@@ -124,6 +159,7 @@ class Tableau:
         False
             Soulève toute exception.
         """
+        self.checkin()
         self.close()
         return False  # Re-raise the exception please
 
@@ -136,108 +172,76 @@ class Tableau:
         ret: pandas.DataFrame
             La copie du DataFrame sous-jacent.
         """
+        self.checkin()
         ret = pd.DataFrame()
         with self.__loquet_df:
             ret = self.__df.copy()
         return ret  # noqa: RET504
 
+    def __getitem__(self, key: int) -> pd.DataFrame:
+        self.checkin()
+        if key > len(self.df.columns) // 2:
+            raise KeyError
 
-def aléatoire(
-    *, n: int = 10, incert: float = 0.001, seed: int = 1903
-) -> TraceurSerie:
-    """Simule du bruit aléatoire autour de courbes simples.
+        i = 2*key
+        return self.df.iloc[:, i:i+2]
 
-    Returns
-    ---------------------
-    TraceurSerie
-        Une liste de dictionnaires contenant les données.
-    """
-    gna = np.random.default_rng(seed=seed)
-    ts: np.ndarray = np.arange(n) + gna.normal(0, incert, n)
-    xs: np.ndarray = np.arange(n) + gna.normal(0, incert, n)
-    ys: np.ndarray = (np.arange(n) + gna.normal(0, incert, n)) ** 2
-    zs: np.ndarray = (np.arange(n) + gna.normal(0, incert, n)) ** 2
-    lignes: TraceurSerie = [
-        {'t': t, 'x': x, 'y': y, 'z': z}
-        for t, x, y, z in zip(ts, xs, ys, zs, strict=True)
-    ]
-    return lignes
+    @property
+    def ts(self) -> pd.DataFrame:
+        self.checkin()
+        num = len(self.df.columns)
+        return [self.df.iloc[:, i] for i in range(0, num, 2)]
 
+    @property
+    def xs(self) -> pd.DataFrame:
+        self.checkin()
+        num = len(self.df.columns)
+        return [self.df.iloc[:, i+1] for i in range(0, num, 2)]
 
-def sinus(
-    *, n: int = 10, incert: float = 0.001, seed: int = 1903, phase: int = 0
-) -> TraceurSerie:
-    """Simule une onde sinusoidale envoyée par la ligne série.
+    def wait(self) -> None:
+        self.__iter.wait()
 
-    Returns
-    ---------------------
-    TraceurSerie
-        Une liste de dictionnaires contenant les données.
-    """
-    gna = np.random.default_rng(seed=seed)
-    ts: np.ndarray = np.arange(phase, phase + n) + gna.normal(0, incert, n)
-    xs: np.ndarray = (
-        2 * np.sin(np.arange(phase, phase + n))
-        + gna.normal(0, incert, n)
-        + 2.5
-    )
-    ys: np.ndarray = (
-        2 * np.cos(np.arange(phase, phase + n))
-        + gna.normal(0, incert, n)
-        + 2.5
-    )
-    lignes: TraceurSerie = [
-        {'t': t, 'x': x, 'y': y} for t, x, y in zip(ts, xs, ys, strict=True)
-    ]
-    return lignes
+        while len(self.__buffer) > 0:
+            continue
 
 
-def main(*, debug: bool = True) -> None:
+def aléatoire():
+    yield from signal(*noise(d=4), bunch=10)
+
+
+def sinus():
+    yield from signal(np.sin, np.cos, bunch=10, noise=noise(d=2))
+
+
+def echotab(*, debug: bool = True) -> None:
     """Démonstration des outils d'acquisition."""
     import time  # noqa: PLC0415
 
-    from .serial import LigneSerie  # noqa: PLC0415
-
-    if debug:
-        from .logging import DEBUG, config  # noqa: PLC0415
-
-        config(__name__, level=DEBUG)
-
-    n = 50
-    phase = 0
-    lignes = sinus(n=n, phase=phase)
-
+    lignes = sinus()
     with LigneSerie() as com:
-        __logger.debug('%s', com)
-        com.print(lignes)
+        with Tableau(com) as tab:
+            if debug:
+                tab.log_to_stderr()
+                tab.setLevel('debug')
 
-        with Tableau(com.parse()) as tab:
-            __logger.debug('%s', tab)
+            for ligne in lignes:
+                try:
+                    com.print(ligne)
+                    print(tab.df)
+                    time.sleep(5)
+                except KeyboardInterrupt:
+                    break
 
+def ardtab(*, debug: bool = False) -> None:
+    import time
+
+    with ArduinoNanoEvery() as ard:
+        with Tableau(ard) as tab:
             while True:
-                phase += n
-                lignes = sinus(n=n, phase=phase)
-                com.print(lignes)
-                df = tab.df
+                try:
+                    print(tab.df)
+                    time.sleep(5)
+                except KeyboardInterrupt:
+                    break
 
-                print()
-                print(df)
-                print()
-
-                time.sleep(5)
-
-            tab.close()
-
-        com.close()
-
-    df = tab.df
-    print()
-    print('Position')
-    print('===========================')
-    print()
-    print(df)
-    print()
-
-
-if __name__ == '__main__':
-    main(debug=False)
+__all__ = ['Tableau']
