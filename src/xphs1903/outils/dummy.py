@@ -103,6 +103,7 @@ def noise(
 
     return [f for _ in range(d)]
 
+
 def concat(*args: Callable) -> list[dict[str, float]]:
     for ls in zip(*args):
         yel = []

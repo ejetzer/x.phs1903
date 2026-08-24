@@ -156,6 +156,9 @@ extend-safe-fixes = [
   "missing-return-type-undocumented-public-function",
 ]
 
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
 

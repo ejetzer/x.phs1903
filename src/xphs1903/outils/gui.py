@@ -7,18 +7,23 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Self
 
+import matplotlib as mpl
 import pandas as pd
 import pandastable as pt
-import matplotlib as mpl
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import serial.tools.list_ports
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk,
+)
 from serial import SerialException
 
-from .logging import WithLogger
 from .acq import Tableau
 from .calcul import TableauCalcul
+from .exceptions import InvalidCommandTypeError
+from .logging import DEBUG, WithLogger, basicConfig, info
+from .logging import debug as debug_
 from .plot import TkGraphe
-from .serial import LigneSerie, ArduinoNanoEvery
+from .serial import ArduinoNanoEvery, LigneSerie
 
 
 class SelectionPortSerie(ttk.Frame):
@@ -263,9 +268,11 @@ class SelectionPortSerie(ttk.Frame):
     def show(self) -> None:
         self.__update()
         self.champ.grid(row=0, column=0, columnspan=2, sticky=tk.E + tk.W)
-        self.liste.grid(row=1, column=0, columnspan=2, sticky=tk.E + tk.W + tk.N + tk.S)
+        self.liste.grid(
+            row=1, column=0, columnspan=2, sticky=tk.E + tk.W + tk.N + tk.S
+        )
         self.defil.grid(row=1, column=2, sticky=tk.N + tk.S)
-        self.baudmenu.grid(row=2, column=0, columnspan=2, sticky=tk.W+tk.E)
+        self.baudmenu.grid(row=2, column=0, columnspan=2, sticky=tk.W + tk.E)
         self.conn.grid(row=3, column=0, sticky=tk.E + tk.W + tk.N + tk.S)
         self.disc.grid(row=3, column=1, sticky=tk.E + tk.W + tk.N + tk.S)
 
@@ -332,7 +339,9 @@ class MoniteurSerie(ttk.Frame):
 
     def __build(self) -> None:
         """Construit l'affichage texte."""
-        self.clear_button = ttk.Button(self, text='Effacer', command=self.__clear)
+        self.clear_button = ttk.Button(
+            self, text='Effacer', command=self.__clear
+        )
         self.text = tk.Text(self, width=90, wrap=tk.WORD)
         self.text.tag_config('prompt', foreground='green')
         self.text.tag_config('entry', foreground='blue')
@@ -341,23 +350,29 @@ class MoniteurSerie(ttk.Frame):
         self.entryvar = tk.StringVar(self)
         self.entry = ttk.Entry(self, textvariable=self.entryvar)
         self.eol_var = tk.StringVar(self, '\\n')
-        self.eol_select = tk.OptionMenu(self, self.eol_var, '\'\\n\'', '\'\\r\'', '\'\\r\\n\'', '\'\'')
-        self.send_button = ttk.Button(self, text='Envoyer', command=self.__send)
+        self.eol_select = tk.OptionMenu(
+            self, self.eol_var, "'\\n'", "'\\r'", "'\\r\\n'", "''"
+        )
+        self.send_button = ttk.Button(
+            self, text='Envoyer', command=self.__send
+        )
 
     @property
     def eol(self) -> str:
         sel = self.eol_var.get()
-        eol = sel.strip("'").replace("\\n", '\n').replace("\\r", '\n')
+        eol = sel.strip("'").replace('\\n', '\n').replace('\\r', '\n')
         return eol
 
     @property
     def command(self) -> str:
+        """Commande entrée dans la ligne de commande."""
         return self.entryvar.get()
 
     @command.setter
     def command(self, val: str) -> None:
+        """Commande entrée dans la ligne de commande."""
         if not isinstance(val, str):
-            raise TypeError
+            raise InvalidCommandTypeError(val)
 
         self.entryvar.set(val)
 
@@ -375,11 +390,11 @@ class MoniteurSerie(ttk.Frame):
         """Affiche avec pack."""
         self.__update()
         self.label.grid(column=0, row=0, columnspan=4, sticky=tk.W)
-        self.clear_button.grid(column=4, row=0, sticky=tk.W+tk.E)
+        self.clear_button.grid(column=4, row=0, sticky=tk.W + tk.E)
         self.text.grid(column=0, row=1, columnspan=5)
-        self.entry.grid(column=0, row=2, columnspan=5, sticky=tk.E+tk.W)
-        self.eol_select.grid(column=3, row=3, sticky=tk.E+tk.W)
-        self.send_button.grid(column=4, row=3, sticky=tk.E+tk.W)
+        self.entry.grid(column=0, row=2, columnspan=5, sticky=tk.E + tk.W)
+        self.eol_select.grid(column=3, row=3, sticky=tk.E + tk.W)
+        self.send_button.grid(column=4, row=3, sticky=tk.E + tk.W)
         super().pack(**kargs)
 
     def __update(self) -> None:
@@ -402,6 +417,7 @@ class MoniteurSerie(ttk.Frame):
 
 
 class TraceurSerie(ttk.Frame, WithLogger):
+    """Traceur série analogue à celui de l'IDE Arduino."""
 
     def __init__(self, parent: tk.Frame, sersel: LigneSerie) -> None:
         """Initialise le moniteur série."""
@@ -415,45 +431,57 @@ class TraceurSerie(ttk.Frame, WithLogger):
     def __build(self) -> None:
         """Construit l'affichage texte."""
         self.checkin()
-        self.clear_button = ttk.Button(self, text='Effacer', command=self.__clear)
+        self.clear_button = ttk.Button(
+            self, text='Effacer', command=self.__clear
+        )
         self.plot_frame = ttk.Frame(self)
         self.figure = mpl.figure.Figure()
         self.axes = self.figure.add_subplot(1, 1, 1)
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.plot_frame)
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self.plot_frame, pack_toolbar=False)
+        self.toolbar = NavigationToolbar2Tk(
+            self.canvas, self.plot_frame, pack_toolbar=False
+        )
         self.labelvar = tk.StringVar(self, 'Aucune connexion.')
         self.label = ttk.Label(self, textvariable=self.labelvar)
         self.entryvar = tk.StringVar(self)
         self.entry = ttk.Entry(self, textvariable=self.entryvar)
         self.eol_var = tk.StringVar(self, '\\n')
-        self.eol_select = tk.OptionMenu(self, self.eol_var, '\'\\n\'', '\'\\r\'', '\'\\r\\n\'', '\'\'')
-        self.send_button = ttk.Button(self, text='Envoyer', command=self.__send)
+        self.eol_select = tk.OptionMenu(
+            self, self.eol_var, "'\\n'", "'\\r'", "'\\r\\n'", "''"
+        )
+        self.send_button = ttk.Button(
+            self, text='Envoyer', command=self.__send
+        )
 
     @property
     def lines(self) -> list[mpl.lines.Line2D]:
+        """Traces du graphique."""
         return self.axes.get_lines()
 
     @property
     def canvas_widget(self) -> tk.Frame:
+        """Composant Tk du canevas."""
         return self.canvas.get_tk_widget()
 
     @property
     def eol(self) -> str:
+        """Caractère de fin de commande."""
         self.checkin()
         sel = self.eol_var.get()
-        eol = sel.strip("'").replace("\\n", '\n').replace("\\r", '\n')
-        return eol
+        return sel.strip("'").replace('\\n', '\n').replace('\\r', '\n')
 
     @property
     def command(self) -> str:
+        """Commande entrée dans la ligne de commande."""
         self.checkin()
         return self.entryvar.get()
 
     @command.setter
     def command(self, val: str) -> None:
+        """Commande entrée dans la ligne de commande."""
         self.checkin()
         if not isinstance(val, str):
-            raise TypeError
+            raise InvalidCommandTypeError(val)
 
         self.entryvar.set(val)
 
@@ -472,14 +500,19 @@ class TraceurSerie(ttk.Frame, WithLogger):
         self.checkin()
         self.__update()
         self.label.grid(column=0, row=0, columnspan=5, sticky=tk.W)
-        self.plot_frame.grid(column=0, row=1, columnspan=5, sticky=tk.W+tk.E+tk.N+tk.S)
-        self.canvas_widget.grid(column=0, row=0, sticky=tk.W+tk.E+tk.N+tk.S)
-        self.toolbar.grid(column=0, row=1, sticky=tk.W+tk.E)
-        self.entry.grid(column=0, row=2, columnspan=5, sticky=tk.E+tk.W)
-        self.eol_select.grid(column=3, row=3, sticky=tk.E+tk.W)
-        self.send_button.grid(column=4, row=3, sticky=tk.E+tk.W)
+        self.plot_frame.grid(
+            column=0, row=1, columnspan=5, sticky=tk.W + tk.E + tk.N + tk.S
+        )
+        self.canvas_widget.grid(
+            column=0, row=0, sticky=tk.W + tk.E + tk.N + tk.S
+        )
+        self.toolbar.grid(column=0, row=1, sticky=tk.W + tk.E)
+        self.entry.grid(column=0, row=2, columnspan=5, sticky=tk.E + tk.W)
+        self.eol_select.grid(column=3, row=3, sticky=tk.E + tk.W)
+        self.send_button.grid(column=4, row=3, sticky=tk.E + tk.W)
 
     def pack(self, **kargs: str | int) -> None:
+        """Affiche le traceur série avec pack."""
         self.checkin()
         self.show()
         super().pack(**kargs)
@@ -499,18 +532,16 @@ class TraceurSerie(ttk.Frame, WithLogger):
             self.debug('ts = %s', ts)
 
             its, ixs = iter(ts), iter(xs)
-            for l, t, x in zip(lignes, its, ixs, strict=False):
-                l.set_data(range(len(x)), x)
+            for ligne, _t, x in zip(lignes, its, ixs, strict=False):
+                ligne.set_data(range(len(x)), x)
 
-            for t, x in zip(its, ixs):
+            for _t, x in zip(its, ixs, strict=True):
                 self.axes.plot(x)
 
             if len(ts) > 0:
                 xmax, xmin = max(map(max, xs)), min(map(min, xs))
-                self.axes.set_xlim(len(xs[0])-100, len(xs[0]))
+                self.axes.set_xlim(len(xs[0]) - 100, len(xs[0]))
                 self.axes.set_ylim(xmin, xmax)
-
-
 
             self.canvas.draw()
 
@@ -527,6 +558,7 @@ class TraceurSerie(ttk.Frame, WithLogger):
 
         self.update()
         self.after(1000, self.__update)
+
 
 class TkTableau(ttk.Frame, WithLogger):
     """Tableau affichant les données transmises via une ligne série."""
@@ -585,7 +617,6 @@ class TkTableau(ttk.Frame, WithLogger):
         self.__update()
         self.tab.show()
         super().grid(**kargs)
-
 
 
 class APropos(tk.Toplevel):
@@ -688,42 +719,136 @@ class Application(tk.Tk):
 
 
 def application(*, debug: bool = False) -> None:
-    app = Application('xphs1903', title='Démo')
-    app.mainloop()
+    """Exemple d'application vide."""
+    if debug:
+        basicConfig(DEBUG)
 
-def selecteur_serie(*, debug: bool = False) -> None:
     app = Application('xphs1903', title='Démo')
-    ser = SelectionPortSerie(app)
-    ser.pack(side=tk.LEFT, fill=tk.Y)
-    app.mainloop()
-
-def moniteur_serie(*, debug: bool = False) -> None:
-    app = Application('xphs1903', title='Démo')
-    ser = SelectionPortSerie(app)
-    mon = MoniteurSerie(app, ser)
-
-    ser.pack(side=tk.LEFT, fill=tk.Y)
-    mon.pack(side=tk.RIGHT, fill=tk.Y)
-    app.mainloop()
-
-def traceur_serie(*, debug: bool = False) -> None:
-    app = Application('xphs1903', title='Démo')
-    ser = SelectionPortSerie(app)
-    mon = TraceurSerie(app, ser)
+    info('Application initialisée: %r', app)
 
     if debug:
+        app.log_to_stderr()
+        app.setLevel('debug')
+
+    info("Lancement de l'application...")
+    app.mainloop()
+
+    info('Fin.')
+
+
+def selecteur_serie(*, debug: bool = False) -> None:
+    """Exemple de sélection de ligne série."""
+    if debug:
+        basicConfig(DEBUG)
+
+    app = Application('xphs1903', title='Démo')
+    info('Application initialisée: %r', app)
+
+    ser = SelectionPortSerie(app)
+    info('Ligne série configurée: %r', ser)
+
+    if debug:
+        app.log_to_stderr()
+        app.setLevel('debug')
+        ser.log_to_stderr()
+        ser.setLevel('debug')
+
+    ser.pack(side=tk.LEFT, fill=tk.Y)
+
+    info("Lancement de l'application...")
+    app.mainloop()
+
+    info('Fin.')
+
+
+def moniteur_serie(*, debug: bool = False) -> None:
+    """Exemple d'affichage de mesures dans un terminal."""
+    if debug:
+        basicConfig(DEBUG)
+
+    app = Application('xphs1903', title='Démo')
+    info('Application initialisée: %r', app)
+
+    ser = SelectionPortSerie(app)
+    info('Ligne série configurée: %r', ser)
+
+    mon = MoniteurSerie(app, ser)
+    info('Traceur configuré: %r', mon)
+
+    if debug:
+        app.log_to_stderr()
+        app.setLevel('debug')
+        ser.log_to_stderr()
+        ser.setLevel('debug')
         mon.log_to_stderr()
         mon.setLevel('debug')
 
     ser.pack(side=tk.LEFT, fill=tk.Y)
     mon.pack(side=tk.RIGHT, fill=tk.Y)
+
+    info("Lancement de l'application...")
     app.mainloop()
 
-def tableau_serie(*, debug: bool = False) -> None:
+    info('Fin.')
+
+
+def traceur_serie(*, debug: bool = False) -> None:
+    """Exemple d'affichage de mesures sur un graphique."""
+    if debug:
+        basicConfig(DEBUG)
+
     app = Application('xphs1903', title='Démo')
+    info('Application initialisée: %r', app)
+
     ser = SelectionPortSerie(app)
-    mon = TkTableau(app, ser)
+    info('Ligne série configurée: %r', ser)
+
+    mon = TraceurSerie(app, ser)
+    info('Traceur configuré: %r', mon)
+
+    if debug:
+        app.log_to_stderr()
+        app.setLevel('debug')
+        ser.log_to_stderr()
+        ser.setLevel('debug')
+        mon.log_to_stderr()
+        mon.setLevel('debug')
 
     ser.pack(side=tk.LEFT, fill=tk.Y)
     mon.pack(side=tk.RIGHT, fill=tk.Y)
+
+    info("Lancement de l'application...")
     app.mainloop()
+
+    info('Fin.')
+
+
+def tableau_serie(*, debug: bool = False) -> None:
+    """Exemple d'affichage de mesures dans un tableau."""
+    if debug:
+        basicConfig(DEBUG)
+
+    app = Application('xphs1903', title='Démo')
+    info('Application initialisée: %r', app)
+
+    ser = SelectionPortSerie(app)
+    info('Ligne série configurée: %r', ser)
+
+    mon = TkTableau(app, ser)
+    info('Tableau configuré: %r', mon)
+
+    if debug:
+        app.log_to_stderr()
+        app.setLevel('debug')
+        ser.log_to_stderr()
+        ser.setLevel(DEBUG)
+        mon.log_to_stderr()
+        ser.setLevel(DEBUG)
+
+    ser.pack(side=tk.LEFT, fill=tk.Y)
+    mon.pack(side=tk.RIGHT, fill=tk.Y)
+
+    info('Lancement de l\'application...')
+    app.mainloop()
+
+    info('Fin.')

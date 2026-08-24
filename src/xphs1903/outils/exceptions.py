@@ -8,10 +8,14 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-class WrongSerialInputTypeError(TypeError):
+class BaseXPHS1903Exception(BaseException):
+    pass
+
+
+class WrongSerialInputTypeError(TypeError, BaseXPHS1903Exception):
     """Entrée fournie du mauvais type ou format."""
 
-    def __init__(self, obj: Any) -> None:  # noqa: ANN401
+    def __init__(self, obj: Any) -> None:
         """Crée le message d'erreur.
 
         Parameters
@@ -23,7 +27,7 @@ class WrongSerialInputTypeError(TypeError):
         super().__init__(msg)
 
 
-class ParsableArduinoSerialDataError(ValueError):
+class ParsableArduinoSerialDataError(ValueError, BaseXPHS1903Exception):
     """Données reçues non-interprétables."""
 
     def __init__(self, data: str) -> None:
@@ -42,10 +46,10 @@ class ParsableArduinoSerialDataError(ValueError):
         super().__init__(msg)
 
 
-class NoiseTypeError(TypeError, ValueError):
+class NoiseTypeError(TypeError, ValueError, BaseXPHS1903Exception):
     """Mauvais type ou format pour une définition de bruit sur un signal."""
 
-    def __init__(self, noise: Any, args: tuple[Callable]) -> None:  # noqa: ANN401
+    def __init__(self, noise: Any, args: tuple[Callable]) -> None:
         """Crée le message d'erreur.
 
         Parameters
@@ -62,8 +66,68 @@ class NoiseTypeError(TypeError, ValueError):
         )
         super().__init__(msg)
 
-class WrongWindowTypeError(TypeError):
 
+class WrongWindowTypeError(TypeError, BaseXPHS1903Exception):
     def __init__(self, val: Any) -> None:
         msg = f'Expected int or numpy.ndarray, but got {type(val)}.'
+        super().__init__(msg)
+
+
+class WrongCanvasTypeError(TypeError, BaseXPHS1903Exception):
+    def __init__(self, val: Any) -> None:
+        msg = f'Expected FigureCanvasAgg but got {type(val)}'
+        super().__init__(msg)
+
+
+class UpdatedPropertyTypeError(TypeError, BaseXPHS1903Exception):
+    def __init__(self, val: Any) -> None:
+        msg = f'updated can only be boolean, not {type(val)}'
+        super().__init__(msg)
+
+
+class WrongArtistTypeError(TypeError, BaseXPHS1903Exception):
+    def __init__(self, val: Any) -> None:
+        msg = f'Expected instance of matplotlib.artist.Artist but got {type(val)}.'
+        super().__init__(msg)
+
+
+class NotLine2DTypeError(TypeError, BaseXPHS1903Exception):
+    def __init__(self, val: Any) -> None:
+        msg = f'Expected matplotlib.lines.Line2D but got {type(val)}.'
+        super().__init__(msg)
+
+
+class NotAxesTypeError(TypeError, BaseXPHS1903Exception):
+    def __init__(self, val: Any) -> None:
+        msg = f'Expected matplotlib.axes.Axes but got {type(val)}.'
+        super().__init__(msg)
+
+
+class NotFigureTypeError(TypeError, BaseXPHS1903Exception):
+    def __init__(self, val: Any) -> None:
+        msg = f'Expected matplotlib.figure.Figure but got {type(val)}.'
+        super().__init__(msg)
+
+
+class IncorrectFormatTypeError(TypeError, BaseXPHS1903Exception):
+    def __init__(self, obj: BaseFormat, oth: Any) -> None:
+        msg = f'Expected dict or {type(obj).__name__} but got {type(oth)}.'
+        super().__init__(msg)
+
+
+class CanvasAlreadySetError(RuntimeError, BaseXPHS1903Exception):
+    def __init__(self, canvas: FigureCanvasAgg) -> None:
+        msg = f'canvas is already set to {canvas} and cannot be changed.'
+        super().__init__(msg)
+
+
+class IncorrectFormatKeyError(KeyError, BaseXPHS1903Exception):
+    def __init__(self, obj: BaseFormat, key: str) -> None:
+        msg = f'{key!r} is not in the allowed keys. Allowed keys are: {obj.SETTINGS}.'
+        super().__init__(msg)
+
+
+class InvalidCommandTypeError(TypeError, BaseXPHS1903Exception):
+    def __init__(self, val: Any) -> None:
+        msg = f'Expected str but got {type(val)}.'
         super().__init__(msg)

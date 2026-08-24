@@ -43,6 +43,7 @@ sphinx = "*"
 python-docs-theme = "*"
 pydata-sphinx-theme = "*"
 matplotlib-inline = "*"
+rich = "*"
 
 [scripts]
 "version" = "python lib/version.py"

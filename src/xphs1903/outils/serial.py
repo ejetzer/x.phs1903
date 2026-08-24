@@ -219,13 +219,12 @@ class LigneSerie(WithLogger):
         output: multiprocessing.Queue,
         loquet: multiprocessing.Lock,
     ) -> None:
-        """Fonction exécutée dans un autre fil.
-
-        Raises
-        ----------------------
-        RuntimeError
-            Si le contenu reçu n'a pas la bonne longueur.
-        """
+        """Gère la connexion série dans un autre processus."""
+        # Normalement les modules sont importés dans l'espace de nom
+        # global en début de fichier. serial est importé ici pour
+        # réduire les possibilités de problèmes avec multiprocessing
+        # en exécutant l'entièreté du code concernant serial dans le
+        # même processus.
         import serial  # noqa: PLC0415
 
         ser = serial.serial_for_url(port, do_not_open=True)
@@ -397,6 +396,7 @@ class LigneSerie(WithLogger):
         self.__reset()
 
     def wait(self) -> None:
+        """Attends d'avoir vidé les files."""
         self.checkin()
 
         while self.sending:
@@ -416,7 +416,15 @@ class LigneSerie(WithLogger):
         self.debug('%s', self.__arret)
 
     def __next__(self) -> str:
-        """Renvoie l'élément suiant reçu sur la ligne série."""  # noqa: DOC201
+        """Renvoie l'élément suiant reçu sur la ligne série.
+
+        Returns
+        ---------------
+        str
+            Le résultat par défaut d'une itération:
+                - Bloque l'exécution en attendant un item
+                - Retourne le texte, pas les valeurs numériques.
+        """
         return self.next()
 
     def next(
@@ -461,14 +469,28 @@ class LigneSerie(WithLogger):
         try:
             val: str = val.decode('utf-8')
         except UnicodeDecodeError:
+            # Les erreurs d'encodage peuvent arriver quand le
+            # débit de communication est mal réglé ou si les
+            # interlocuteurs sont désynchronisés. Plutôt que
+            # d'ignorer les caractères erronés silencieusement,
+            # on les remplace ici par un caractère reconnaissable
+            # comme indicateur de problème.
+
             res = ''
+
+            # Ci-dessous, la variable c est redéfinie à l'intérieur de
+            # la boucle. C'est un idiome fréquent en Python pour des
+            # cas simples, il s'agit ici d'une boucle très simple
+            # où les modifications n'ont pas d'effets secondaires
+            # ou externes.
             for c in val:
                 try:
-                    c = c.decode('utf-8')
+                    c = c.decode('utf-8')  # noqa: PLW2901
                 except UnicodeDecodeError:
-                    c = '▮'
+                    c = '▮'  # noqa: PLW2901
                 finally:
                     res += c
+
             val = res
         else:
             val = val.strip()
@@ -487,7 +509,14 @@ class LigneSerie(WithLogger):
         raise ParsableArduinoSerialDataError(val)
 
     def __iter__(self) -> iter:
-        """Retourne un itérateur sur l'entrée série."""  # noqa: DOC201
+        """Retourne un itérateur sur l'entrée série.
+
+        Returns
+        ---------------
+        iter
+            Un itérateur avec les paramètres par défaut:
+                - Non bloquant, donc retourne parfois None.
+        """
         return self.iter()
 
     def iter(self, *, block: bool = False, timeout: int | None = None) -> str:
@@ -567,7 +596,14 @@ class LigneSerie(WithLogger):
             yield self.next(block=block, timeout=timeout, parse=True)
 
     def __repr__(self) -> str:
-        """Retourne une description d'un :class:LigneSerie."""  # noqa: DOC201
+        """Retourne une description d'un :class:LigneSerie.
+
+        Returns
+        ---------------
+        str
+            Sommaire de la connexion.
+            ``LigneSerie<<id>> to <port> [on <thread>]
+        """
         self.checkin()
 
         if self.is_open:

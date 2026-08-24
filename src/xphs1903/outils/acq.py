@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
+from .dummy import noise, signal
 from .logging import WithLogger
-from .dummy import signal, noise
-from .serial import LigneSerie, ArduinoNanoEvery
+from .serial import ArduinoNanoEvery, LigneSerie
 
 if TYPE_CHECKING:
     from types import TracebackType
@@ -30,8 +30,7 @@ class Tableau(WithLogger):
         self.__df: pd.DataFrame = pd.DataFrame()
         self.__buffer: list[pd.Series] = []
         self.__thread_consume: threading.Thread = threading.Thread(
-            target=self.__run_consume,
-            daemon=True
+            target=self.__run_consume, daemon=True
         )
         self.__thread_update: threading.Thread = threading.Thread(
             target=self.__run_update
@@ -82,9 +81,9 @@ class Tableau(WithLogger):
                 if len(self.__buffer) > 0:
                     self.debug('len(buffer) = %s', len(self.__buffer))
                     with self.__loquet_buffer, self.__loquet_df:
-                        self.__df = pd.concat([self.__df] + self.__buffer).reset_index(
-                            drop=True
-                        )
+                        self.__df = pd.concat(
+                            [self.__df] + self.__buffer
+                        ).reset_index(drop=True)
                         self.__buffer = []
 
                         if not self._updated.is_set():
@@ -183,8 +182,8 @@ class Tableau(WithLogger):
         if key > len(self.df.columns) // 2:
             raise KeyError
 
-        i = 2*key
-        return self.df.iloc[:, i:i+2]
+        i = 2 * key
+        return self.df.iloc[:, i : i + 2]
 
     @property
     def ts(self) -> pd.DataFrame:
@@ -196,7 +195,7 @@ class Tableau(WithLogger):
     def xs(self) -> pd.DataFrame:
         self.checkin()
         num = len(self.df.columns)
-        return [self.df.iloc[:, i+1] for i in range(0, num, 2)]
+        return [self.df.iloc[:, i + 1] for i in range(0, num, 2)]
 
     def wait(self) -> None:
         self.__iter.wait()
@@ -232,6 +231,7 @@ def echotab(*, debug: bool = True) -> None:
                 except KeyboardInterrupt:
                     break
 
+
 def ardtab(*, debug: bool = False) -> None:
     import time
 
@@ -243,5 +243,6 @@ def ardtab(*, debug: bool = False) -> None:
                     time.sleep(5)
                 except KeyboardInterrupt:
                     break
+
 
 __all__ = ['Tableau']
