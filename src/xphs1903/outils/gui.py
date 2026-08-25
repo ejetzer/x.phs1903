@@ -1,7 +1,6 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
 """Outils de création d'interface graphique."""
 
-import logging
 import re
 import tkinter as tk
 from tkinter import ttk
@@ -10,6 +9,7 @@ from typing import Self
 import matplotlib as mpl
 import pandas as pd
 import pandastable as pt
+import serial.tools
 import serial.tools.list_ports
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg,
@@ -18,15 +18,12 @@ from matplotlib.backends.backend_tkagg import (
 from serial import SerialException
 
 from .acq import Tableau
-from .calcul import TableauCalcul
 from .exceptions import InvalidCommandTypeError
 from .logging import DEBUG, WithLogger, basicConfig, info
-from .logging import debug as debug_
-from .plot import TkGraphe
-from .serial import ArduinoNanoEvery, LigneSerie
+from .serial import LigneSerie
 
 
-class SelectionPortSerie(ttk.Frame):
+class SelectionPortSerie(ttk.Frame, WithLogger):
     """Sélecteur de port série."""
 
     def __init__(self, parent: ttk.Frame | tk.Toplevel) -> None:
@@ -44,14 +41,14 @@ class SelectionPortSerie(ttk.Frame):
         self.valeur: tk.StringVar = tk.StringVar()
         self.valeurs: tk.StringVar = tk.StringVar(value=self.options)
 
-        self.valeur.trace_add('write', self.__filtrer)
+        self.valeur.trace_add("write", self.__filtrer)
 
         self.champ: ttk.Entry = ttk.Entry(
             self,
             textvariable=self.valeur,
-            validate='all',
-            validatecommand=(self.valider, '%d', '%P', '%s', '%v', '%V'),
-            invalidcommand=(self.invalide, '%d', '%P', '%s', '%v', '%V'),
+            validate="all",
+            validatecommand=(self.valider, "%d", "%P", "%s", "%v", "%V"),
+            invalidcommand=(self.invalide, "%d", "%P", "%s", "%v", "%V"),
         )
         self.defil: ttk.Scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL)
         self.liste: tk.Listbox = tk.Listbox(
@@ -63,29 +60,29 @@ class SelectionPortSerie(ttk.Frame):
             exportselection=False,
         )
 
-        self.defil['command'] = self.liste.yview
+        self.defil["command"] = self.liste.yview
 
         self.conn = ttk.Button(
             self,
-            text='Connecter',
+            text="Connecter",
             command=self.__connect_serial,
         )
-        self.conn.state(('!disabled',))
+        self.conn.state(("!disabled",))
 
         self.disc = ttk.Button(
-            self, text='Déconnecter', command=self.__disconnect_serial
+            self, text="Déconnecter", command=self.__disconnect_serial
         )
         self.disc.state((tk.DISABLED,))
 
-        self.baudvar = tk.StringVar(self, '9 600')
-        self.baudmenu = tk.OptionMenu(self, self.baudvar, '9 600', '115 200')
+        self.baudvar = tk.StringVar(self, "9 600")
+        self.baudmenu = tk.OptionMenu(self, self.baudvar, "9 600", "115 200")
 
     @property
     def baudrate(self) -> None:
+        """Débit maximal de communication."""
         val = self.baudvar.get()
-        val = val.replace(' ', '')
-        val = int(val)
-        return val
+        val = val.replace(" ", "")
+        return int(val)
 
     def __update(self) -> None:
         """Met l'affichage à jour."""
@@ -118,7 +115,7 @@ class SelectionPortSerie(ttk.Frame):
             Les URLs décrivant les différents ports disponibles.
         """
         return [x.device for x in serial.tools.list_ports.comports()] + [
-            'loop://'
+            "loop://"
         ]
 
     @property
@@ -132,7 +129,9 @@ class SelectionPortSerie(ttk.Frame):
         """
         return [self.liste.get(i) for i in self.liste.curselection()]
 
-    def __filtrer(self, nom: str, mode: str, op: str) -> None:
+    # La signature est imposée par Tk, donc certains arguments
+    # ne sont pas utilisés.
+    def __filtrer(self, nom: str, mode: str, op: str) -> None:  # noqa: ARG002
         """Sélectionne les valeurs pertinentes."""
         sel = self.selection
         self.valeurs.set(self.options)
@@ -142,13 +141,15 @@ class SelectionPortSerie(ttk.Frame):
                 self.liste.selection_set(i)
 
     # Voir https://tkdocs.com/shipman/entry-validation.html
+    # La signature est imposée par Tk, donc certains arguments
+    # ne sont pas utilisés.
     def __valider(
         self,
-        action: int,
-        apres: str,
-        avant: str,
-        validate: bool,  # noqa: FBT001
-        reason: str,
+        action: int,  # noqa: ARG002
+        apres: str,  # noqa: ARG002
+        avant: str,  # noqa: ARG002
+        validate: bool,  # noqa: FBT001,ARG002
+        reason: str,  # noqa: ARG002
     ) -> bool:
         """Valide une entrée.
 
@@ -174,10 +175,10 @@ class SelectionPortSerie(ttk.Frame):
 
     def __connect_serial(self) -> None:
         """Connecte la ligne série."""
-        self.conn.state(('disabled',))
+        self.conn.state(("disabled",))
         sel = self.selection
         baud = self.baudrate
-        self.baudmenu.configure(state='disabled')
+        self.baudmenu.configure(state="disabled")
         if len(sel) > 0:
             self.ligne_serie = LigneSerie(sel[0], baud)
             self.__parent.lignes_series.append(self.ligne_serie)
@@ -188,18 +189,18 @@ class SelectionPortSerie(ttk.Frame):
                 pass
 
             if self.is_open:
-                self.disc.state(('!disabled',))
+                self.disc.state(("!disabled",))
 
         if not self.is_open:
-            self.conn.state(('!disabled',))
+            self.conn.state(("!disabled",))
 
     def __disconnect_serial(self) -> None:
         """Déconnecte la ligne série."""
-        self.disc.state(('disabled',))
+        self.disc.state(("disabled",))
         self.ligne_serie.close()
         self.ligne_serie = None
-        self.conn.state(('!disabled',))
-        self.baudmenu.configure(state='active')
+        self.conn.state(("!disabled",))
+        self.baudmenu.configure(state="active")
 
     @property
     def is_open(self) -> bool:
@@ -259,13 +260,14 @@ class SelectionPortSerie(ttk.Frame):
             Une chaîne décrivant la connexion.
         """
         if self.is_open:
-            ret = f'Connecté à {self.ligne_serie.device}.'
+            ret = f"Connecté à {self.ligne_serie.device}."
         else:
-            ret = 'Aucune connexion.'
+            ret = "Aucune connexion."
 
         return ret
 
     def show(self) -> None:
+        """Affiche les composants Tk."""
         self.__update()
         self.champ.grid(row=0, column=0, columnspan=2, sticky=tk.E + tk.W)
         self.liste.grid(
@@ -287,7 +289,7 @@ class SelectionPortSerie(ttk.Frame):
         super().grid(row=row, column=column, **kargs)
 
 
-class BarreMenu(tk.Menu):
+class BarreMenu(tk.Menu, WithLogger):
     """Le menu de base pour les applications de PHS1903."""
 
     def __init__(self, parent: Application) -> None:
@@ -302,66 +304,65 @@ class BarreMenu(tk.Menu):
         menu_app = tk.Menu(self)
         self.add_cascade(label=self.__parent.name, menu=menu_app)
         menu_app.add_command(
-            label=f'À propos de {self.__parent.name}',
+            label=f"À propos de {self.__parent.name}",
             command=self.__parent.show_about,
         )
         menu_app.add_command(
-            label='Réglages...', command=self.__parent.show_settings
+            label="Réglages...", command=self.__parent.show_settings
         )
-        menu_app.add_command(label='Quitter', command=self.__parent.quit)
+        menu_app.add_command(label="Quitter", command=self.__parent.quit)
 
         # Menu fichier
         menu_fic = tk.Menu(self)
-        self.add_cascade(label='Fichier', menu=menu_fic)
-        menu_fic.add_command(label='Exporter...', command=self.__parent.export)
+        self.add_cascade(label="Fichier", menu=menu_fic)
+        menu_fic.add_command(label="Exporter...", command=self.__parent.export)
 
         # Menu d'aide
         menu_aide = tk.Menu(self)
-        self.add_cascade(label='Aide', menu=menu_aide)
+        self.add_cascade(label="Aide", menu=menu_aide)
         menu_aide.add_command(
-            label='Journal de débogage', command=self.__parent.show_logger
+            label="Journal de débogage", command=self.__parent.show_logger
         )
         menu_aide.add_command(
-            label='Documentation du module x.phs1903',
+            label="Documentation du module x.phs1903",
             command=self.__parent.show_doc,
         )
 
 
-class MoniteurSerie(ttk.Frame):
+class MoniteurSerie(ttk.Frame, WithLogger):
     """Affiche le texte envoyé via une ligne série."""
 
     def __init__(self, parent: tk.Frame, sersel: LigneSerie) -> None:
         """Initialise le moniteur série."""
         super().__init__(parent)
-        self.__parent = parent
         self.__sersel = sersel
         self.__build()
 
     def __build(self) -> None:
         """Construit l'affichage texte."""
         self.clear_button = ttk.Button(
-            self, text='Effacer', command=self.__clear
+            self, text="Effacer", command=self.__clear
         )
         self.text = tk.Text(self, width=90, wrap=tk.WORD)
-        self.text.tag_config('prompt', foreground='green')
-        self.text.tag_config('entry', foreground='blue')
-        self.labelvar = tk.StringVar(self, 'Aucune connexion.')
+        self.text.tag_config("prompt", foreground="green")
+        self.text.tag_config("entry", foreground="blue")
+        self.labelvar = tk.StringVar(self, "Aucune connexion.")
         self.label = ttk.Label(self, textvariable=self.labelvar)
         self.entryvar = tk.StringVar(self)
         self.entry = ttk.Entry(self, textvariable=self.entryvar)
-        self.eol_var = tk.StringVar(self, '\\n')
+        self.eol_var = tk.StringVar(self, "\\n")
         self.eol_select = tk.OptionMenu(
             self, self.eol_var, "'\\n'", "'\\r'", "'\\r\\n'", "''"
         )
         self.send_button = ttk.Button(
-            self, text='Envoyer', command=self.__send
+            self, text="Envoyer", command=self.__send
         )
 
     @property
     def eol(self) -> str:
+        """Caractère de fin de commande."""
         sel = self.eol_var.get()
-        eol = sel.strip("'").replace('\\n', '\n').replace('\\r', '\n')
-        return eol
+        return sel.strip("'").replace("\\n", "\n").replace("\\r", "\n")
 
     @property
     def command(self) -> str:
@@ -379,12 +380,12 @@ class MoniteurSerie(ttk.Frame):
     def __send(self) -> None:
         cmd = self.command
         self.__sersel.ligne_serie.print(cmd, end=self.eol)
-        self.text.insert(tk.END, '>>> ', 'prompt')
-        self.text.insert(tk.END, f'{cmd}\n', 'entry')
-        self.command = ''
+        self.text.insert(tk.END, ">>> ", "prompt")
+        self.text.insert(tk.END, f"{cmd}\n", "entry")
+        self.command = ""
 
     def __clear(self) -> None:
-        self.text.delete('1.0', tk.END)
+        self.text.delete("1.0", tk.END)
 
     def pack(self, **kargs: str | int) -> None:
         """Affiche avec pack."""
@@ -399,16 +400,16 @@ class MoniteurSerie(ttk.Frame):
 
     def __update(self) -> None:
         """Met le contenu du composant de texte à jour."""
-        texte = '\n'.join(i for i in self.__sersel)
+        texte = "\n".join(i for i in self.__sersel)
 
         if len(texte.strip()) > 0:
-            self.text.insert(tk.END, texte + '\n')
+            self.text.insert(tk.END, texte + "\n")
             self.text.see(tk.END)
 
         if self.__sersel.is_open:
             self.labelvar.set(str(self.__sersel))
         else:
-            self.labelvar.set('Aucune connexion.')
+            self.labelvar.set("Aucune connexion.")
 
         self.label.update()
         self.text.update()
@@ -423,7 +424,6 @@ class TraceurSerie(ttk.Frame, WithLogger):
         """Initialise le moniteur série."""
         self.checkin()
         super().__init__(parent)
-        self.__parent = parent
         self.__sersel = sersel
         self.__tab = None
         self.__build()
@@ -432,7 +432,7 @@ class TraceurSerie(ttk.Frame, WithLogger):
         """Construit l'affichage texte."""
         self.checkin()
         self.clear_button = ttk.Button(
-            self, text='Effacer', command=self.__clear
+            self, text="Effacer", command=self.__clear
         )
         self.plot_frame = ttk.Frame(self)
         self.figure = mpl.figure.Figure()
@@ -441,16 +441,16 @@ class TraceurSerie(ttk.Frame, WithLogger):
         self.toolbar = NavigationToolbar2Tk(
             self.canvas, self.plot_frame, pack_toolbar=False
         )
-        self.labelvar = tk.StringVar(self, 'Aucune connexion.')
+        self.labelvar = tk.StringVar(self, "Aucune connexion.")
         self.label = ttk.Label(self, textvariable=self.labelvar)
         self.entryvar = tk.StringVar(self)
         self.entry = ttk.Entry(self, textvariable=self.entryvar)
-        self.eol_var = tk.StringVar(self, '\\n')
+        self.eol_var = tk.StringVar(self, "\\n")
         self.eol_select = tk.OptionMenu(
             self, self.eol_var, "'\\n'", "'\\r'", "'\\r\\n'", "''"
         )
         self.send_button = ttk.Button(
-            self, text='Envoyer', command=self.__send
+            self, text="Envoyer", command=self.__send
         )
 
     @property
@@ -468,7 +468,7 @@ class TraceurSerie(ttk.Frame, WithLogger):
         """Caractère de fin de commande."""
         self.checkin()
         sel = self.eol_var.get()
-        return sel.strip("'").replace('\\n', '\n').replace('\\r', '\n')
+        return sel.strip("'").replace("\\n", "\n").replace("\\r", "\n")
 
     @property
     def command(self) -> str:
@@ -489,11 +489,11 @@ class TraceurSerie(ttk.Frame, WithLogger):
         self.checkin()
         cmd = self.command
         self.__sersel.ligne_serie.print(cmd, end=self.eol)
-        self.command = ''
+        self.command = ""
 
     def __clear(self) -> None:
         self.checkin()
-        self.text.delete('1.0', tk.END)
+        self.text.delete("1.0", tk.END)
 
     def show(self) -> None:
         """Affiche avec pack."""
@@ -527,9 +527,9 @@ class TraceurSerie(ttk.Frame, WithLogger):
                 self.__tab.start()
 
             lignes = self.lines
-            self.debug('lignes = %s', lignes)
+            self.debug("lignes = %s", lignes)
             ts, xs = self.__tab.ts, self.__tab.xs
-            self.debug('ts = %s', ts)
+            self.debug("ts = %s", ts)
 
             its, ixs = iter(ts), iter(xs)
             for ligne, _t, x in zip(lignes, its, ixs, strict=False):
@@ -552,7 +552,7 @@ class TraceurSerie(ttk.Frame, WithLogger):
         if self.__sersel.is_open:
             self.labelvar.set(str(self.__sersel))
         else:
-            self.labelvar.set('Aucune connexion.')
+            self.labelvar.set("Aucune connexion.")
 
         self.label.update()
 
@@ -567,7 +567,6 @@ class TkTableau(ttk.Frame, WithLogger):
         """Initialise le tableau."""
         self.checkin()
         super().__init__(parent)
-        self.__parent = parent
         self.__sersel = sersel
         self.__tab = None
 
@@ -583,7 +582,7 @@ class TkTableau(ttk.Frame, WithLogger):
         """Met le tableau et les données sous-jacentes à jour."""
         self.checkin()
 
-        self.debug('open = %s', self.__sersel.is_open)
+        self.debug("open = %s", self.__sersel.is_open)
         if self.__sersel.is_open:
             if self.__tab is None:
                 self.__tab = Tableau(self.__sersel.ligne_serie)
@@ -619,27 +618,27 @@ class TkTableau(ttk.Frame, WithLogger):
         super().grid(**kargs)
 
 
-class APropos(tk.Toplevel):
+class APropos(tk.Toplevel, WithLogger):
     """Fenêtre d'informations sur l'application."""
 
 
-class Reglages(tk.Toplevel):
+class Reglages(tk.Toplevel, WithLogger):
     """Fenêtre de réglages."""
 
 
-class Exporter(tk.Toplevel):
+class Exporter(tk.Toplevel, WithLogger):
     """Invite d'exportation."""
 
 
-class FenetreMoniteurSerie(tk.Toplevel):
+class FenetreMoniteurSerie(tk.Toplevel, WithLogger):
     """Moniteur série dans une fenêtre à part."""
 
 
-class FenetreTraceurSerie(tk.Toplevel):
+class FenetreTraceurSerie(tk.Toplevel, WithLogger):
     """Traceur série dans une fenêtre à part."""
 
 
-class Application(tk.Tk):
+class Application(tk.Tk, WithLogger):
     """Application de base pour PHS1903."""
 
     def __init__(self, name: str, *, title: str | None = None) -> None:
@@ -653,11 +652,11 @@ class Application(tk.Tk):
         self.lignes_series = []
         self.__build()
 
-        self.protocol('WM_DELETE_WINDOW', self.quit)
+        self.protocol("WM_DELETE_WINDOW", self.quit)
 
     def __build(self) -> None:
         """Construit les composants graphiques."""
-        self['menu'] = BarreMenu(self)
+        self["menu"] = BarreMenu(self)
 
     # Méthodes de fonctionnalités de base
     def show_about(self) -> None:
@@ -723,17 +722,17 @@ def application(*, debug: bool = False) -> None:
     if debug:
         basicConfig(DEBUG)
 
-    app = Application('xphs1903', title='Démo')
-    info('Application initialisée: %r', app)
+    app = Application("xphs1903", title="Démo")
+    info("Application initialisée: %r", app)
 
     if debug:
         app.log_to_stderr()
-        app.setLevel('debug')
+        app.setLevel("debug")
 
     info("Lancement de l'application...")
     app.mainloop()
 
-    info('Fin.')
+    info("Fin.")
 
 
 def selecteur_serie(*, debug: bool = False) -> None:
@@ -741,24 +740,24 @@ def selecteur_serie(*, debug: bool = False) -> None:
     if debug:
         basicConfig(DEBUG)
 
-    app = Application('xphs1903', title='Démo')
-    info('Application initialisée: %r', app)
+    app = Application("xphs1903", title="Démo")
+    info("Application initialisée: %r", app)
 
     ser = SelectionPortSerie(app)
-    info('Ligne série configurée: %r', ser)
+    info("Ligne série configurée: %r", ser)
 
     if debug:
         app.log_to_stderr()
-        app.setLevel('debug')
+        app.setLevel("debug")
         ser.log_to_stderr()
-        ser.setLevel('debug')
+        ser.setLevel("debug")
 
     ser.pack(side=tk.LEFT, fill=tk.Y)
 
     info("Lancement de l'application...")
     app.mainloop()
 
-    info('Fin.')
+    info("Fin.")
 
 
 def moniteur_serie(*, debug: bool = False) -> None:
@@ -766,22 +765,22 @@ def moniteur_serie(*, debug: bool = False) -> None:
     if debug:
         basicConfig(DEBUG)
 
-    app = Application('xphs1903', title='Démo')
-    info('Application initialisée: %r', app)
+    app = Application("xphs1903", title="Démo")
+    info("Application initialisée: %r", app)
 
     ser = SelectionPortSerie(app)
-    info('Ligne série configurée: %r', ser)
+    info("Ligne série configurée: %r", ser)
 
     mon = MoniteurSerie(app, ser)
-    info('Traceur configuré: %r', mon)
+    info("Traceur configuré: %r", mon)
 
     if debug:
         app.log_to_stderr()
-        app.setLevel('debug')
+        app.setLevel("debug")
         ser.log_to_stderr()
-        ser.setLevel('debug')
+        ser.setLevel("debug")
         mon.log_to_stderr()
-        mon.setLevel('debug')
+        mon.setLevel("debug")
 
     ser.pack(side=tk.LEFT, fill=tk.Y)
     mon.pack(side=tk.RIGHT, fill=tk.Y)
@@ -789,7 +788,7 @@ def moniteur_serie(*, debug: bool = False) -> None:
     info("Lancement de l'application...")
     app.mainloop()
 
-    info('Fin.')
+    info("Fin.")
 
 
 def traceur_serie(*, debug: bool = False) -> None:
@@ -797,22 +796,22 @@ def traceur_serie(*, debug: bool = False) -> None:
     if debug:
         basicConfig(DEBUG)
 
-    app = Application('xphs1903', title='Démo')
-    info('Application initialisée: %r', app)
+    app = Application("xphs1903", title="Démo")
+    info("Application initialisée: %r", app)
 
     ser = SelectionPortSerie(app)
-    info('Ligne série configurée: %r', ser)
+    info("Ligne série configurée: %r", ser)
 
     mon = TraceurSerie(app, ser)
-    info('Traceur configuré: %r', mon)
+    info("Traceur configuré: %r", mon)
 
     if debug:
         app.log_to_stderr()
-        app.setLevel('debug')
+        app.setLevel("debug")
         ser.log_to_stderr()
-        ser.setLevel('debug')
+        ser.setLevel("debug")
         mon.log_to_stderr()
-        mon.setLevel('debug')
+        mon.setLevel("debug")
 
     ser.pack(side=tk.LEFT, fill=tk.Y)
     mon.pack(side=tk.RIGHT, fill=tk.Y)
@@ -820,7 +819,7 @@ def traceur_serie(*, debug: bool = False) -> None:
     info("Lancement de l'application...")
     app.mainloop()
 
-    info('Fin.')
+    info("Fin.")
 
 
 def tableau_serie(*, debug: bool = False) -> None:
@@ -828,18 +827,18 @@ def tableau_serie(*, debug: bool = False) -> None:
     if debug:
         basicConfig(DEBUG)
 
-    app = Application('xphs1903', title='Démo')
-    info('Application initialisée: %r', app)
+    app = Application("xphs1903", title="Démo")
+    info("Application initialisée: %r", app)
 
     ser = SelectionPortSerie(app)
-    info('Ligne série configurée: %r', ser)
+    info("Ligne série configurée: %r", ser)
 
     mon = TkTableau(app, ser)
-    info('Tableau configuré: %r', mon)
+    info("Tableau configuré: %r", mon)
 
     if debug:
         app.log_to_stderr()
-        app.setLevel('debug')
+        app.setLevel("debug")
         ser.log_to_stderr()
         ser.setLevel(DEBUG)
         mon.log_to_stderr()
@@ -848,7 +847,10 @@ def tableau_serie(*, debug: bool = False) -> None:
     ser.pack(side=tk.LEFT, fill=tk.Y)
     mon.pack(side=tk.RIGHT, fill=tk.Y)
 
-    info('Lancement de l\'application...')
+    info("Lancement de l'application...")
     app.mainloop()
 
-    info('Fin.')
+    info("Fin.")
+
+
+__all__ = ["MoniteurSerie", "SelectionPortSerie", "TkTableau", "TraceurSerie"]

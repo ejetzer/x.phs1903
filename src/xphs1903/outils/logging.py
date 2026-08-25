@@ -1,10 +1,12 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
+# ruff: noqa: LOG015
 """Utilitaire de journalisation pour le débogage."""
 
 import functools
 import inspect
 import logging
 import sys
+import threading
 import time
 from contextlib import AbstractContextManager
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
@@ -16,18 +18,18 @@ if TYPE_CHECKING:
     from types import TracebackType
     from typing import Any, Final, Self, TextIO
 
-import rich
+import rich, rich.console
 from rich.logging import RichHandler
 
 from .functools import staticproperty
 
 FMT: Final[str] = (
-    '%(asctime)s:'
-    '%(name)s:'
-    '%(levelname)s\t'
-    '%(threadName)s\t'
-    '%(funcName)s (%(lineno)s)\t'
-    '%(message)s'
+    "%(asctime)s:"
+    "%(name)s:"
+    "%(levelname)s\t"
+    "%(threadName)s\t"
+    "%(funcName)s (%(lineno)s)\t"
+    "%(message)s"
 )
 """Chaîne de formatage par défaut."""
 
@@ -43,7 +45,7 @@ class WithLogger:
         """Logger par défaut pour une instance."""
         cls = type(self)
         mod, cls = cls.__module__, cls.__name__
-        return logging.getLogger(f'{mod}.{cls}.{id(self)}')
+        return logging.getLogger(f"{mod}.{cls}.{id(self)}")
 
     # ruff ne remarque pas les staticproperty
     # alors on ignore DOC201 manuellement.
@@ -65,16 +67,16 @@ class WithLogger:
     def levels() -> dict[str, float]:
         """Niveaux de messages d'erreur."""  # noqa: DOC201
         return {
-            'debug': DEBUG,
-            'info': INFO,
-            'warning': WARNING,
-            'error': ERROR,
-            'critical': CRITICAL,
+            "debug": DEBUG,
+            "info": INFO,
+            "warning": WARNING,
+            "error": ERROR,
+            "critical": CRITICAL,
         }
 
     def log(self, level: float, msg: str, *args: Any, **kargs: Any) -> None:
         """Afficher un message d'erreur."""
-        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        kargs["stacklevel"] = kargs.get("stacklevel", 1) + 1
         self.logger.log(level, msg, *args, **kargs)
 
     def debug(
@@ -94,9 +96,9 @@ class WithLogger:
         logging-levels
         """
         if exc_info is not None:
-            kargs['exc_info'] = exc_info
+            kargs["exc_info"] = exc_info
 
-        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        kargs["stacklevel"] = kargs.get("stacklevel", 1) + 1
         self.log(DEBUG, msg, *args, **kargs)
 
     def info(
@@ -116,9 +118,9 @@ class WithLogger:
         logging-levels
         """
         if exc_info is not None:
-            kargs['exc_info'] = exc_info
+            kargs["exc_info"] = exc_info
 
-        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        kargs["stacklevel"] = kargs.get("stacklevel", 1) + 1
         self.log(INFO, msg, *args, **kargs)
 
     def warning(
@@ -138,9 +140,9 @@ class WithLogger:
         logging-levels
         """
         if exc_info is not None:
-            kargs['exc_info'] = exc_info
+            kargs["exc_info"] = exc_info
 
-        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        kargs["stacklevel"] = kargs.get("stacklevel", 1) + 1
         self.log(WARNING, msg, *args, **kargs)
 
     def error(
@@ -160,9 +162,9 @@ class WithLogger:
         logging-levels
         """
         if exc_info is not None:
-            kargs['exc_info'] = exc_info
+            kargs["exc_info"] = exc_info
 
-        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        kargs["stacklevel"] = kargs.get("stacklevel", 1) + 1
         self.log(ERROR, msg, *args, **kargs)
 
     def critical(
@@ -182,9 +184,9 @@ class WithLogger:
         logging-levels
         """
         if exc_info is not None:
-            kargs['exc_info'] = exc_info
+            kargs["exc_info"] = exc_info
 
-        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        kargs["stacklevel"] = kargs.get("stacklevel", 1) + 1
         self.log(CRITICAL, msg, *args, **kargs)
 
     # Le nom setLevel utilise la convention motsChameaux
@@ -214,7 +216,7 @@ class WithLogger:
 
     def log_to_file(self, path: Path) -> None:
         """Envoie les rapports d'erreur à un fichier."""
-        stream = path.open(encoding='utf-8')
+        stream = path.open(encoding="utf-8")
         self.log_to_stream(stream)
 
     def log_to_stderr(
@@ -225,23 +227,32 @@ class WithLogger:
             self.log_to_stream(sys.stderr)
         else:
             kargs = {
-                'console': rich.console.Console(stderr=True),
-                'show_time': True,
-                'show_level': True,
-                'enable_link_path': True,
-                'rich_traceback': True,
+                "console": rich.console.Console(stderr=True),
+                "show_time": True,
+                "show_level": True,
+                "enable_link_path": True,
+                "rich_traceback": True,
             } | kargs
             self.logger.addHandler(RichHandler(**kargs))
 
     def checkin(self) -> None:
         """Note l'entrée dans une fonction."""
-        self.debug('', stacklevel=2)
+        frame = inspect.stack()[1].frame
+        name = frame.f_code.co_name
+        thread = threading.current_thread().name
+        self.debug("Checkin: %s starting in %s.", name, thread, stacklevel=2)
 
 
 class SuppressAndLogContextManager(AbstractContextManager):
-    def __init__(self, has_logger: WithLogger, *excs: BaseException) -> None:
+    def __init__(
+        self,
+        has_logger: WithLogger,
+        *excs: BaseException,
+        final: Callable | None = None,
+    ) -> None:
         self.__excs = excs
         self.__has_logger = has_logger
+        self.__final = final
 
     def __enter__(self) -> Self:
         return self
@@ -252,15 +263,18 @@ class SuppressAndLogContextManager(AbstractContextManager):
         excinst: BaseException | None,
         exctb: TracebackType | None,
     ) -> bool | None:
-        if exctype not in self.__excs:
+        if self.__final is not None:
+            self.__final()
+
+        if exctype is not None and exctype not in self.__excs:
             self.__has_logger.error(
-                '%s has occurred.', exctype.__name__, exc_info=excinst
+                "%s has occurred.", exctype.__name__, exc_info=excinst
             )
             return False
 
         if exctype is not None:
             self.__has_logger.warning(
-                '%s was suppressed.', exctype.__name__, exc_info=excinst
+                "%s was suppressed.", exctype.__name__, exc_info=excinst
             )
             return True
 
@@ -286,21 +300,23 @@ def config(
         handler = logging.StreamHandler(stream=stream)
         handler.setFormatter(formatter)
     else:
-        handler = RichHandler(console=rich.console.Console(stderr=True))
+        handler = RichHandler(
+            console=rich.console.Console(stderr=True), rich_tracebacks=True
+        )
 
     logger.addHandler(handler)
 
 
 # :func:`basicConfig` reprend le nom d'une fonction du module :mod:`logging`
 # :func:`basic_config` est un alias disponible et favorisé.
-def basicConfig(level: float = WARNING, *, use_rich: bool = False) -> None:  # noqa: N802
+def basic_config(level: float = WARNING, *, use_rich: bool = True) -> None:
     """Configuration de base pour un logger de module ou script."""
-    frame = inspect.stack()[1]
-    name = frame.f_globals['__name__']
+    frame = inspect.stack()[1].frame
+    name = frame.f_globals["__name__"]
     config(name, level=level, use_rich=use_rich)
 
 
-basic_config = basicConfig
+basicConfig = basic_config  # noqa: N816
 
 
 def system() -> str:
@@ -315,8 +331,8 @@ def system() -> str:
     import platform  # noqa: PLC0415
 
     ret: dict[str, str] = {
-        'platform': platform.platform(),
-        'python': platform.python_implementation() + platform.python_version(),
+        "platform": platform.platform(),
+        "python": platform.python_implementation() + platform.python_version(),
     }
 
     return json.dumps(ret)
@@ -332,19 +348,19 @@ def ez_log(
 ) -> None:
     if logger is None:
         # On va chercher l'information des frames supérieurs.
-        kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+        kargs["stacklevel"] = kargs.get("stacklevel", 1) + 1
         frame = inspect.stack()[
-            kargs['stacklevel']
+            kargs["stacklevel"]
         ].frame  # On veut l'environnement de l'appel de la fonction.
         # On en assume un peu sur la structure du code
         # pour estimer un nom de module et de logger.
         name = frame.f_code.co_name
 
-        module = frame.f_globals['__name__']
+        module = frame.f_globals["__name__"]
         if frame.f_back is not None and name in frame.f_back.f_locals:
             module = frame.f_back.f_locals[name].__module__
 
-        logger = f'{module}.{name}'
+        logger = f"{module}.{name}"
 
     logger = logging.getLogger(logger)
     logger.log(level, msg, *args, exc_info=exc_info, **kargs)
@@ -362,7 +378,7 @@ def debug(
     ----------------------
     logging-levels
     """
-    kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+    kargs["stacklevel"] = kargs.get("stacklevel", 1)
     ez_log(DEBUG, msg, *args, exc_info=exc_info, **kargs)
 
 
@@ -378,7 +394,7 @@ def info(
     ----------------------
     logging-levels
     """
-    kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+    kargs["stacklevel"] = kargs.get("stacklevel", 1)
     ez_log(INFO, msg, *args, exc_info=exc_info, **kargs)
 
 
@@ -394,7 +410,7 @@ def warning(
     ----------------------
     logging-levels
     """
-    kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+    kargs["stacklevel"] = kargs.get("stacklevel", 1)
     ez_log(WARNING, msg, *args, exc_info=exc_info, **kargs)
 
 
@@ -410,7 +426,7 @@ def error(
     ----------------------
     logging-levels
     """
-    kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+    kargs["stacklevel"] = kargs.get("stacklevel", 1)
     ez_log(ERROR, msg, *args, exc_info=exc_info, **kargs)
 
 
@@ -426,7 +442,7 @@ def critical(
     ----------------------
     logging-levels
     """
-    kargs['stacklevel'] = kargs.get('stacklevel', 1) + 1
+    kargs["stacklevel"] = kargs.get("stacklevel", 1)
     ez_log(CRITICAL, msg, *args, exc_info=exc_info, **kargs)
 
 
@@ -451,17 +467,17 @@ def profile(f: Callable) -> Callable:
     # le logger global.
     @functools.wraps(f)
     def wrapped_f(*args: Any, **kargs: Any) -> Any:  # noqa: ANN401
-        log_name = f'{f.__module__}.{f.__name__}'
+        log_name = f"{f.__module__}.{f.__name__}"
 
-        debug("Début de l'exécution de %s...", f.__name__, logger=log_name)  # noqa: LOG015
+        debug("Début de l'exécution de %s...", f.__name__, logger=log_name)
         debut = time.time()
         try:
             res = f(*args, **kargs)
         except Exception as err:
             fin = time.time()
             temps_exec = fin - debut
-            debug("%s s'est exécutée en %ss.", f.__name__, temps_exec)  # noqa: LOG015
-            error(  # noqa: LOG015, TRY400
+            debug("%s s'est exécutée en %ss.", f.__name__, temps_exec)
+            error(  # noqa: TRY400
                 "Erreur dans l'exécution de %s.",
                 f.__name__,
                 logger=log_name,
@@ -471,8 +487,8 @@ def profile(f: Callable) -> Callable:
         else:
             fin = time.time()
             temps_exec = fin - debut
-            debug("%s s'est exécutée en %ss.", f.__name__, temps_exec)  # noqa: LOG015
-            debug('%s a retourné %r.', f.__name__, res)  # noqa: LOG015
+            debug("%s s'est exécutée en %ss.", f.__name__, temps_exec)
+            debug("%s a retourné %r.", f.__name__, res)
 
         return res
 
@@ -480,21 +496,21 @@ def profile(f: Callable) -> Callable:
 
 
 __all__: Final[list[str]] = [
-    'CRITICAL',
-    'DEBUG',
-    'ERROR',
-    'INFO',
-    'WARNING',
-    'WithLogger',
-    'basic_config',
-    'config',
-    'critical',
-    'debug',
-    'error',
-    'formatter',
-    'info',
-    'profile',
-    'suppress',
-    'system',
-    'warning',
+    "CRITICAL",
+    "DEBUG",
+    "ERROR",
+    "INFO",
+    "WARNING",
+    "WithLogger",
+    "basic_config",
+    "config",
+    "critical",
+    "debug",
+    "error",
+    "formatter",
+    "info",
+    "profile",
+    "suppress",
+    "system",
+    "warning",
 ]

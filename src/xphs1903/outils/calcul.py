@@ -6,28 +6,29 @@ import itertools
 import logging
 import queue
 import threading
+import time
 import typing
-from collections.abc import Callable
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
-import scipy
 
 from .acq import Tableau as AcqTab
-from .exceptions import WrongWindowTypeError
-from .logging import WithLogger
+from .acq import sinus
+from .exceptions import InvalidCalculKeyTypeError
+from .logging import DEBUG, basicConfig, info, suppress
 from .serial import ArduinoNanoEvery, LigneSerie
 
 if typing.TYPE_CHECKING:
-    from types import TracebackType
-    from typing import Final, Self
-
-    from .acq import Tableau
+    from collections.abc import Callable
+    from concurrent.futures import Executor
 
 
 class TableauCalcul(AcqTab):
+    """Tableau de calculs en direct."""
+
     def __init__(self, ser: LigneSerie | None) -> None:
+        """Configure les fils d'exécution."""
         self.checkin()
         super().__init__(ser)
 
@@ -43,6 +44,7 @@ class TableauCalcul(AcqTab):
         self.__executor = ThreadPoolExecutor()
 
     def start(self, *, ser: LigneSerie | None = None) -> None:
+        """Démarre les fils d'exécution."""
         self.checkin()
         super().start(ser=ser)
 
@@ -51,6 +53,7 @@ class TableauCalcul(AcqTab):
             thread.start()
 
     def close(self) -> None:
+        """Ferme les fils d'exécution."""
         self.checkin()
         self.__arret.set()
         for thread in self.__f_threads.values():
@@ -62,7 +65,15 @@ class TableauCalcul(AcqTab):
 
     def __syncing(self) -> None:
         self.checkin()
-        try:
+
+        def final() -> None:
+            if not self.__arret.is_set():
+                self.__arret.set()
+
+            for q in self.__in_queues.values():
+                q.shutdown()
+
+        with suppress(self, Exception, final):
             while not self.__arret.is_set():
                 if self._updated.is_set():
                     self.checkin()
@@ -70,16 +81,15 @@ class TableauCalcul(AcqTab):
                     self._updated.clear()
                     for q in self.__in_queues.values():
                         q.put(nouv)
-        except Exception as err:
-            self.error('', exc_info=err)
-        finally:
-            if not self.__arret.is_set():
-                self.__arret.set()
-
-            for q in self.__in_queues.values():
-                q.shutdown()
 
     def wrap(self, f: Callable) -> Callable:
+        """Suppresse les erreurs levées par f et les note.
+
+        Returns
+        ---------------------------
+        func: Callable
+            Fonction enveloppant f.
+        """
         self.checkin()
         name = f.__name__
         self.__in_queues[name] = queue.Queue()
@@ -87,15 +97,22 @@ class TableauCalcul(AcqTab):
         self.__results[name] = None
         self.__updates[name] = threading.Event()
 
+        def final() -> None:
+            if not self.__arret.is_set():
+                self.__arret.set()
+
+            for q in self.__in_queues.values():
+                q.shutdown()
+
         @functools.wraps(f)
         def func() -> None:
             self.checkin()
 
-            self.debug('arret = %s', self.__arret)
-            try:
+            self.debug("arret = %s", self.__arret)
+            with suppress(self, Exception, final=final):
                 while not self.__arret.is_set():
                     entree = self.__in_queues[name].get()
-                    self.debug('entree = %r', entree)
+                    self.debug("entree = %r", entree)
                     res = f(
                         entree, executor=self.__executor, logger=self.logger
                     )
@@ -104,30 +121,34 @@ class TableauCalcul(AcqTab):
                     with self.__loquets[name]:
                         self.__results[name] = res
                     self.__updates[name].set()
-            except Exception as err:
-                self.error('', exc_info=err)
-            finally:
-                if not self.__arret.is_set():
-                    self.__arret.set()
-
-                for q in self.__in_queues.values():
-                    q.shutdown()
 
         return func
 
-    def register(self, f: Callable):
+    def register(self, f: Callable) -> None:
+        """Ajoute une fonction à calculer."""
         self.checkin()
         self.__f_threads[f.__name__] = threading.Thread(
             target=self.wrap(f), name=f.__name__, daemon=True
         )
 
     def __getitem__(self, key: int | str) -> pd.DataFrame:
+        """Obtiens les derniers résultats du calcul key sans attente.
+
+        Returns
+        ---------------------------
+        Le résultat du calcul ou les données brutes.
+
+        Raises
+        ---------------------------
+        InvalidCalculKeyTypeError
+            Si la clé key n'est ni un int ni une str.
+        """  # noqa: DOC502
         self.checkin()
         if isinstance(key, int):
             return super().__getitem__(key)
 
         if not isinstance(key, str):
-            raise TypeError
+            raise InvalidCalculKeyTypeError(key)
 
         return self.get(key)
 
@@ -135,15 +156,21 @@ class TableauCalcul(AcqTab):
         self,
         key: str,
         *,
-        default: Any = None,
+        default: np.ndarray | None = None,
         timeout: float | None = None,
         wait: bool = False,
-    ):
+    ) -> np.ndarray:
+        """Obtiens les derniers résultats du calcul.
+
+        Returns
+        ---------------------------
+        Les derniers résultats du calcul.
+        """
         self.checkin()
 
-        self.debug('wait = %s, timeout = %s', wait, timeout)
-        self.debug('updates[%s] = %s', key, self.__updates[key])
-        self.debug('threads[%s] = %s', key, self.__f_threads[key])
+        self.debug("wait = %s, timeout = %s", wait, timeout)
+        self.debug("updates[%s] = %s", key, self.__updates[key])
+        self.debug("threads[%s] = %s", key, self.__f_threads[key])
         if wait or timeout is not None:
             self.__updates[key].wait(timeout=timeout)
 
@@ -151,11 +178,12 @@ class TableauCalcul(AcqTab):
             self.__updates[key].clear()
 
         res = self.__results.get(key, default)
-        self.debug('res = %r', res)
+        self.debug("res = %r", res)
 
         return res
 
     def wait(self) -> None:
+        """Attends la fin de l'exécution des calculs."""
         super().wait()
 
         while not all(map(queue.Queue.empty, self.__in_queues.values())):
@@ -163,11 +191,23 @@ class TableauCalcul(AcqTab):
 
 
 def rfftfreq(t: np.ndarray) -> np.ndarray:
+    """Calcule les fréquences du domaine d'une transformée de Fourier.
+
+    Returns
+    ---------------------------
+    Les fréquences positives réelles.
+    """
     dt = np.mean(t[1:] - t[:-1])
     return np.fft.rfftfreq(len(t), dt)
 
 
 def rfft(x: np.ndarray) -> np.ndarray:
+    """Calcule la transformée de Fourier d'une colonne.
+
+    Returns
+    ---------------------------
+    La transformée de Fourier discrète réelle.
+    """
     res = np.fft.rfft(x)
     return np.real(np.sqrt(np.multiply(res, res.conjugate())))
 
@@ -178,18 +218,26 @@ def fft(
     executor: Executor | None = None,
     logger: logging.Logger | None = None,
 ) -> pd.DataFrame:
-    if logger is None:
-        logger = logging.getLogger(f'{__name__}.fft')
+    """Calcule la transformée de Fourier.
 
-    logger.debug('df =\n%r', df)
+    Returns
+    ---------------------------
+    pd.DataFrame
+        La transformée de Fourier calculée pour chaque colonne.
+    """
+    if logger is None:
+        logger = logging.getLogger(f"{__name__}.fft")
+
+    logger.debug("df =\n%r", df)
     ts, xs = zip(
         *(
             (df.iloc[:, i].to_numpy(), df.iloc[:, i + 1].to_numpy())
             for i in range(0, len(df.columns), 2)
-        )
+        ),
+        strict=True,
     )
 
-    logger.debug('len(ts), len(xs) = %s, %s', len(ts), len(xs))
+    logger.debug("len(ts), len(xs) = %s, %s", len(ts), len(xs))
 
     if executor is not None:
         results = list(
@@ -200,20 +248,29 @@ def fft(
             itertools.chain([rfftfreq(t) for t in ts], [rfft(x) for x in xs])
         )
 
-    logger.debug('results = %r', results)
+    logger.debug("results = %r", results)
 
     num = len(df.columns) // 2
     cols = [
         pd.Series(r)
-        for r in itertools.chain(*zip(results[:num], results[num:]))
+        for r in itertools.chain(
+            *zip(results[:num], results[num:], strict=True)
+        )
     ]
-    logger.debug('len(cols) = %s', len(cols))
-    return pd.concat(cols, axis='columns')
+    logger.debug("len(cols) = %s", len(cols))
+    return pd.concat(cols, axis="columns")
 
 
 def parallellize(f: Callable[[pd.DataFrame], pd.DataFrame]) -> Callable:
+    """Parallélise l'exécution d'une fonction de calculs.
 
-    @wraps(f)
+    Returns
+    ---------------------------
+    fct: Callable
+        Fonction enveloppant l'exécution en parallèle de f.
+    """
+
+    @functools.wraps(f)
     def fct(
         df: pd.DataFrame,
         *,
@@ -221,72 +278,111 @@ def parallellize(f: Callable[[pd.DataFrame], pd.DataFrame]) -> Callable:
         logger: logging.Logger | None = None,
     ) -> pd.DataFrame:
         if logger is None:
-            logger = logging.getLogger(f'{__name__}.{f.__name__}')
+            logger = logging.getLogger(f"{__name__}.{f.__name__}")
 
-        logger.debug('df.size = %s', df.size)
+        logger.debug("df.size = %s", df.size)
         ts, xs = zip(
             *(
                 (df.iloc[:, i].to_numpy(), df.iloc[:, i + 1].to_numpy())
                 for i in range(0, len(df.columns), 2)
-            )
+            ),
+            strict=True,
         )
 
-        logger.debug('len(ts), len(xs) = %s, %s', len(ts), len(xs))
+        logger.debug("len(ts), len(xs) = %s, %s", len(ts), len(xs))
 
         if executor is not None:
             results = list(executor.map(f, ts, xs))
         else:
-            results = [f(t, x) for t, x in zip(ts, xs)]
+            results = map(f, ts, xs, strict=True)
 
-        logger.debug('results = %r', results)
+        logger.debug("results = %r", results)
 
-        cols = [pd.Series(r) for r in itertools.chain(*zip(ts, results))]
-        logger.debug('len(cols) = %s', len(cols))
-        return pd.concat(cols, axis='columns')
+        cols = [
+            pd.Series(r)
+            for r in itertools.chain(*zip(ts, results, strict=True))
+        ]
+        logger.debug("len(cols) = %s", len(cols))
+        return pd.concat(cols, axis="columns")
 
     return fct
 
 
 def no_op(*, debug: bool = False) -> None:
-    import time
+    """Test d'exécution minimale."""
+    if debug:
+        basicConfig(DEBUG)
 
-    with LigneSerie as com:
-        with TableauCalcul(com) as tab:
-            time.sleep(1)
+    with LigneSerie as com, TableauCalcul(com) as tab:
+        if debug:
+            com.log_to_stderr()
+            com.setLevel(DEBUG)
+            tab.log_to_stderr()
+            tab.setLevel(DEBUG)
+
+        info("Connexion %r établie.", com)
+        info("Tableau %r créé.", tab)
+
+        time.sleep(1)
+
+    info("Fin.")
 
 
 def echocalc(*, debug: bool = False) -> None:
-    import time  # noqa: PLC0415
-
-    from .acq import sinus
+    """Démonstration de calculs en direct."""
+    if debug:
+        basicConfig(DEBUG)
 
     lignes = sinus()
+    info("Données factices crées: %r.", lignes)
+
     with LigneSerie() as com:
+        info("Connexion %r établie.", com)
+
         tab = TableauCalcul(com)
+        info("Tableau %r créé.", tab)
+
         tab.register(fft)
+        info("Calcul %r enregistré.", tab["fft"])
 
-        if debug:
-            tab.log_to_stderr()
-            tab.setLevel('debug')
-
-        with tab as tab:
-            while True:
-                try:
-                    com.print(next(lignes))
-                    print(tab.get('fft', timeout=5))
-                except KeyboardInterrupt:
-                    break
-
-
-def ardcalc(*, debug: bool = False) -> None:
-    import time  # noqa: PLC0415
-
-    with ArduinoNanoEvery(baudrate=9600) as com:
-        tab = TableauCalcul(com)
-        tab.register(fft)
         with tab:
             while True:
                 try:
-                    print(tab.get('fft', timeout=5))
+                    com.print(next(lignes))
+                    info("Nouvelles données transmises.")
+                    print(tab.get("fft", timeout=5))
+                    print()
+                    print("^C pour quitter.")
                 except KeyboardInterrupt:
                     break
+
+        info("Fin.")
+
+
+def ardcalc(*, debug: bool = False) -> None:
+    """Démonstration de calculs en direct."""
+    if debug:
+        basicConfig(DEBUG)
+
+    with ArduinoNanoEvery(baudrate=9600) as com:
+        info("Connexion %r établie.", com)
+
+        tab = TableauCalcul(com)
+        info("Tableau %r créé.", tab)
+
+        tab.register(fft)
+        info("Calcul %r enregistré.", "fft")
+
+        with tab:
+            while True:
+                try:
+                    print(tab.get("fft", timeout=5))
+                    print()
+                    print("^C pour quitter.")
+                except KeyboardInterrupt:
+                    break
+
+    info("Fin.")
+
+
+__all__ = ["TableauCalcul"]

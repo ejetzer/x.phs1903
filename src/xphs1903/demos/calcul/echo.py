@@ -1,6 +1,6 @@
-from ...outils.acq import echotab
+from ...outils.calcul import echocalc
 from ...outils.clitools import argparse
 
 if __name__ == "__main__":
     args = argparse()
-    echotab(debug=args.debug)
+    echocalc(debug=args.debug)

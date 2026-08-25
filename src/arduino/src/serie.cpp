@@ -26,18 +26,21 @@ phs::LigneSerie::read ()
   return res;
 }
 
-String phs::LigneSerie::cmd ()
+String
+phs::LigneSerie::cmd ()
 {
   String res = "";
-  while (this->available()) {
-    char c = this->read();
+  while (this->available ())
+    {
+      char c = this->read ();
 
-    if (c == '\n') {
-      break;
+      if (c == '\n')
+        {
+          break;
+        }
+
+      res += c;
     }
-
-    res += c;
-  }
 
   return res;
 }

@@ -20,10 +20,17 @@ rufflint: pipenv
 ruffformat: pipenv
 	$(ruff) format . 2> "$(LOGS)/$(notdir $@).log"
 
+black = $(pipenv) run black
+blackformat: pipenv
+	$(black) src/xphs1903 docs/ template/ tests/
+
+pylint: pipenv
+	$(pylint) src/xphs1903 docs/ template/ tests/
+
 clangformat: $(clangformat)
 	$(clangformat) -i $(ard_src)/**/*.{ino,h,cpp} 2> "$(LOGS)/$(notdir $@).log"
 
-format: ruffformat clangformat
+format: blackformat clangformat
 
 lint: format rufflint
 

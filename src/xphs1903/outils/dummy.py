@@ -70,7 +70,7 @@ def signal(
             for i, f in enumerate(args):
                 tn = t_noise[i]()
                 fn = noise[i]()
-                res |= {f't_{i}': t + tn, f'f_{i}': f(t + tn) + fn}
+                res |= {f"t_{i}": t + tn, f"f_{i}": f(t + tn) + fn}
             yel.append(res)
             t += dt
         yield yel
@@ -95,6 +95,11 @@ def noise(
         Valeur moyenne.
     seed: int | None = None
         Valeur de départ pour le générateur de nombres aléatoires.
+
+    Returns
+    ----------------
+    list[Callable]
+        Une liste de fonctions de génération de bruit normal.
     """
     gna = np.random.default_rng(seed=seed)
 
@@ -105,8 +110,18 @@ def noise(
 
 
 def concat(*args: Callable) -> list[dict[str, float]]:
-    for ls in zip(*args):
+    """Concatène des itérateurs de lignes de données.
+
+    Yields
+    ----------------
+    list[dict[str, float]]
+        Les groupes de lignes des itérateurs.
+    """
+    for ls in zip(*args, strict=True):
         yel = []
-        for l in ls:
-            yel += l
+        for l_ in ls:
+            yel += l_
         yield yel
+
+
+__all__ = ["noise", "signal"]

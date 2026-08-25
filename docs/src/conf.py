@@ -20,11 +20,11 @@ from hawkmoth.util import readthedocs
 __logger = logging.getLogger(__name__)
 __handler = logging.StreamHandler()
 __formatter = logging.Formatter(
-    '%(name)s:'
-    '%(levelname)s\t'
-    '%(threadName)s\t'
-    '%(funcName)s (%(lineno)s)\t'
-    '%(message)s'
+    "%(name)s:"
+    "%(levelname)s\t"
+    "%(threadName)s\t"
+    "%(funcName)s (%(lineno)s)\t"
+    "%(message)s"
 )
 __logger.setLevel(logging.INFO)
 __handler.setFormatter(__formatter)
@@ -33,16 +33,16 @@ __logger.addHandler(__handler)
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'x.phs1903'
-author = 'Émile Jetzer & Jacques Massicotte, Polytechnique Montréal'
-project_copyright = '%Y ' + author
+project = "x.phs1903"
+author = "Émile Jetzer & Jacques Massicotte, Polytechnique Montréal"
+project_copyright = "%Y " + author
 
-__logger.info('Configuration de la document pour %s', project)
-__logger.info('Écrit par %s', author)
-__logger.info('%s', project_copyright)
+__logger.info("Configuration de la document pour %s", project)
+__logger.info("Écrit par %s", author)
+__logger.info("%s", project_copyright)
 
 sys.path.insert(
-    0, str((Path(__file__).parent.parent.parent / 'lib').resolve())
+    0, str((Path(__file__).parent.parent.parent / "lib").resolve())
 )
 import version as mkversion  # noqa: E402
 
@@ -50,52 +50,52 @@ version = mkversion.vstring()
 print(version)
 
 if not version:
-    repo_path = (Path(__file__).parent.parent.parent / '.git').resolve()
-    __logger.info('Répertoire git: %s', repo_path)
+    repo_path = (Path(__file__).parent.parent.parent / ".git").resolve()
+    __logger.info("Répertoire git: %s", repo_path)
 
     try:
         import pygit2 as pygit
 
         repo = pygit.Repository(repo_path)
-        reference = repo.describe(dirty_suffix='+')
+        reference = repo.describe(dirty_suffix="+")
     except (ImportError, pygit.GitError) as err:
-        __logger.warning('Erreur avec PyGit2', exc_info=err)
+        __logger.warning("Erreur avec PyGit2", exc_info=err)
 
         import subprocess  # noqa: S404
 
         reference = subprocess.run(
-            ['/usr/bin/git', 'describe', '--always'],
+            ["/usr/bin/git", "describe", "--always"],
             capture_output=True,
             check=True,
-        ).stdout.decode('utf-8')
+        ).stdout.decode("utf-8")
     finally:
-        release = reference.lstrip('v')
+        release = reference.lstrip("v")
         version = release
-        __logger.info('Version %s', release)
+        __logger.info("Version %s", release)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.autosectionlabel',
-    'sphinx.ext.extlinks',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.viewcode',
-    'hawkmoth',  # https://github.com/jnikula/hawkmoth
-    'hawkmoth.ext.napoleon',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
+    "hawkmoth",  # https://github.com/jnikula/hawkmoth
+    "hawkmoth.ext.napoleon",
 ]
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
 
 # Configuration d'autodoc
-autoclass_content = 'init'
-autodoc_class_signature = 'mixed'
-autodoc_typehints = 'both'
-autodoc_typehints_description_target = 'all'
-autodoc_typehints_format = 'short'
+autoclass_content = "init"
+autodoc_class_signature = "mixed"
+autodoc_typehints = "both"
+autodoc_typehints_description_target = "all"
+autodoc_typehints_format = "short"
 autodoc_inherit_docstrings = False
 
 # Configuration de Napoléon
@@ -103,7 +103,7 @@ napoleon_include_init_with_doc = False
 
 # Ajout du répertoire de code source au chemin Python
 sys.path.insert(
-    0, str((Path(__file__).parent.parent.parent / 'src').resolve())
+    0, str((Path(__file__).parent.parent.parent / "src").resolve())
 )
 
 autosectionlabel_prefix_document = True
@@ -111,96 +111,96 @@ autosectionlabel_prefix_document = True
 # Configuration de Hawkmoth
 hawkmoth_root = Path().parent.parent.resolve()
 arduino_libs = (
-    Path('/')
-    / 'Volumes'
-    / 'data'
-    / 'home'
-    / 'emilejetzer'
-    / 'Library'
-    / 'Arduino15'
-    / 'packages'
-    / 'arduino'
+    Path("/")
+    / "Volumes"
+    / "data"
+    / "home"
+    / "emilejetzer"
+    / "Library"
+    / "Arduino15"
+    / "packages"
+    / "arduino"
 )
-hawkmoth_domain = 'cpp'
+hawkmoth_domain = "cpp"
 hawkmoth_clang = [
-    '-DHAWKMOTH',
-    f'-I{hawkmoth_root}/lib/arduinoHawkmoth',
+    "-DHAWKMOTH",
+    f"-I{hawkmoth_root}/lib/arduinoHawkmoth",
 ]
 
 dev_clang = (
     Path().parent
-    / '.venv'
-    / 'lib'
-    / 'python3.14'
-    / 'site-packages'
-    / 'clang'
-    / 'native'
-    / 'libclang.dylib'
+    / ".venv"
+    / "lib"
+    / "python3.14"
+    / "site-packages"
+    / "clang"
+    / "native"
+    / "libclang.dylib"
 )
 clang_file_set = False
 
 if dev_clang.exists():
     Config.set_library_file(str(dev_clang))
-    __logger.info('Using %s', dev_clang)
+    __logger.info("Using %s", dev_clang)
     clang_file_set = True
 else:
-    any_clang = Path().rglob('libclang.*')
+    any_clang = Path().rglob("libclang.*")
     for cl in any_clang:
         if cl.exists():
             Config.set_library_file(str(cl))
-            __logger.warning('Using %s', cl)
+            __logger.warning("Using %s", cl)
             clang_file_set = True
             break
 
 if not clang_file_set:
-    __logger.warning('Recherche de clang...')
+    __logger.warning("Recherche de clang...")
     readthedocs.clang_setup()
 
 # Configuration des liens externes
 extlinks = {
-    'arduino': ('https://docs.arduino.cc/language-reference/en/%s', '%s'),
-    'arduinolib': ('https://docs.arduino.cc/libraries/%s', '%s'),
-    'arduinocard': ('https://docs.arduino.cc/hardware/en/%s', '%s'),
-    'gammon': ('https://www.gammon.com.au/%s', '%s'),
+    "arduino": ("https://docs.arduino.cc/language-reference/en/%s", "%s"),
+    "arduinolib": ("https://docs.arduino.cc/libraries/%s", "%s"),
+    "arduinocard": ("https://docs.arduino.cc/hardware/en/%s", "%s"),
+    "gammon": ("https://www.gammon.com.au/%s", "%s"),
 }
 extlinks_detect_hardcoded_links = True
 
 # Configuration des liens inter-documentation
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
-    'matplotlib': ('https://matplotlib.org/stable', None),
-    'Sphinx': ('https://www.sphinx-doc.org/en/master/', None),
-    'serial': ('https://pyserial.readthedocs.io/en/latest/', None),
-    'pip': ('https://pip.pypa.io/en/stable/', None),
-    'pipenv': ('https://pipenv.pypa.io/en/latest/', None),
-    'conda': ('https://docs.conda.io/projects/conda/en/stable/', None),
-    'pandas': ('https://pandas.pydata.org/docs/', None),
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
+    "Sphinx": ("https://www.sphinx-doc.org/en/master/", None),
+    "serial": ("https://pyserial.readthedocs.io/en/latest/", None),
+    "pip": ("https://pip.pypa.io/en/stable/", None),
+    "pipenv": ("https://pipenv.pypa.io/en/latest/", None),
+    "conda": ("https://docs.conda.io/projects/conda/en/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
 }
 
-language = 'fr'
+language = "fr"
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'classic'
-html_static_path = ['_static']
+html_theme = "classic"
+html_static_path = ["_static"]
 html_copy_source = True
 html_show_sourcelink = True
-html_logo = 'logo-noir.png'
+html_logo = "logo-noir.png"
 html_use_index = True
 html_show_copyright = True
-html_search_language = 'fr'
+html_search_language = "fr"
 
 # Couleurs du thème
 # Basé sur le logotype de Polytechnique
-couleur_rouge = '#ed1c24'
-couleur_orange = '#f15a22'
-couleur_vert = '#25b34b'
-couleur_bleu = '#00bdf2'
-couleur_blanc = '#ffffff'
-couleur_noir = '#000000'
+couleur_rouge = "#ed1c24"
+couleur_orange = "#f15a22"
+couleur_vert = "#25b34b"
+couleur_bleu = "#00bdf2"
+couleur_blanc = "#ffffff"
+couleur_noir = "#000000"
 
 footerbgcolor = couleur_rouge
 footertextcolor = couleur_noir
@@ -220,23 +220,23 @@ headtextcolor = couleur_noir
 headlinkcolor = couleur_noir
 codebgcolor = couleur_blanc
 codetextcolor = couleur_noir
-bodyfont = 'Arial'
-headfont = 'Impact'
+bodyfont = "Arial"
+headfont = "Impact"
 
 # Options pour la sortie LaTeX et PDF
-latex_engine = 'lualatex'
+latex_engine = "lualatex"
 latex_elements = {
-    'preamble': r'\usepackage{unicode-math}',
-    'papersize': 'letterpaper',
-    'babel': r'\usepackage[french]{babel}',
-    'tableofcontents': r'\sphinxtableofcontents',
+    "preamble": r"\usepackage{unicode-math}",
+    "papersize": "letterpaper",
+    "babel": r"\usepackage[french]{babel}",
+    "tableofcontents": r"\sphinxtableofcontents",
 }
 latex_additional_files = [
-    'latexmkrc',
-    'xindex-sphinx.lua',
-    'logo-noir.png',
+    "latexmkrc",
+    "xindex-sphinx.lua",
+    "logo-noir.png",
 ]
-latex_logo = 'logo-noir.png'
+latex_logo = "logo-noir.png"
 
 # -- Options pour viewcode -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html

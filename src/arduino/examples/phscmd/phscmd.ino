@@ -19,14 +19,15 @@ loop ()
 {
   broche.loop ();
   serie.loop ();
-  if (chrono.loop () && serie.available())
+  if (chrono.loop () && serie.available ())
     {
-      String cmd = serie.cmd();
-      if ((cmd == "A0") || (cmd == "14")) {
-       serie.print("t:");
-       serie.print(String(millis()));
-       serie.tab();
-       serie.println (broche);
-      }
+      String cmd = serie.cmd ();
+      if ((cmd == "A0") || (cmd == "14"))
+        {
+          serie.print ("t:");
+          serie.print (String (millis ()));
+          serie.tab ();
+          serie.println (broche);
+        }
     }
 }

@@ -32,7 +32,7 @@ from .exceptions import (
     WrongArtistTypeError,
     WrongCanvasTypeError,
 )
-from .logging import WithLogger, suppress
+from .logging import WithLogger, suppress, basicConfig, DEBUG
 from .serial import LigneSerie
 
 if typing.TYPE_CHECKING:
@@ -43,26 +43,26 @@ class BaseFormat(WithLogger, MutableMapping):
     """Objet de paramétrage pour un :obj:`Artist` de matplotlib."""
 
     SETTINGS: tuple[str] = (
-        'agg_filter',
-        'alpha',
-        'animated',
-        'clip_box',
-        'clip_on',
-        'clip_path',
-        'figure',
-        'gid',
-        'in_layout',
-        'label',
-        'mouseover',
-        'path_effects',
-        'picker',
-        'rasterized',
-        'sketch_params',
-        'snap',
-        'transform',
-        'url',
-        'visible',
-        'zorder',
+        "agg_filter",
+        "alpha",
+        "animated",
+        "clip_box",
+        "clip_on",
+        "clip_path",
+        "figure",
+        "gid",
+        "in_layout",
+        "label",
+        "mouseover",
+        "path_effects",
+        "picker",
+        "rasterized",
+        "sketch_params",
+        "snap",
+        "transform",
+        "url",
+        "visible",
+        "zorder",
     )
     """Paramètres permis."""
 
@@ -123,7 +123,7 @@ class BaseFormat(WithLogger, MutableMapping):
         """
         return self.keys()
 
-    @functools.cached
+    @functools.cache
     def keys(self) -> iter[str]:
         """Un itérateur sur le clés fixées.
 
@@ -151,7 +151,7 @@ class BaseFormat(WithLogger, MutableMapping):
         """
         return zip(self.keys(), self.values(), strict=True)
 
-    @functools.cached
+    @functools.cache
     def __contains__(self, key: str) -> bool:
         """Vérifie si le paramètre key existe.
 
@@ -164,7 +164,7 @@ class BaseFormat(WithLogger, MutableMapping):
         """
         return key in self.SETTINGS
 
-    @functools.cached
+    @functools.cache
     def __len__(self) -> int:
         """Calcule le nombre de paramètres.
 
@@ -229,13 +229,23 @@ class BaseFormat(WithLogger, MutableMapping):
             ou que la valeur d'au moins un paramètre n'est pas
             égale dans les deux objets.
         """
-        return all(
-            a == b for a, b in zip(self.items(), other.items(), strict=True)
-        )
+        return hash(self) == hash(other)
 
-    def __hash__(self) -> None:
-        """Hache la valeur courante de l'objet."""
-        return hash(tuple(self.items()))
+    def __hash__(self) -> int:
+        """Hache la valeur courante de l'objet.
+
+        Équivalent à hash(tuple(self.items())).
+
+        Returns
+        ---------------------------
+        Hachage de la valeur des réglages de format.
+        """
+        hashable_value = []
+        for key in self.SETTINGS:
+            val = self.__kargs.get(key, self.DEFAULTS.get(key, None))
+            hashable_value.append((key, val))
+        hashable_value = tuple(hashable_value)
+        return hash(hashable_value)
 
     # Les valeurs données aux paramètres sont vérifiées
     # par matplotlib à l'application des paramètres.
@@ -300,17 +310,17 @@ class FigureFormat(BaseFormat):
     """Paramètres de format d'une figure."""
 
     SETTINGS = BaseFormat.SETTINGS + (
-        'canvas',
-        'constrained_layout',
-        'constrained_layout_pads',
-        'dpi',
-        'edgecolor',
-        'facecolor',
-        'figheight',
-        'figwidth',
-        'layout_engine',
-        'linewidth',
-        'size_inches',
+        "canvas",
+        "constrained_layout",
+        "constrained_layout_pads",
+        "dpi",
+        "edgecolor",
+        "facecolor",
+        "figheight",
+        "figwidth",
+        "layout_engine",
+        "linewidth",
+        "size_inches",
     )
 
     @property
@@ -331,39 +341,39 @@ class AxesFormat(BaseFormat):
     """Paramètres de format d'un système d'axes."""
 
     SETTINGS = BaseFormat.SETTINGS + (
-        'adjustable',
-        'anchor',
-        'aspect',
-        'autoscale_on',
-        'autoscalex_on',
-        'autoscaley_on',
-        'axes_locator',
-        'axisbelow',
-        'box_aspect',
-        'facecolor',
-        'forward_navigation_events',
-        'navigate',
-        'navigate_mode',
-        'position',
-        'prop_cycle',
-        'rasterization_zorder',
-        'sublotspec',
-        'title',
-        'xbound',
-        'xinverted',
-        'xlabel',
-        'xlim',
-        'xmargin',
-        'xscale',
-        'xticklabels',
-        'xticksybound',
-        'yinverted',
-        'ylabel',
-        'ylim',
-        'ymargin',
-        'yscale',
-        'yticklabels',
-        'yticks',
+        "adjustable",
+        "anchor",
+        "aspect",
+        "autoscale_on",
+        "autoscalex_on",
+        "autoscaley_on",
+        "axes_locator",
+        "axisbelow",
+        "box_aspect",
+        "facecolor",
+        "forward_navigation_events",
+        "navigate",
+        "navigate_mode",
+        "position",
+        "prop_cycle",
+        "rasterization_zorder",
+        "sublotspec",
+        "title",
+        "xbound",
+        "xinverted",
+        "xlabel",
+        "xlim",
+        "xmargin",
+        "xscale",
+        "xticklabels",
+        "xticksybound",
+        "yinverted",
+        "ylabel",
+        "ylim",
+        "ymargin",
+        "yscale",
+        "yticklabels",
+        "yticks",
     )
 
     @property
@@ -384,28 +394,28 @@ class LineFormat(BaseFormat):
     """Paramètres de formatage pour un tracé."""
 
     SETTINGS = BaseFormat.SETTINGS + (
-        'color',
-        'dash_capstyle',
-        'dash_joinstyle',
-        'dashes',
-        'data',
-        'drawstyle',
-        'fillstyle',
-        'gapcolor',
-        'linestyle',
-        'linewidth',
-        'marker',
-        'markeredgecolor',
-        'markeredgewidth',
-        'markerfacecolor',
-        'markerfacecoloralt',
-        'markersize',
-        'markevery',
-        'pickradius',
-        'solid_capstyle',
-        'solid_joinstyle',
-        'xdata',
-        'ydata',
+        "color",
+        "dash_capstyle",
+        "dash_joinstyle",
+        "dashes",
+        "data",
+        "drawstyle",
+        "fillstyle",
+        "gapcolor",
+        "linestyle",
+        "linewidth",
+        "marker",
+        "markeredgecolor",
+        "markeredgewidth",
+        "markerfacecolor",
+        "markerfacecoloralt",
+        "markersize",
+        "markevery",
+        "pickradius",
+        "solid_capstyle",
+        "solid_joinstyle",
+        "xdata",
+        "ydata",
     )
 
     @property
@@ -497,7 +507,7 @@ class BaseGraphe(CalTab):
         """
         self.checkin()
         lines = self.__plots[key].get_lines()
-        self.debug('lines = %s', lines)
+        self.debug("lines = %s", lines)
         return lines
 
     def add_subplot(
@@ -511,8 +521,8 @@ class BaseGraphe(CalTab):
             Le système d'axes pour le graphique.
         """
         self.checkin()
-        self.debug('which = %s, where = %s', which, where)
-        self.debug('kargs = %s', kargs)
+        self.debug("which = %s, where = %s", which, where)
+        self.debug("kargs = %s", kargs)
 
         if not isinstance(which, tuple):
             which = (which,)
@@ -523,7 +533,7 @@ class BaseGraphe(CalTab):
         for w in which:
             self.add_plot(w, ax)
 
-            self.debug('plot = %s', self.plots[w])
+            self.debug("plot = %s", self.plots[w])
         self.frame()
         return ax
 
@@ -532,7 +542,7 @@ class BaseGraphe(CalTab):
         self.checkin()
 
         if self.updated:
-            self.debug('updated = True')
+            self.debug("updated = True")
             self.frame()
 
         self.updated = False
@@ -564,7 +574,7 @@ class BaseGraphe(CalTab):
     def updated(self, val: bool) -> None:
         """Si les données ont été mises à jour."""
         self.checkin()
-        self.debug('val = %s', val)
+        self.debug("val = %s", val)
 
         if not isinstance(val, bool):
             raise UpdatedPropertyTypeError(val)
@@ -579,16 +589,16 @@ class BaseGraphe(CalTab):
         self.checkin()
 
         for key in self.__plots:
-            self.debug('key = %s', key)
+            self.debug("key = %s", key)
             lines = self.lines(key)
             df = self[key]
 
             if df is not None:
-                self.debug('df.size = %s', df.size)
+                self.debug("df.size = %s", df.size)
 
             if len(lines) == 0 and df is not None and not df.empty:
                 n = len(df.columns)
-                self.debug('n = %s', n)
+                self.debug("n = %s", n)
                 ts, xs = df.iloc[:, 0].to_numpy(), df.iloc[:, 1].to_numpy()
                 ax = self.plots[key]
                 lines = ax.plot(ts, xs)
@@ -611,7 +621,7 @@ class BaseGraphe(CalTab):
     def save(self, path: pathlib.Path) -> None:
         """Enregistre l'image."""
         self.checkin()
-        self.debug('path = %s', path)
+        self.debug("path = %s", path)
         self.frame()
         self.fig.savefig(str(path))
 
@@ -659,8 +669,8 @@ class PyPlotGraphe(BaseGraphe):
             L'objet Axes contenant le sous-graphique.
         """
         self.checkin()
-        self.debug('which = %s, where = %s', which, where)
-        self.debug('kargs = %s', kargs)
+        self.debug("which = %s, where = %s", which, where)
+        self.debug("kargs = %s", kargs)
 
         if not isinstance(which, tuple):
             which = (which,)
@@ -670,7 +680,7 @@ class PyPlotGraphe(BaseGraphe):
         for w in which:
             self.add_plot(w, ax)
 
-            self.debug('plot = %s', self.plots[w])
+            self.debug("plot = %s", self.plots[w])
 
         self.frame()
         return ax
@@ -695,8 +705,8 @@ class CanvasGraphe(BaseGraphe):
     ) -> None:
         """Configure la classe parente."""
         self.checkin()
-        self.debug('CanvasClass = %s', canvas_class.__name__)
-        self.debug('kargs = %s', kargs)
+        self.debug("CanvasClass = %s", canvas_class.__name__)
+        self.debug("kargs = %s", kargs)
         super().__init__(com)
         self.__canvas = None
 
@@ -740,7 +750,7 @@ class FichierGraphe(CanvasGraphe):
         self,
         com: LigneSerie,
         *,
-        name: str | pathlib.Path = 'graphe.png',
+        name: str | pathlib.Path = "graphe.png",
     ) -> None:
         """Création des objets d'exécution parallèle."""
         self.checkin()
@@ -866,17 +876,21 @@ class TkGraphe(CanvasGraphe):
 
 
 def interactive_echo_pyplot_plot(*, debug: bool = False) -> None:
-    """Affiche des données simulées avecplt."""
+    """Affiche des données simulées avec plt."""
+
+    if debug:
+        basicConfig(DEBUG)
+
     lignes = sinus()
     with LigneSerie() as com:
         tab = PyPlotGraphe(com)
 
         if debug:
             tab.log_to_stderr()
-            tab.setLevel('debug')
+            tab.setLevel("debug")
 
         tab.register(fft)
-        tab.add_subplot('fft', (1, 2, 2))
+        tab.add_subplot("fft", (1, 2, 2))
         tab.add_subplot(0, (1, 2, 1))
 
         with tab:
@@ -889,38 +903,36 @@ def interactive_echo_pyplot_plot(*, debug: bool = False) -> None:
 
 def static_echo_image_plot(*, debug: bool = False) -> None:
     """Compile et enregistre des données simulées."""
+
+    if debug:
+        basicConfig(DEBUG)
+
     lignes = sinus()
     with LigneSerie() as com:
         tab = BaseGraphe(com)
-
-        if debug:
-            tab.log_to_stderr()
-            tab.setLevel('debug')
-
         tab.register(fft)
-        tab.add_subplot('fft', (1, 2, 2))
+        tab.add_subplot("fft", (1, 2, 2))
         tab.add_subplot(0, (1, 2, 1))
 
         with tab:
             for _i in range(100):
                 com.print(next(lignes))
             tab.wait()
-            tab.save('graphe.png')
+            tab.save("graphe.png")
 
 
 def dynamic_echo_image_plot(*, debug: bool = False) -> None:
     """Enregistre des données simulées."""
+
+    if debug:
+        basicConfig(DEBUG)
+
     lignes = sinus()
     with LigneSerie() as com:
         tab = FichierGraphe(com)
-
-        if debug:
-            tab.log_to_stderr()
-            tab.setLevel('debug')
-
         tab.register(fft)
         tab.add_subplot(0, (1, 2, 1))
-        tab.add_subplot('fft', (1, 2, 2))
+        tab.add_subplot("fft", (1, 2, 2))
 
         with tab:
             for _i in range(100):
@@ -930,18 +942,17 @@ def dynamic_echo_image_plot(*, debug: bool = False) -> None:
 
 def static_echo_tk_plot(*, debug: bool = False) -> None:
     """Compile et affiche des données simulées."""
+
+    if debug:
+        basicConfig(DEBUG)
+
     root = tk.Tk()
     lignes = sinus()
     with LigneSerie() as com:
         tab = TkGraphe(com, root=root)
-
-        if debug:
-            tab.log_to_stderr()
-            tab.setLevel('debug')
-
         tab.register(fft)
         tab.add_subplot(0, (1, 2, 1))
-        tab.add_subplot('fft', (1, 2, 2))
+        tab.add_subplot("fft", (1, 2, 2))
 
         with tab:
             for _i in range(100):
@@ -954,18 +965,17 @@ def static_echo_tk_plot(*, debug: bool = False) -> None:
 
 def dynamic_echo_tk_plot(*, debug: bool = False) -> None:
     """Affiche des données simulées."""
+
+    if debug:
+        basicConfig(DEBUG)
+
     root = tk.Tk()
     lignes = sinus()
     with LigneSerie() as com:
         tab = TkGraphe(com, root=root)
-
-        if debug:
-            tab.log_to_stderr()
-            tab.setLevel('debug')
-
         tab.register(fft)
         tab.add_subplot(0, (1, 2, 1))
-        tab.add_subplot('fft', (1, 2, 2))
+        tab.add_subplot("fft", (1, 2, 2))
         tab.show()
 
         with tab:
@@ -977,18 +987,17 @@ def dynamic_echo_tk_plot(*, debug: bool = False) -> None:
 
 def interactive_echo_tk_plot(*, debug: bool = False) -> None:
     """Affiche des données simulées."""
+
+    if debug:
+        basicConfig(DEBUG)
+
     root = tk.Tk()
     lignes = sinus()
     with LigneSerie() as com:
         tab = TkGraphe(com, root=root)
-
-        if debug:
-            tab.log_to_stderr()
-            tab.setLevel('debug')
-
         tab.register(fft)
         tab.add_subplot(0, (1, 2, 1))
-        tab.add_subplot('fft', (1, 2, 2))
+        tab.add_subplot("fft", (1, 2, 2))
         tab.show()
         tab.toolbar.grid(column=0, row=1, sticky=tk.W + tk.E)
 
@@ -1002,18 +1011,87 @@ def interactive_echo_tk_plot(*, debug: bool = False) -> None:
 def static_arduino_image_plot(*, debug: bool = False) -> None:
     """Compile et enregistre les données reçues d'un Arduino."""
 
+    if debug:
+        basicConfig(DEBUG)
+
+    with ArduinoNanoEvery() as com:
+        tab = BaseGraphe(com)
+        tab.register(fft)
+        tab.add_subplot("fft", (1, 2, 2))
+        tab.add_subplot(0, (1, 2, 1))
+
+        with tab:
+            tab.wait()
+            tab.save("graphe.png")
+
 
 def dynamic_arduino_image_plot(*, debug: bool = False) -> None:
     """Enregistre les données reçues d'un Arduino."""
+
+    if debug:
+        basicConfig(DEBUG)
+
+    with ArduinoNanoEvery() as com:
+        tab = FichierGraphe(com)
+        tab.register(fft)
+        tab.add_subplot(0, (1, 2, 1))
+        tab.add_subplot("fft", (1, 2, 2))
+
+        with tab:
+            tab.wait()
 
 
 def static_arduino_tk_plot(*, debug: bool = False) -> None:
     """Compile et affiche les données reçues d'un Arduino."""
 
+    if debug:
+        basicConfig(DEBUG)
+
+    root = tk.Tk()
+    with ArduinoNanoEvery() as com:
+        tab = TkGraphe(com, root=root)
+        tab.register(fft)
+        tab.add_subplot(0, (1, 2, 1))
+        tab.add_subplot("fft", (1, 2, 2))
+
+        with tab:
+            tab.show()
+            tab.wait()
+            root.mainloop()
+
 
 def dynamic_arduino_tk_plot(*, debug: bool = False) -> None:
     """Affiche les données reçues d'un Arduino."""
 
+    if debug:
+        basicConfig(DEBUG)
+
+    root = tk.Tk()
+    with ArduinoNanoEvery() as com:
+        tab = TkGraphe(com, root=root)
+        tab.register(fft)
+        tab.add_subplot(0, (1, 2, 1))
+        tab.add_subplot("fft", (1, 2, 2))
+        tab.show()
+
+        with tab:
+            root.mainloop()
+
 
 def interactive_arduino_tk_plot(*, debug: bool = False) -> None:
     """Affiche les données reçues d'un Arduino."""
+
+    if debug:
+        basicConfig(DEBUG)
+
+    root = tk.Tk()
+    with ArduinoNanoEvery() as com:
+        tab = TkGraphe(com, root=root)
+        tab.register(fft)
+        tab.add_subplot(0, (1, 2, 1))
+        tab.add_subplot("fft", (1, 2, 2))
+        tab.show()
+        tab.toolbar.grid(column=0, row=1, sticky=tk.W + tk.E)
+
+        with tab:
+            root.mainloop()

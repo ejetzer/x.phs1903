@@ -44,6 +44,8 @@ python-docs-theme = "*"
 pydata-sphinx-theme = "*"
 matplotlib-inline = "*"
 rich = "*"
+pylint = "*"
+black = "*"
 
 [scripts]
 "version" = "python lib/version.py"

@@ -1,15 +1,24 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
 """Définitions d'execptions et erreurs précises."""
 
+# ruff: noqa: ANN401
+# Les arguments d'entrée de plusieurs erreurs
+# doivent pouvoir accepter n'importe quel objet.
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
 
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    from .plot import BaseFormat
+    from .serial import LigneSerie
+
 
 class BaseXPHS1903Exception(BaseException):
-    pass
+    """Exception de base pour les exceptions de PHS1903."""
 
 
 class WrongSerialInputTypeError(TypeError, BaseXPHS1903Exception):
@@ -23,7 +32,7 @@ class WrongSerialInputTypeError(TypeError, BaseXPHS1903Exception):
         obj: Any
             L'objet du mauvais type.
         """
-        msg = f'Expected str or list[dict] but got {type(obj)}.'
+        msg = f"Expected str or list[dict] but got {type(obj)}."
         super().__init__(msg)
 
 
@@ -39,9 +48,9 @@ class ParsableArduinoSerialDataError(ValueError, BaseXPHS1903Exception):
             Les données invalides.
         """
         msg = (
-            'Expected data of format '
+            "Expected data of format "
             "'t:val\tf:val[...]' but "
-            f'got {data!r} instead.'
+            f"got {data!r} instead."
         )
         super().__init__(msg)
 
@@ -60,74 +69,134 @@ class NoiseTypeError(TypeError, ValueError, BaseXPHS1903Exception):
             Les fonctions pour lesquelles ont défini du bruit.
         """
         msg = (
-            'Expected data of type NoneType, '
-            f'Callable or a list of length {len(args)} '
-            f'but got {noise!r} instead.'
+            "Expected data of type NoneType, "
+            f"Callable or a list of length {len(args)} "
+            f"but got {noise!r} instead."
         )
         super().__init__(msg)
 
 
 class WrongWindowTypeError(TypeError, BaseXPHS1903Exception):
+    """Erreur indiquant un mauvais type de fenêtre de fonction."""
+
     def __init__(self, val: Any) -> None:
-        msg = f'Expected int or numpy.ndarray, but got {type(val)}.'
+        """Crée le message d'erreur."""
+        msg = f"Expected int or numpy.ndarray, but got {type(val)}."
         super().__init__(msg)
 
 
 class WrongCanvasTypeError(TypeError, BaseXPHS1903Exception):
+    """Erreur indiquant un type de Canvas invalide."""
+
     def __init__(self, val: Any) -> None:
-        msg = f'Expected FigureCanvasAgg but got {type(val)}'
+        """Crée le message d'erreur."""
+        msg = f"Expected FigureCanvasAgg but got {type(val)}"
         super().__init__(msg)
 
 
 class UpdatedPropertyTypeError(TypeError, BaseXPHS1903Exception):
+    """Erreur indiquant que la valeur assignée à updated est invalide."""
+
     def __init__(self, val: Any) -> None:
-        msg = f'updated can only be boolean, not {type(val)}'
+        """Crée le message d'erreur."""
+        msg = f"updated can only be boolean, not {type(val)}"
         super().__init__(msg)
 
 
 class WrongArtistTypeError(TypeError, BaseXPHS1903Exception):
+    """Erreur indiquant une sous-classe d'Artist invalide."""
+
     def __init__(self, val: Any) -> None:
-        msg = f'Expected instance of matplotlib.artist.Artist but got {type(val)}.'
+        """Crée le message d'erreur."""
+        msg = (
+            f"Expected instance of matplotlib.artist.Artist"
+            f" but got {type(val)}."
+        )
         super().__init__(msg)
 
 
-class NotLine2DTypeError(TypeError, BaseXPHS1903Exception):
+class NotLine2DTypeError(WrongArtistTypeError, BaseXPHS1903Exception):
+    """Erreur indiquant qu'on attendait une Line2D."""
+
     def __init__(self, val: Any) -> None:
-        msg = f'Expected matplotlib.lines.Line2D but got {type(val)}.'
+        """Crée le message d'erreur."""
+        msg = f"Expected matplotlib.lines.Line2D but got {type(val)}."
         super().__init__(msg)
 
 
-class NotAxesTypeError(TypeError, BaseXPHS1903Exception):
+class NotAxesTypeError(WrongArtistTypeError, BaseXPHS1903Exception):
+    """Erreur indiquant qu'on attendait un Axes."""
+
     def __init__(self, val: Any) -> None:
-        msg = f'Expected matplotlib.axes.Axes but got {type(val)}.'
+        """Crée le message d'erreur."""
+        msg = f"Expected matplotlib.axes.Axes but got {type(val)}."
         super().__init__(msg)
 
 
-class NotFigureTypeError(TypeError, BaseXPHS1903Exception):
+class NotFigureTypeError(WrongArtistTypeError, BaseXPHS1903Exception):
+    """Erreur indiquant qu'on attendait une Figure."""
+
     def __init__(self, val: Any) -> None:
-        msg = f'Expected matplotlib.figure.Figure but got {type(val)}.'
+        """Crée le message d'erreur."""
+        msg = f"Expected matplotlib.figure.Figure but got {type(val)}."
         super().__init__(msg)
 
 
 class IncorrectFormatTypeError(TypeError, BaseXPHS1903Exception):
+    """Erreur indiquant un type de Format incompatible avec un Artist donné."""
+
     def __init__(self, obj: BaseFormat, oth: Any) -> None:
-        msg = f'Expected dict or {type(obj).__name__} but got {type(oth)}.'
+        """Crée le message d'erreur."""
+        msg = f"Expected dict or {type(obj).__name__} but got {type(oth)}."
         super().__init__(msg)
 
 
 class CanvasAlreadySetError(RuntimeError, BaseXPHS1903Exception):
+    """Erreur indiquant qu'un attribut canvas est déjà fixé."""
+
     def __init__(self, canvas: FigureCanvasAgg) -> None:
-        msg = f'canvas is already set to {canvas} and cannot be changed.'
+        """Crée le message d'erreur."""
+        msg = f"canvas is already set to {canvas} and cannot be changed."
+        super().__init__(msg)
+
+
+class IterAlreadySetError(RuntimeError, BaseXPHS1903Exception):
+    """Erreur indiquant qu'un attribut ser est déjà fixé."""
+
+    def __init__(self, ser: LigneSerie) -> None:
+        """Crée le message d'erreur."""
+        msg = f"ser is already set to {ser} and cannot be changed."
         super().__init__(msg)
 
 
 class IncorrectFormatKeyError(KeyError, BaseXPHS1903Exception):
+    """Erreur indiquant qu'une clé d'objet Format n'existe pas."""
+
     def __init__(self, obj: BaseFormat, key: str) -> None:
-        msg = f'{key!r} is not in the allowed keys. Allowed keys are: {obj.SETTINGS}.'
+        """Crée le message d'erreur."""
+        msg = (
+            f"{key!r} is not in the allowed keys. "
+            f"Allowed keys are: {obj.SETTINGS}."
+        )
         super().__init__(msg)
 
 
 class InvalidCommandTypeError(TypeError, BaseXPHS1903Exception):
+    """Erreur indiquant un type de commande invalide."""
+
     def __init__(self, val: Any) -> None:
-        msg = f'Expected str but got {type(val)}.'
+        """Crée le message d'erreur."""
+        msg = f"Expected str but got {type(val)}."
         super().__init__(msg)
+
+
+class InvalidCalculKeyTypeError(TypeError, BaseXPHS1903Exception):
+    """Erreur indiquant un mauvais type de clé de calcul."""
+
+    def __init__(self, key: Any) -> None:
+        """Crée le message d'erreur."""
+        msg = f"Expected str or int but got f{type(key)}."
+        super().__init__(msg)
+
+
+__all__ = []

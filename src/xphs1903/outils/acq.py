@@ -4,13 +4,15 @@
 """Fonctions de contrôle ordiné."""
 
 import threading
+import time
 from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from .dummy import noise, signal
-from .logging import WithLogger
+from .exceptions import IterAlreadySetError
+from .logging import DEBUG, WithLogger, basicConfig, info, suppress
 from .serial import ArduinoNanoEvery, LigneSerie
 
 if TYPE_CHECKING:
@@ -42,6 +44,7 @@ class Tableau(WithLogger):
 
     @property
     def connection(self) -> LigneSerie | None:
+        """Connexion série."""
         return self.__iter
 
     @connection.setter
@@ -55,31 +58,34 @@ class Tableau(WithLogger):
         """Lit les nouvelles données."""
         self.checkin()
 
-        try:
+        def final() -> None:
+            if not self.__arret.is_set():
+                self.__arret.set()
+
+        with suppress(self, Exception, final=final):
             while not self.__arret.is_set():
                 ser = None
                 if self.__iter is not None:
                     ser = self.__iter.next(block=False, parse=True)
 
                 if ser is not None:
-                    self.debug('ser = %r', ser)
+                    self.debug("ser = %r", ser)
                     with self.__loquet_buffer:
                         self.__buffer.append(pd.Series(ser).to_frame().T)
-                        self.debug('len(buffer) = %s', len(self.__buffer))
-        except Exception as err:
-            self.error('', exc_info=err)
-        finally:
-            if not self.__arret.is_set():
-                self.__arret.set()
+                        self.debug("len(buffer) = %s", len(self.__buffer))
 
     def __run_update(self) -> None:
         """Concatène les DataFrame."""
         self.checkin()
 
-        try:
+        def final() -> None:
+            if not self.__arret.is_set():
+                self.__arret.set()
+
+        with suppress(self, Exception, final):
             while not self.__arret.is_set():
                 if len(self.__buffer) > 0:
-                    self.debug('len(buffer) = %s', len(self.__buffer))
+                    self.debug("len(buffer) = %s", len(self.__buffer))
                     with self.__loquet_buffer, self.__loquet_df:
                         self.__df = pd.concat(
                             [self.__df] + self.__buffer
@@ -88,11 +94,6 @@ class Tableau(WithLogger):
 
                         if not self._updated.is_set():
                             self._updated.set()
-        except Exception as err:
-            self.error('', exc_info=err)
-        finally:
-            if not self.__arret.is_set():
-                self.__arret.set()
 
     def close(self) -> None:
         """Arrête la compilation des données."""
@@ -126,8 +127,9 @@ class Tableau(WithLogger):
         self.checkin()
 
         if ser is not None and self.__iter is not None:
-            raise ValueError
-        elif ser is not None:
+            raise IterAlreadySetError(self.__iter)
+
+        if ser is not None:
             self.__iter = ser
 
         self.__thread_consume.start()
@@ -178,6 +180,18 @@ class Tableau(WithLogger):
         return ret  # noqa: RET504
 
     def __getitem__(self, key: int) -> pd.DataFrame:
+        """Obtiens la paire de colonne key.
+
+        Returns
+        ---------------------
+        pd.DataFrame
+            DataFrame de deux colonnes.
+
+        Raises
+        ---------------------
+        KeyError
+            Index key en dehors du nombe de séries de mesures.
+        """
         self.checkin()
         if key > len(self.df.columns) // 2:
             raise KeyError
@@ -187,62 +201,74 @@ class Tableau(WithLogger):
 
     @property
     def ts(self) -> pd.DataFrame:
+        """Colonnes de temps."""
         self.checkin()
         num = len(self.df.columns)
         return [self.df.iloc[:, i] for i in range(0, num, 2)]
 
     @property
     def xs(self) -> pd.DataFrame:
+        """Colonnes de mesures."""
         self.checkin()
         num = len(self.df.columns)
         return [self.df.iloc[:, i + 1] for i in range(0, num, 2)]
 
     def wait(self) -> None:
+        """Attendre la fin de l'acquisition."""
         self.__iter.wait()
 
         while len(self.__buffer) > 0:
             continue
 
 
-def aléatoire():
+def aléatoire() -> list[dict[str, float]]:
     yield from signal(*noise(d=4), bunch=10)
 
 
-def sinus():
+def sinus() -> list[dict[str, float]]:
     yield from signal(np.sin, np.cos, bunch=10, noise=noise(d=2))
 
 
 def echotab(*, debug: bool = True) -> None:
     """Démonstration des outils d'acquisition."""
-    import time  # noqa: PLC0415
+    if debug:
+        basicConfig(DEBUG)
 
     lignes = sinus()
-    with LigneSerie() as com:
-        with Tableau(com) as tab:
-            if debug:
-                tab.log_to_stderr()
-                tab.setLevel('debug')
+    with LigneSerie() as com, Tableau(com) as tab:
+        info("Connexion %r établie.", com)
+        info("Tableau %r créé.", tab)
 
-            for ligne in lignes:
-                try:
-                    com.print(ligne)
-                    print(tab.df)
-                    time.sleep(5)
-                except KeyboardInterrupt:
-                    break
+        for ligne in lignes:
+            try:
+                com.print(ligne)
+                print(tab.df)
+                print("^C pour quitter.")
+                time.sleep(5)
+            except KeyboardInterrupt:
+                break
+
+    info("Fin.")
 
 
 def ardtab(*, debug: bool = False) -> None:
-    import time
+    """Exemple de compilation de données."""
+    if debug:
+        basicConfig(DEBUG)
 
-    with ArduinoNanoEvery() as ard:
-        with Tableau(ard) as tab:
-            while True:
-                try:
-                    print(tab.df)
-                    time.sleep(5)
-                except KeyboardInterrupt:
-                    break
+    with ArduinoNanoEvery() as ard, Tableau(ard) as tab:
+        info("Connexion %r établie.", ard)
+        info("Tableau %r créé.", tab)
+
+        while True:
+            try:
+                print(tab.df)
+                print("^C pour quitter.")
+                time.sleep(5)
+            except KeyboardInterrupt:
+                break
+
+    info("Fin.")
 
 
-__all__ = ['Tableau']
+__all__ = ["Tableau"]

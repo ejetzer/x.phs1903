@@ -50,6 +50,7 @@ immédiatement être lu avec la fonction :func:`next`.
 
 """
 
+import contextlib
 import multiprocessing
 import queue
 import time
@@ -61,7 +62,7 @@ from .exceptions import (
     WrongSerialInputTypeError,
 )
 from .functools import staticproperty
-from .logging import WithLogger
+from .logging import WithLogger, basicConfig, DEBUG, info
 
 if typing.TYPE_CHECKING:
     from types import TracebackType
@@ -82,7 +83,7 @@ class LigneSerie(WithLogger):
 
     def __init__(
         self,
-        port: str = 'loop://',
+        port: str = "loop://",
         baudrate: BaudRateType = 115_200,
         *,
         stop_event: multiprocessing.Event | None = None,
@@ -114,14 +115,14 @@ class LigneSerie(WithLogger):
         )
         """Signal d'arrêt pour la ligne série."""
 
-        self.debug('%s', self.__arret)
+        self.debug("%s", self.__arret)
 
         self.__loquet: multiprocessing.Lock = (
             multiprocessing.Lock() if lock is None else lock
         )
         """Loquet de synchronisation pour la ligne série."""
 
-        self.debug('%s', self.__loquet)
+        self.debug("%s", self.__loquet)
 
         self.__reset()
 
@@ -159,7 +160,7 @@ class LigneSerie(WithLogger):
         self,
         data: str | list[dict[str, int | str]],
         *,
-        end: str = '\n',
+        end: str = "\n",
         block: bool = True,
     ) -> None:
         """Envoyer :obj:`!data` via la ligne série.
@@ -188,7 +189,7 @@ class LigneSerie(WithLogger):
 
         """  # noqa: DOC502
         self.checkin()
-        self.debug('len(data) = %s, type(data) = %s', len(data), type(data))
+        self.debug("len(data) = %s, type(data) = %s", len(data), type(data))
 
         if (
             isinstance(data, list)
@@ -196,15 +197,15 @@ class LigneSerie(WithLogger):
             and all(all(isinstance(x, str) for x in d) for d in data)
         ):
             data = end.join(
-                '\t'.join(f'{k}:{v}' for k, v in d.items()) for d in data
+                "\t".join(f"{k}:{v}" for k, v in d.items()) for d in data
             )
 
         if isinstance(data, str):
             try:
-                self.__input.put((data + end).encode('utf-8'), block=block)
+                self.__input.put((data + end).encode("utf-8"), block=block)
             except queue.Full as err:
                 self.debug(
-                    'input.full()=%s', self.__input.full(), exc_info=err
+                    "input.full()=%s", self.__input.full(), exc_info=err
                 )
         else:
             raise WrongSerialInputTypeError(data)
@@ -236,38 +237,39 @@ class LigneSerie(WithLogger):
         with loquet:
             ser.open()
 
-        temp_val: bytes = b''
-        val: bytes = b''
+        temp_val: bytes = b""
+        val: bytes = b""
 
-        while not arret.is_set():
-            if not input.empty() and not ser.out_waiting:
-                try:
-                    cmd: bytes = input.get()
-                except ValueError:
-                    break
-                else:
+        with contextlib.suppress(KeyboardInterrupt):
+            while not arret.is_set():
+                if not input.empty() and not ser.out_waiting:
+                    try:
+                        cmd: bytes = input.get()
+                    except ValueError:
+                        break
+                    else:
+                        with loquet:
+                            ser.write(cmd)
+                        input.task_done()
+
+                if len(val) > 0:
+                    try:
+                        output.put(val, block=False)
+                    except ValueError:
+                        break
+                    else:
+                        val = b""
+                elif not output.full() and ser.in_waiting:
+                    max_size: int = 100
                     with loquet:
-                        ser.write(cmd)
-                    input.task_done()
+                        val = ser.read_until(b"\n", size=max_size)
 
-            if len(val) > 0:
-                try:
-                    output.put(val, block=False)
-                except ValueError:
-                    break
-                else:
-                    val = b''
-            elif not output.full() and ser.in_waiting:
-                max_size: int = 100
-                with loquet:
-                    val = ser.read_until(b'\n', size=max_size)
-
-                if val.endswith(b'\n'):
-                    val = temp_val + val
-                    temp_val = b''
-                elif len(val) == max_size:
-                    temp_val += val
-                    val = b''
+                    if val.endswith(b"\n"):
+                        val = temp_val + val
+                        temp_val = b""
+                    elif len(val) == max_size:
+                        temp_val += val
+                        val = b""
 
         ser.close()
 
@@ -313,13 +315,13 @@ class LigneSerie(WithLogger):
                 self.__output,
                 self.__loquet,
             ),
-            name=f'{self.__port}',
+            name=f"{self.__port}",
             daemon=True,
         )
         """Objet :class:`threading.Thread` propre à cette ligne série."""
 
         self.__thread.start()
-        self.debug('%s', self.__thread)
+        self.debug("%s", self.__thread)
         self.__open = True
 
     @property
@@ -366,7 +368,7 @@ class LigneSerie(WithLogger):
         self.checkin()
 
         if typ is not None:
-            self.warning('', exc_info=exc)
+            self.warning("", exc_info=exc)
 
         self.close()
 
@@ -375,24 +377,24 @@ class LigneSerie(WithLogger):
     def close(self) -> None:
         """Ferme la connexion série."""
         self.checkin()
-        self.debug('%s', self.__open)
+        self.debug("%s", self.__open)
 
         if self.__open:
             self.__arret.set()
-            self.debug('%s', self.__arret)
+            self.debug("%s", self.__arret)
 
             self.__input.close()
             self.__output.close()
 
             self.__thread.join(timeout=0.005)
-            self.debug('%s', self.__thread)
+            self.debug("%s", self.__thread)
 
             if self.__thread.is_alive():
                 self.__thread.interrupt()
 
             self.__open = False
 
-        self.debug('%s', self.__open)
+        self.debug("%s", self.__open)
         self.__reset()
 
     def wait(self) -> None:
@@ -409,11 +411,11 @@ class LigneSerie(WithLogger):
         self.checkin()
 
         self.__open = False
-        self.__temp_val = b'\n'
+        self.__temp_val = b"\n"
 
         if self.__arret.is_set():
             self.__arret.clear()
-        self.debug('%s', self.__arret)
+        self.debug("%s", self.__arret)
 
     def __next__(self) -> str:
         """Renvoie l'élément suiant reçu sur la ligne série.
@@ -467,7 +469,7 @@ class LigneSerie(WithLogger):
             return None
 
         try:
-            val: str = val.decode('utf-8')
+            val: str = val.decode("utf-8")
         except UnicodeDecodeError:
             # Les erreurs d'encodage peuvent arriver quand le
             # débit de communication est mal réglé ou si les
@@ -476,7 +478,7 @@ class LigneSerie(WithLogger):
             # on les remplace ici par un caractère reconnaissable
             # comme indicateur de problème.
 
-            res = ''
+            res = ""
 
             # Ci-dessous, la variable c est redéfinie à l'intérieur de
             # la boucle. C'est un idiome fréquent en Python pour des
@@ -485,9 +487,9 @@ class LigneSerie(WithLogger):
             # ou externes.
             for c in val:
                 try:
-                    c = c.decode('utf-8')  # noqa: PLW2901
+                    c = c.decode("utf-8")  # noqa: PLW2901
                 except UnicodeDecodeError:
-                    c = '▮'  # noqa: PLW2901
+                    c = "▮"  # noqa: PLW2901
                 finally:
                     res += c
 
@@ -498,12 +500,12 @@ class LigneSerie(WithLogger):
         if not parse:
             return val
 
-        if '\t' in val:
-            items = val.split('\t')
+        if "\t" in val:
+            items = val.split("\t")
 
-            if all((':' in mot) for mot in items):
+            if all((":" in mot) for mot in items):
                 return {
-                    k: float(v) for k, v in (mot.split(':') for mot in items)
+                    k: float(v) for k, v in (mot.split(":") for mot in items)
                 }
 
         raise ParsableArduinoSerialDataError(val)
@@ -608,11 +610,11 @@ class LigneSerie(WithLogger):
 
         if self.is_open:
             return (
-                f'LigneSerie<{hex(id(self))}> '
-                f'to {self.__port} running on {self.__thread}'
+                f"LigneSerie<{hex(id(self))}> "
+                f"to {self.__port} running on {self.__thread}"
             )
 
-        return f'LigneSerie<{hex(id(self))}> to {self.__serial}'
+        return f"LigneSerie<{hex(id(self))}> to {self.__serial}"
 
 
 class Appareil(LigneSerie):
@@ -627,7 +629,7 @@ class Appareil(LigneSerie):
         'hwgrep://&skip_busy'
             Adresse indiquant n'importe quel appareil disponible.
         """
-        return 'hwgrep://&skip_busy'
+        return "hwgrep://&skip_busy"
 
     def __init__(
         self,
@@ -683,7 +685,7 @@ class ArduinoNanoEvery(Appareil):
         'hwgrep://Arduino Nano Every&skip_busy'
             Adresse indiquant n'importe quel appareil disponible.
         """
-        return 'hwgrep://Arduino Nano Every&skip_busy'
+        return "hwgrep://Arduino Nano Every&skip_busy"
 
 
 def no_op(*, debug: bool = False) -> None:
@@ -712,14 +714,12 @@ def echo(*, debug: bool = False) -> None:
         Si la journalisation de débogage est activée.
     """
     if debug:
-        from .logging import DEBUG, config  # noqa: PLC0415
-
-        config(__name__, level=DEBUG)
+        basicConfig(DEBUG, use_rich=True)
 
     with LigneSerie() as com:
         while True:
             try:
-                com.print(input('>>>'))
+                com.print(input(">>>"))
                 print(com.next(block=True))
             except KeyboardInterrupt:
                 break
@@ -737,14 +737,12 @@ def ardecho(*, debug: bool = False) -> None:
         Si la journalisation de débogage est activée.
     """
     if debug:
-        from .logging import DEBUG, config  # noqa: PLC0415
-
-        config(__name__, level=DEBUG)
+        basicConfig(DEBUG)
 
     with ArduinoNanoEvery(baudrate=9600) as com:
         while True:
             try:
-                com.print(input('>>>'))
+                com.print(input(">>>"))
                 print(com.next(block=True))
             except KeyboardInterrupt:
                 break
@@ -759,9 +757,7 @@ def echodata(*, debug: bool = False) -> None:
         Si la journalisation de débogage est activée.
     """
     if debug:
-        from .logging import DEBUG, config  # noqa: PLC0415
-
-        config(__name__, level=DEBUG)
+        basicConfig(DEBUG)
 
     with LigneSerie() as com:
         for sig in dummy_signal():
@@ -781,9 +777,7 @@ def arddata(*, debug: bool = False) -> None:
         Si la journalisation de débogage est activée.
     """
     if debug:
-        from .logging import DEBUG, config  # noqa: PLC0415
-
-        config(__name__, level=DEBUG)
+        basicConfig(DEBUG)
 
     with ArduinoNanoEvery(baudrate=9600) as com:
         while True:
@@ -793,4 +787,4 @@ def arddata(*, debug: bool = False) -> None:
                 break
 
 
-__all__ = ['Appareil', 'ArduinoNanoEvery', 'LigneSerie']
+__all__ = ["Appareil", "ArduinoNanoEvery", "LigneSerie"]
