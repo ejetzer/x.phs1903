@@ -9,3 +9,8 @@ Implémentation Python
    python/plot
    python/gui
    python/logging
+   python/functools
+   python/clitools
+   python/dummy
+   python/exceptions
+   python/demos

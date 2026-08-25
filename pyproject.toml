@@ -165,10 +165,20 @@ convention = "pep257"
 [tool.ruff.format]
 docstring-code-format = true
 indent-style = "space"
-quote-style = "single"
+quote-style = "double"
 preview = true
 
 [tool.black]
 line-length = 79
 target-version = ["py314"]
 verbose = true
+
+[tool.pylint.main]
+source-roots = ["src/xphs1903", "template", "tests", "docs/src"]
+
+[tool.pylint.parameter_documentation]
+accept-no-param-doc = false
+accept-no-raise-doc = false
+accept-no-return-doc = false
+accept-no-yields-doc = false
+default-docstring-type = "numpy"
