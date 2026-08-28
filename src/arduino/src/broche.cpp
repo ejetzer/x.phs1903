@@ -56,141 +56,201 @@ phs::BrocheAnalogique::sonde ()
   return this->Broche::valeur ();
 }
 
+void phs::BrocheAnalogique::loop ()
+{
+  this->BrocheAnalogique::sonde();
+}
+
+uint16_t
+phs::BrocheAnalogique::valeur () const
+{
+  return this->Broche::_valeur;
+}
+
 uint16_t
 phs::BrocheAnalogique::potentiel () const
 {
-  uint16_t res = this->Broche::valeur () * 5e3 / 1024;
+  uint16_t res = this->valeur () * 4.883; // 5.0e3 / 1024
   return res;
 }
 
-phs::ListeBroche::ListeBroche ()
+template<typename T>
+phs::ListeBroche<T>::ListeBroche ()
 {
   this->numero = 13;
   this->size = 100;
+  this->dt = 10;
+  this->_valeurs.resize (this->size);
 }
 
-phs::ListeBroche::ListeBroche (uint8_t numero)
+template<typename T>
+phs::ListeBroche<T>::ListeBroche (uint8_t numero)
 {
   this->numero = numero;
   this->size = 100;
+  this->dt = 10;
+  this->_valeurs.resize (this->size);
 }
 
-phs::ListeBroche::ListeBroche (uint8_t numero, uint8_t size)
+template<typename T>
+phs::ListeBroche<T>::ListeBroche (uint8_t numero, uint16_t size)
 {
   this->numero = numero;
   this->size = size;
+  this->dt = 10;
+  this->_valeurs.resize (this->size);
 }
 
-void
-phs::ListeBroche::setup ()
+template<typename T>
+phs::ListeBroche<T>::ListeBroche(uint8_t numero, uint16_t size, uint16_t dt)
 {
+  this->numero = numero;
+  this->size = size;
+  this->dt = dt;
   this->_valeurs.resize (this->size);
-  this->_temps.resize (this->size);
-  this->begin ();
+}
 
+template<typename T>
+void
+phs::ListeBroche<T>::setup ()
+{
   pinMode (this->numero, INPUT_PULLUP);
   this->regler (LOW);
 }
 
+template<typename T>
 void
-phs::ListeBroche::loop ()
+phs::ListeBroche<T>::loop ()
 {
   this->sonde ();
   this->move ();
 }
 
-uint16_t
-phs::ListeBroche::sonde ()
+template<typename T>
+T
+phs::ListeBroche<T>::sonde ()
 {
-  uint8_t i = this->pos ();
-  uint16_t v = analogRead (this->numero);
-  uint16_t t = millis ();
-  this->_temps[i] = t;
-  this->_valeurs[i] = v;
+  uint16_t i = this->pos ();
+  this->_valeurs[i] = analogRead (this->numero);
   return this->valeur ();
 }
 
-uint8_t
-phs::ListeBroche::pos () const
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::pos () const
 {
   return this->curri;
 }
 
-uint8_t
-phs::ListeBroche::pos (uint8_t i)
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::pos (uint16_t i)
 {
   this->curri = i;
   this->curri %= this->size;
   return this->curri;
 }
 
-uint8_t
-phs::ListeBroche::move ()
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::move ()
 {
   this->pos (this->next ());
   return this->pos ();
 }
 
-uint8_t
-phs::ListeBroche::move (uint8_t n)
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::move (uint16_t n)
 {
-  uint8_t i = this->pos ();
+  uint16_t i = this->pos ();
   this->pos (i + n);
   return this->pos ();
 }
 
-uint16_t
-phs::ListeBroche::valeur () const
+template<typename T>
+T
+phs::ListeBroche<T>::valeur () const
 {
-  uint8_t i = this->pos ();
-  uint16_t v = this->_valeurs[i];
+  uint16_t i = this->pos ();
+  T v = this->_valeurs[i];
   return v;
 }
 
-uint16_t
-phs::ListeBroche::valeur (uint8_t i) const
+template<typename T>
+T
+phs::ListeBroche<T>::valeur (uint16_t i) const
 {
-  uint16_t v = this->_valeurs[i];
+  T v = this->_valeurs[i];
   return v;
 }
 
+template<typename T>
 uint16_t
-phs::ListeBroche::temps () const
+phs::ListeBroche<T>::potentiel () const
 {
-  uint8_t i = this->pos ();
-  uint16_t v = this->_temps[i];
-  return v;
+  T val = this->valeur ();
+  float pre = 1.0;
+  if (sizeof(T) == 1) {
+    pre = 4.0;
+  }
+  uint16_t res = (float)(val) * pre * 4.883; // 5.0e3 / 1024
+  return res;
 }
 
+template<typename T>
 uint16_t
-phs::ListeBroche::temps (uint8_t i) const
+phs::ListeBroche<T>::potentiel (uint16_t n) const
 {
-  uint16_t v = this->_temps[i];
-  return v;
+  uint16_t res = (float)(this->valeur (n)) * 4.883; // 5.0e3 / 1024
+  return res;
 }
 
-uint8_t
-phs::ListeBroche::begin () const
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::temps () const
+{
+  uint16_t i = this->pos ();
+  uint16_t dt = this->dt;
+  uint16_t t = i * dt;
+  return t;
+}
+
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::temps (uint16_t i) const
+{
+  uint16_t dt = this->dt;
+  uint16_t t = i * dt;
+  return t;
+}
+
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::begin () const
 {
   return 0;
 }
 
-uint8_t
-phs::ListeBroche::end () const
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::end () const
 {
   return this->size - 1;
 }
 
-uint8_t
-phs::ListeBroche::next () const
+template<typename T>
+uint16_t
+phs::ListeBroche<T>::next () const
 {
   return this->pos () + 1;
 }
 
+template<typename T>
 bool
-phs::ListeBroche::is_full () const
+phs::ListeBroche<T>::is_full () const
 {
-  if (this->next () == this->end ())
+  if (this->pos () == this->end ())
     {
       return true;
     }
@@ -200,8 +260,20 @@ phs::ListeBroche::is_full () const
     }
 }
 
+template<typename T>
 void
-phs::ListeBroche::empty ()
+phs::ListeBroche<T>::empty ()
 {
   this->pos (this->begin ());
+}
+
+template class phs::ListeBroche<uint8_t>;
+template class phs::ListeBroche<uint16_t>;
+
+// https://docs.arduino.cc/learn/programming/memory-guide/
+int freeRam() {
+  extern int __heap_start,*__brkval;
+  int v;
+  return (int)&v - (__brkval == 0
+    ? (int)&__heap_start : (int) __brkval);
 }

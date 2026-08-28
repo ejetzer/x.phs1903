@@ -1,3 +1,6 @@
+curr_mk := $(lastword $(MAKEFILE_LIST))
+$(info Lecture de $(curr_mk)...)
+
 dir_source_python = $(SOURCE)/xphs1903
 
 # Configuration de module Python
@@ -27,3 +30,6 @@ $(wheel)/$(wheel_name): $(dir_source_python) $(pyproject) $(python_build) $(BUIL
 	mv $(wheel)/x_phs1903-*.whl "$@"
 
 wheel: $(wheel)/$(wheel_name)
+
+
+$(info $(curr_mk) lu.)

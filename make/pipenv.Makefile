@@ -1,3 +1,6 @@
+curr_mk := $(lastword $(MAKEFILE_LIST))
+$(info Lecture de $(curr_mk)...)
+
 # Développement
 pipfile = Pipfile
 pipfile_lock = Pipfile.lock
@@ -33,3 +36,6 @@ $(drapeau_pipenv): pip $(DIR_DRAPEAUX)
 
 $(prerequis_docs): $(pipfile)
 	$(pipenv) requirements --exclude-index --no-lock|sed 's/==/~=/g' > $@ 2> "$(LOGS)/$(notdir $@).log"
+
+
+$(info $(curr_mk) lu.)

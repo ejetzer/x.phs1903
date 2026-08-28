@@ -12,6 +12,7 @@ Recevoir un tableau
    Ce tutoriel est basé sur :doc:`/start/python/echo`.
 
 #. Assurez vous d'avoir téléversé le programme de remplissage et d'envoi de tableau sur votre Arduino.
+   Voir :doc:`/tuto/acq/tabfill`.
 #. Créez un nouveau fichier Python dans votre dossier de projet, nommé :file:`tabsend.py`.
 #. Importez la classe de communication série :class:`ArduinoNanoEvery` du sous-module :mod:`xphs1903.outils.serial`:
 

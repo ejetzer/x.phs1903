@@ -1,3 +1,6 @@
+# (c) Copyright 2026 Émile Jetzer. All Rights Reserved. 
+"""Exemple de calculs sur des données prises avec un Arduino."""
+
 from ...outils.calcul import ardcalc
 from ...outils.clitools import argparse
 

@@ -32,8 +32,8 @@ from .exceptions import (
     WrongArtistTypeError,
     WrongCanvasTypeError,
 )
-from .logging import WithLogger, suppress, basicConfig, DEBUG
-from .serial import LigneSerie
+from .logging import DEBUG, WithLogger, basicConfig, suppress
+from .serial import ArduinoNanoEvery, LigneSerie
 
 if typing.TYPE_CHECKING:
     from typing import Any, ClassVar, Self
@@ -123,7 +123,6 @@ class BaseFormat(WithLogger, MutableMapping):
         """
         return self.keys()
 
-    @functools.cache
     def keys(self) -> iter[str]:
         """Un itérateur sur le clés fixées.
 
@@ -151,8 +150,9 @@ class BaseFormat(WithLogger, MutableMapping):
         """
         return zip(self.keys(), self.values(), strict=True)
 
+    @classmethod
     @functools.cache
-    def __contains__(self, key: str) -> bool:
+    def __contains__(cls, key: str) -> bool:
         """Vérifie si le paramètre key existe.
 
         Returns
@@ -162,10 +162,11 @@ class BaseFormat(WithLogger, MutableMapping):
         False
             Si le paramètre n'existe pas.
         """
-        return key in self.SETTINGS
+        return key in cls.SETTINGS
 
+    @classmethod
     @functools.cache
-    def __len__(self) -> int:
+    def __len__(cls) -> int:
         """Calcule le nombre de paramètres.
 
         Returns
@@ -173,7 +174,7 @@ class BaseFormat(WithLogger, MutableMapping):
         int
             Le nombre de paramètres.
         """
-        return len(self.SETTINGS)
+        return len(cls.SETTINGS)
 
     def __getitem__(self, key: str) -> Any:  # noqa: ANN401
         """Obtiens la valeur d'un paramètre.
@@ -877,7 +878,6 @@ class TkGraphe(CanvasGraphe):
 
 def interactive_echo_pyplot_plot(*, debug: bool = False) -> None:
     """Affiche des données simulées avec plt."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -903,7 +903,6 @@ def interactive_echo_pyplot_plot(*, debug: bool = False) -> None:
 
 def static_echo_image_plot(*, debug: bool = False) -> None:
     """Compile et enregistre des données simulées."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -923,7 +922,6 @@ def static_echo_image_plot(*, debug: bool = False) -> None:
 
 def dynamic_echo_image_plot(*, debug: bool = False) -> None:
     """Enregistre des données simulées."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -942,7 +940,6 @@ def dynamic_echo_image_plot(*, debug: bool = False) -> None:
 
 def static_echo_tk_plot(*, debug: bool = False) -> None:
     """Compile et affiche des données simulées."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -965,7 +962,6 @@ def static_echo_tk_plot(*, debug: bool = False) -> None:
 
 def dynamic_echo_tk_plot(*, debug: bool = False) -> None:
     """Affiche des données simulées."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -987,7 +983,6 @@ def dynamic_echo_tk_plot(*, debug: bool = False) -> None:
 
 def interactive_echo_tk_plot(*, debug: bool = False) -> None:
     """Affiche des données simulées."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -1010,7 +1005,6 @@ def interactive_echo_tk_plot(*, debug: bool = False) -> None:
 
 def static_arduino_image_plot(*, debug: bool = False) -> None:
     """Compile et enregistre les données reçues d'un Arduino."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -1027,7 +1021,6 @@ def static_arduino_image_plot(*, debug: bool = False) -> None:
 
 def dynamic_arduino_image_plot(*, debug: bool = False) -> None:
     """Enregistre les données reçues d'un Arduino."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -1043,7 +1036,6 @@ def dynamic_arduino_image_plot(*, debug: bool = False) -> None:
 
 def static_arduino_tk_plot(*, debug: bool = False) -> None:
     """Compile et affiche les données reçues d'un Arduino."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -1062,7 +1054,6 @@ def static_arduino_tk_plot(*, debug: bool = False) -> None:
 
 def dynamic_arduino_tk_plot(*, debug: bool = False) -> None:
     """Affiche les données reçues d'un Arduino."""
-
     if debug:
         basicConfig(DEBUG)
 
@@ -1080,7 +1071,6 @@ def dynamic_arduino_tk_plot(*, debug: bool = False) -> None:
 
 def interactive_arduino_tk_plot(*, debug: bool = False) -> None:
     """Affiche les données reçues d'un Arduino."""
-
     if debug:
         basicConfig(DEBUG)
 

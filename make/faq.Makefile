@@ -1,3 +1,6 @@
+curr_mk := $(lastword $(MAKEFILE_LIST))
+$(info Lecture de $(curr_mk)...)
+
 curl ?= /usr/bin/curl
 jq ?= /usr/bin/jq
 askbot_server = http://localhost:8000
@@ -21,3 +24,6 @@ issues: $(logs)
 
 .PHONY: faq issues
 
+
+
+$(info $(curr_mk) lu.)

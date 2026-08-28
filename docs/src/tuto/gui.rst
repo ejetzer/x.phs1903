@@ -1,6 +1,14 @@
 Interface graphique de contrôle et affichage
 ------------------------------------------------
 
+.. warning::
+
+   En date du 28 août cette section n'est pas complète.
+
+.. warning::
+
+   Assurez-vous d'avoir un prototype fonctionnel et caractérisé avant de commencer ce tutoriel.
+
 .. admonition:: Pré-requis
 
    Ce tutoriel assume que vous avez complété les tutoriels

@@ -1,3 +1,2 @@
 [commit]
-template = cfg/commitmsg
-
+template = cfg / commitmsg

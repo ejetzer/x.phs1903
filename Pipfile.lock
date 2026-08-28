@@ -1356,12 +1356,12 @@
         },
         "pydata-sphinx-theme": {
             "hashes": [
-                "sha256:0da172d41e19a66de875f4002f7054b385372ec65763852193791e658d50bb4a",
-                "sha256:56744483c9d72c783e075de716ab95d486108b69605df7528078090b73f11f69"
+                "sha256:d36a754bf9580b01789efa8a01869f2d7c87fa6c543ecbcafb14b6bdd4364f90",
+                "sha256:dc3f71216ea34725ddad68e505497eab4ba134a88abfb971a7df6b28a35c1997"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.11'",
-            "version": "==0.20.0"
+            "version": "==0.21.0"
         },
         "pygit2": {
             "hashes": [
@@ -1937,7 +1937,5 @@
             "version": "==3.2.9"
         }
     },
-    "dev": {},
-    "develop": {},
-    "docs": {}
+    "develop": {}
 }

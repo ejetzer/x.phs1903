@@ -19,9 +19,6 @@ if TYPE_CHECKING:
     from types import TracebackType
     from typing import Self
 
-type TraceurSerie = list[dict[str, float]]
-type IterTraceurSerie = iter[dict[str, float]]
-
 
 class Tableau(WithLogger):
     """Tableau d'acquisition de données par la ligne série."""
@@ -49,6 +46,18 @@ class Tableau(WithLogger):
 
     @connection.setter
     def connection(self, val: LigneSerie | None) -> None:
+        """Vérifie la nouvelle valeur de connection.
+
+        Parameters
+        ---------------------
+        val: LigneSerie
+            La ligne série à laquelle se connecter.
+
+        Raises
+        ---------------------
+        TypeError
+            Si val n'est pas LigneSerie.
+        """
         if val is not None and not isinstance(val, LigneSerie):
             raise TypeError
 
@@ -63,7 +72,7 @@ class Tableau(WithLogger):
                 self.__arret.set()
 
         with suppress(self, Exception, final=final):
-            while not self.__arret.is_set():
+            while not self.__arret.is_set():  # noqa: W0149
                 ser = None
                 if self.__iter is not None:
                     ser = self.__iter.next(block=False, parse=True)
@@ -83,7 +92,7 @@ class Tableau(WithLogger):
                 self.__arret.set()
 
         with suppress(self, Exception, final):
-            while not self.__arret.is_set():
+            while not self.__arret.is_set():  # noqa: W0149
                 if len(self.__buffer) > 0:
                     self.debug("len(buffer) = %s", len(self.__buffer))
                     with self.__loquet_buffer, self.__loquet_df:
@@ -123,7 +132,18 @@ class Tableau(WithLogger):
         return self.df
 
     def start(self, *, ser: LigneSerie | None = None) -> None:
-        """Démarre l'exécution."""
+        """Démarre l'exécution.
+
+        Parameters
+        ---------------------
+        ser: LigneSerie
+            La ligne série à laquelle se connecter.
+
+        Raises
+        ---------------------
+        xphs1903.outils.IterAlreadySetError
+            Si iter est déjà fixé.
+        """  # noqa: DOC502
         self.checkin()
 
         if ser is not None and self.__iter is not None:
@@ -221,16 +241,34 @@ class Tableau(WithLogger):
             continue
 
 
-def aléatoire() -> list[dict[str, float]]:
+def aleatoire() -> list[dict[str, float]]:
+    """Génère un signal aléatoire.
+
+    Yields
+    ---------------------
+    Lignes de données.
+    """
     yield from signal(*noise(d=4), bunch=10)
 
 
 def sinus() -> list[dict[str, float]]:
+    """Génère un sinus bruité.
+
+    Yields
+    ---------------------
+    Lignes de données.
+    """
     yield from signal(np.sin, np.cos, bunch=10, noise=noise(d=2))
 
 
 def echotab(*, debug: bool = True) -> None:
-    """Démonstration des outils d'acquisition."""
+    """Démonstration des outils d'acquisition.
+
+    Parameters
+    ---------------------
+    debug: bool
+        Si la journalisation est activée.
+    """
     if debug:
         basicConfig(DEBUG)
 

@@ -1,3 +1,6 @@
+curr_mk := $(lastword $(MAKEFILE_LIST))
+$(info Lecture de $(curr_mk)...)
+
 VERSION ?= $(shell git describe --always)
 release_name ?= $(NAME)_$(VERSION)
 release_dir ?= $(BUILD)/$(release_name)
@@ -39,3 +42,6 @@ share export: $(release_name).zip
 
 $(release_name).zip: release
 	cp $(release_dir).zip ./
+
+
+$(info $(curr_mk) lu.)

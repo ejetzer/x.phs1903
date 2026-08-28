@@ -62,7 +62,7 @@ from .exceptions import (
     WrongSerialInputTypeError,
 )
 from .functools import staticproperty
-from .logging import WithLogger, basicConfig, DEBUG, info
+from .logging import DEBUG, WithLogger, basicConfig, info
 
 if typing.TYPE_CHECKING:
     from types import TracebackType
@@ -183,9 +183,9 @@ class LigneSerie(WithLogger):
 
         Examples
         ------------------
-        >>> com.print('allo monde')
+        >>> com.print("allo monde")
 
-        >>> com.print([{'A2': 120, '13': 255}])
+        >>> com.print([{"A2": 120, "13": 255}])
 
         """  # noqa: DOC502
         self.checkin()
@@ -240,6 +240,7 @@ class LigneSerie(WithLogger):
         temp_val: bytes = b""
         val: bytes = b""
 
+        ser.read_until(b"\n")
         with contextlib.suppress(KeyboardInterrupt):
             while not arret.is_set():
                 if not input.empty() and not ser.out_waiting:
@@ -614,7 +615,7 @@ class LigneSerie(WithLogger):
                 f"to {self.__port} running on {self.__thread}"
             )
 
-        return f"LigneSerie<{hex(id(self))}> to {self.__serial}"
+        return f"LigneSerie<{hex(id(self))}> to {self.__port}"
 
 
 class Appareil(LigneSerie):
@@ -655,9 +656,9 @@ class Appareil(LigneSerie):
         Examples
         ---------------
         >>> class Arduino(Appareil):
-        ...     APPAREIL = 'hwgrep://Arduino&skip_busy'
+        ...     APPAREIL = "hwgrep://Arduino&skip_busy"
         >>> with Arduino() as ard:
-        ...     ard.print('allo')
+        ...     ard.print("allo")
         ...     print(next(ard))
 
         """
@@ -697,12 +698,13 @@ def no_op(*, debug: bool = False) -> None:
         Si la journalisation de débogage est activée.
     """
     if debug:
-        from .logging import DEBUG, config  # noqa: PLC0415
+        basicConfig(DEBUG)
 
-        config(__name__, level=DEBUG)
-
-    with LigneSerie():
+    with LigneSerie() as com:
+        info("Connecté à %r.", com)
         time.sleep(1)
+
+    info("Fin.")
 
 
 def echo(*, debug: bool = False) -> None:
@@ -714,15 +716,18 @@ def echo(*, debug: bool = False) -> None:
         Si la journalisation de débogage est activée.
     """
     if debug:
-        basicConfig(DEBUG, use_rich=True)
+        basicConfig(DEBUG)
 
     with LigneSerie() as com:
+        info("Connecté à %r.", com)
         while True:
             try:
                 com.print(input(">>>"))
                 print(com.next(block=True))
             except KeyboardInterrupt:
                 break
+
+    info("Fin.")
 
 
 def ardecho(*, debug: bool = False) -> None:
@@ -740,12 +745,15 @@ def ardecho(*, debug: bool = False) -> None:
         basicConfig(DEBUG)
 
     with ArduinoNanoEvery(baudrate=9600) as com:
+        info("Connecté à %r.", com)
         while True:
             try:
                 com.print(input(">>>"))
                 print(com.next(block=True))
             except KeyboardInterrupt:
                 break
+
+    info("Fin.")
 
 
 def echodata(*, debug: bool = False) -> None:
@@ -760,12 +768,15 @@ def echodata(*, debug: bool = False) -> None:
         basicConfig(DEBUG)
 
     with LigneSerie() as com:
+        info("Connecté à %r.", com)
         for sig in dummy_signal():
             try:
                 com.print(sig)
                 print(com.next(block=True, parse=True))
             except KeyboardInterrupt:
                 break
+
+    info("Fin.")
 
 
 def arddata(*, debug: bool = False) -> None:
@@ -780,11 +791,14 @@ def arddata(*, debug: bool = False) -> None:
         basicConfig(DEBUG)
 
     with ArduinoNanoEvery(baudrate=9600) as com:
+        info("Connecté à %r.", com)
         while True:
             try:
                 print(com.next(block=True, parse=True))
             except KeyboardInterrupt:
                 break
+
+    info("Fin.")
 
 
 __all__ = ["Appareil", "ArduinoNanoEvery", "LigneSerie"]
