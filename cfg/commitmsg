@@ -1,7 +1,7 @@
 # Titre: Résumé, à l'impératif, en case de titre sans point à la fin
 # Pas plus de 50 caractères  ### C'est là:   >|
 # Préfixer le titre de façon appropriée:
-# 
+#
 # - ajout:<titre> pour un ajout de fonctionalité
 # - struc:<titre> pour une modification purement structurelle
 # - docum:<titre> pour une modification touchant uniquement la documentation
@@ -14,7 +14,7 @@
 # Limiter les lignes à 72 caractères, soit là:                    >|
 
 # À la fin: inclure une section Co-authored-by.
-# Placer au moins une ligne vide avant. Format: 
+# Placer au moins une ligne vide avant. Format:
 # Co-authored-by: prénom nom <prenom.nom@polymtl.ca>
 #
 # Pour plus d'infos vvvv
@@ -29,4 +29,3 @@
 # 6. Limiter la largeur du corps à 72 caractères
 # 7. Utiliser le corps pour expliquer le *quoi* et *pourquoi* plutôt que le
 #    *comment*
-

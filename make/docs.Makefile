@@ -1,3 +1,6 @@
+curr_mk := $(lastword $(MAKEFILE_LIST))
+$(info Lecture de $(curr_mk)...)
+
 # Documentation
 dir_docs = docs
 dir_docs_source = $(dir_docs)/src
@@ -55,3 +58,6 @@ mandocs: man
 
 man texinfo: $(prerequis_docs) $(conf_py)
 	$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2> "$(LOGS)/$(notdir $@).log"
+
+
+$(info $(curr_mk) lu.)

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from types import TracebackType
     from typing import Any, Final, Self, TextIO
 
-import rich, rich.console
+import rich.console
 from rich.logging import RichHandler
 
 from .functools import staticproperty

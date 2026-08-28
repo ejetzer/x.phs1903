@@ -109,4 +109,4 @@ include make/demos.Makefile
 include make/release.Makefile
 include make/faq.Makefile
 
-
+$(info Makefile lu.)

@@ -33,25 +33,25 @@ class InvalidEndpointError(ValueError):
 
     def __init__(self, endpoint: str) -> None:
         """Mauvais appel d'API."""
-        msg: str = f'Endpoint {endpoint:r} is not valid.'
+        msg: str = f"Endpoint {endpoint:r} is not valid."
         super().__init__(msg)
 
 
 class Github:
     """Interactions avec l'API de GitHub."""
 
-    API_URL: Final[str] = 'https://api.github.com'
+    API_URL: Final[str] = "https://api.github.com"
     """URL de l'API GitHub."""
 
-    ENDPOINTS: tuple[str] = ('issues',)
+    ENDPOINTS: tuple[str] = ("issues",)
     """Appels d'API gérés par la classe."""
 
     def __init__(self, token: str) -> None:
         """Création d'une :class:`requests.Session`."""
         self.session = requests.Session()
-        self.session.headers['Accept'] = 'application/vnd.github+json'
-        self.session.headers['X-GitHub-Api-Version'] = '2026-03-10'
-        self.session.headers['Authorization'] = f'Bearer {token}'
+        self.session.headers["Accept"] = "application/vnd.github+json"
+        self.session.headers["X-GitHub-Api-Version"] = "2026-03-10"
+        self.session.headers["Authorization"] = f"Bearer {token}"
 
     def url(self, endpoint: str, **kargs: int | str) -> str:
         """Calcule l'URL d'appel d'API.
@@ -67,11 +67,11 @@ class Github:
             Si l'appel est invalide ou non-géré par la classe.
         """
         if endpoint in self.ENDPOINTS:
-            params = ''
+            params = ""
             if len(kargs) > 0:
-                params = '?' + urllib.parse.urlencode(kargs)
+                params = "?" + urllib.parse.urlencode(kargs)
 
-            return f'{self.API_URL}/{endpoint}{params}'
+            return f"{self.API_URL}/{endpoint}{params}"
 
         raise InvalidEndpointError(endpoint)
 
@@ -94,11 +94,11 @@ class Github:
     def issues(  # noqa: PLR0913
         self,
         *,
-        filter: str = 'assigned',  # noqa: A002
-        state: str = 'open',
-        sort: str = 'created',
+        filter: str = "assigned",  # noqa: A002
+        state: str = "open",
+        sort: str = "created",
         labels: list[str] | None = None,
-        direction: str = 'desc',
+        direction: str = "desc",
         since: str | None = None,
         collab: bool | None = None,
         orgs: bool | None = None,
@@ -115,28 +115,28 @@ class Github:
             La liste des rapports disponibles.
         """
         kargs = {
-            'filter': filter,
-            'state': state,
-            'sort': sort,
-            'direction': direction,
-            'per_page': per_page,
-            'page': page,
+            "filter": filter,
+            "state": state,
+            "sort": sort,
+            "direction": direction,
+            "per_page": per_page,
+            "page": page,
         }
 
         if labels is not None and len(labels) > 0:
-            kargs['labels'] = ','.join(labels)
+            kargs["labels"] = ",".join(labels)
         if since is not None:
-            kargs['since'] = str(int(since))
+            kargs["since"] = str(int(since))
         if collab is not None:
-            kargs['collab'] = str(int(collab))
+            kargs["collab"] = str(int(collab))
         if orgs is not None:
-            kargs['orgs'] = str(int(collab))
+            kargs["orgs"] = str(int(collab))
         if owned is not None:
-            kargs['owned'] = str(int(owned))
+            kargs["owned"] = str(int(owned))
         if pulls is not None:
-            kargs['pulls'] = str(int(pulls))
+            kargs["pulls"] = str(int(pulls))
 
-        rep = self.api('issues', **kargs)
+        rep = self.api("issues", **kargs)
 
         return [Issue(self, **issue) for issue in rep]
 
@@ -148,7 +148,7 @@ class Github:
         str
             <API GitHub>
         """
-        return '<API GitHub>'
+        return "<API GitHub>"
 
 
 class User:
@@ -178,7 +178,7 @@ class User:
         ----------------
         str
         """
-        return f'<User#{self.id} from {self.parent!r}>'
+        return f"<User#{self.id} from {self.parent!r}>"
 
     def __str__(self) -> str:
         """Affiche un User.
@@ -187,7 +187,7 @@ class User:
         ----------------
         str
         """
-        return f'{self.login}#{self.id}'
+        return f"{self.login}#{self.id}"
 
 
 class Repository:
@@ -241,7 +241,7 @@ class Issue:
         self.html_url: Final[str] = html_url
 
         if body is None:
-            self.__body: Final[str] = ''
+            self.__body: Final[str] = ""
         else:
             self.__body: Final[str] = body
 
@@ -257,8 +257,8 @@ class Issue:
         rst: str
             Le texte converti.
         """
-        mod = pandoc.read(self.__body, format='gfm')
-        return pandoc.write(mod, format='rst')
+        mod = pandoc.read(self.__body, format="gfm")
+        return pandoc.write(mod, format="rst")
 
     def __repr__(self) -> str:
         """Représente une Issue.
@@ -267,7 +267,7 @@ class Issue:
         ----------------
         str
         """
-        return f'<Issue#{self.id} by {self.user} from {self.parent}>'
+        return f"<Issue#{self.id} by {self.user} from {self.parent}>"
 
     def __str__(self) -> str:
         """Affiche une description de l'Issue.
@@ -276,7 +276,7 @@ class Issue:
         ----------------
         str
         """
-        return f'Issue#{self.id} by {self.user}'
+        return f"Issue#{self.id} by {self.user}"
 
     def to_rst(self) -> str:
         """Converti en reST.
@@ -286,7 +286,7 @@ class Issue:
         str
         """
         title: str = self.title
-        title_line: str = '.' * (len(title) + 2)
+        title_line: str = "." * (len(title) + 2)
         ret: str = f"""
 {title}
 {title_line}
@@ -302,21 +302,21 @@ Voir en ligne: {self.html_url}.
 def main() -> None:
     """Affiche une section reST des rapports de problème."""
     token = (
-        (pathlib.Path.home() / '.config' / 'github' / 'tokens' / 'issues.txt')
+        (pathlib.Path.home() / ".config" / "github" / "tokens" / "issues.txt")
         .read_text()
         .strip()
     )
     gh = Github(token)
     issues = gh.issues()
 
-    print('Rapports de bogues sur Github')
-    print('----------------------------------')
+    print("Rapports de bogues sur Github")
+    print("----------------------------------")
     print()
     print()
     for issue in issues:
-        if issue.repository.name == 'x.phs1903':
+        if issue.repository.name == "x.phs1903":
             print(issue.to_rst())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,3 +1,6 @@
+curr_mk := $(lastword $(MAKEFILE_LIST))
+$(info Lecture de $(curr_mk)...)
+
 template_dir ?= template
 template_build ?= $(BUILD)/template
 template_files ?= $(wildcard $(template_dir)/*)
@@ -16,3 +19,6 @@ $(template_build_files): $(template_build)/%: $(template_dir)/% $(template_build
 
 $(template_build): $(BUILD)
 	mkdir -p $@
+
+
+$(info $(curr_mk) lu.)

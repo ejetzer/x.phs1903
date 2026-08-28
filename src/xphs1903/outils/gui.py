@@ -9,7 +9,6 @@ from typing import Self
 import matplotlib as mpl
 import pandas as pd
 import pandastable as pt
-import serial.tools
 import serial.tools.list_ports
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg,

@@ -1,3 +1,6 @@
+curr_mk := $(lastword $(MAKEFILE_LIST))
+$(info Lecture de $(curr_mk)...)
+
 # Programmes utilitaires
 dir_outils ?= lib
 python_version ?= 3.14
@@ -51,3 +54,6 @@ $(arduinoSTL_pkg): $(arduinoSTL_prebuild) $(arduinoSTL) $(tar) $(cp) $(rm)
 
 arduinoSTL: $(arduinoSTL_pkg) $(arduino-cli)
 	$(arduino-cli) lib install --config-file $(arduino_config) --zip-path $< 2> "$(LOGS)/$(notdir $@).log"
+
+
+$(info $(curr_mk) lu.)

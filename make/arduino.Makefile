@@ -1,3 +1,6 @@
+curr_mk := $(lastword $(MAKEFILE_LIST))
+$(info Lecture de $(curr_mk)...)
+
 # Installation de modules
 arduino_proprietes = $(CONFIG)/library.properties $(CONFIG)/library.json
 arduino_fichiers := $(shell echo $(SOURCE)/arduino/**/*(.))
@@ -23,3 +26,6 @@ $(arduino_targets_cfg): $(BUILD)/$(NAME)/%: $(CONFIG)/% $(BUILD)/$(NAME)
 
 arduino-install: $(BUILD)/$(NAME).zip arduino arduinoFFT arduinoSTL
 	$(arduino-cli) lib install --config-file $(arduino_config) --zip-path $< 2> "$(LOGS)/$(notdir $@).log"
+
+
+$(info $(curr_mk) lu.)
