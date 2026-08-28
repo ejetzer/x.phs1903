@@ -16,7 +16,7 @@
       "email": "jacques-2.massicotte@polymtl.ca"
     }
   ],
-  "version": "2026.08.00",
+  "version": "2026.8.1",
   "frameworks": [
     "arduino",
     "mbed",
