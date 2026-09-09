@@ -30,8 +30,14 @@ Premier pas avec Spyder
       :download:`main.py <../../../../template/src/main.py>`.
 
 #. Ouvrez Spyder.
+
+   .. image:: spydergen.png
+
 #. Sélectionnez :menuselection:`Projects --> New Project...` et créez un
    nouveau projet à partir de votre répertoire de travail.
+
+   .. image:: spyder_nouvproj.png
+
 #. Dans les réglages de Spyder, réglez l'interpréteur Python à
    l'interpréteur Python 3.14 que vous avez installé dans :doc:`../install`. Voir :doc:`AppData` si vous
    avez de la difficulté à trouver l'interpréteur sur Windows.

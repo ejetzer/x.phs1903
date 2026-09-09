@@ -13,7 +13,11 @@ Sur MacOS, cherchez l'application :file:`Utilitaires/Informations système.app`.
 Les connexions série sont aussi visibles dans la section :menuselection:`Réseau --> Emplacements`.
 Il manque par contre le nom d'appareil à utiliser avec la librairie.
 
+.. image:: infosys.png
+
 Sur Windows, utilisez l'application ``Gestionnaire de périphériques`` pour voir la liste des appareils connectées.
+
+.. image:: gestper.jpg
 
 Sur toutes les plateformes, vous pouvez utiliser la fonction :func:`print_ports` du module
 :mod:`xphs1903.outils.serial`.

@@ -20,18 +20,18 @@ Dans le cadre des ateliers de programmation du cours PHS1903, vous devrez compl√
 
 .. admonition:: Mise √† jour du 9 septembre 2026
 
-   :ref:`majard`
-   :ref:`majpy`
-   :doc:`/start/serial/port`
-   :doc:`/start/install/arduino`
-   :doc:`/start/install/megaavr`
-   :doc:`/start/install/python`
-   :doc:`/start/install/spyder`
-   :doc:`/start/install/w10sec`
-   :doc:`/start/install/w11sec`
-   :doc:`/start/python/AppData`
-   :doc:`/start/python/echo`
-   :doc:`/start/arduino/blink`
+   * :ref:`majard`
+   * :ref:`majpy`
+   * :doc:`/start/serial/port`
+   * :doc:`/start/install/arduino`
+   * :doc:`/start/install/megaavr`
+   * :doc:`/start/install/python`
+   * :doc:`/start/install/spyder`
+   * :doc:`/start/install/w10sec`
+   * :doc:`/start/install/w11sec`
+   * :doc:`/start/python/AppData`
+   * :doc:`/start/python/echo`
+   * :doc:`/start/arduino/blink`
 
 .. only:: latex
 
