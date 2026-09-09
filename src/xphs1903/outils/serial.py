@@ -686,7 +686,20 @@ class ArduinoNanoEvery(Appareil):
         'hwgrep://Arduino Nano Every&skip_busy'
             Adresse indiquant n'importe quel appareil disponible.
         """
+        import platform
+
+        if platform.system() == 'Windows':
+            return "hwgrep://&skip_busy"
+
         return "hwgrep://Arduino Nano Every&skip_busy"
+
+
+def print_ports() -> None:
+    """Affiche les ports série disponibles."""
+    from serial.tools.list_ports import comports
+
+    for p in comports():
+        print(p.device, p.description, p.hwid, sep='\t')
 
 
 def no_op(*, debug: bool = False) -> None:

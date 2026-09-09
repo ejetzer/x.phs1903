@@ -33,7 +33,8 @@ Premier pas avec Spyder
 #. Sélectionnez :menuselection:`Projects --> New Project...` et créez un
    nouveau projet à partir de votre répertoire de travail.
 #. Dans les réglages de Spyder, réglez l'interpréteur Python à
-   l'interpréteur Python 3.14 que vous avez installé dans :doc:`../install`.
+   l'interpréteur Python 3.14 que vous avez installé dans :doc:`../install`. Voir :doc:`AppData` si vous
+   avez de la difficulté à trouver l'interpréteur sur Windows.
 #. Spyder devrait vous avertir que vous n'avez pas le modules :mod:`spyder-kernels` quand vous démarrez
    une nouvelle console. Pour l'installer, suivez les instructions appropriées dans :doc:`spyder-kernels`.
 #. Dans la console IPython de Spyder, entrez les commandes:
@@ -66,6 +67,18 @@ Vous devriez voir apparaître un invite de commande, qui vous renvoie exactement
 le texte que vous tapez quand vous appuyez sur :kbd:`<Enter>`. Bravo!
 
 .. _sorties: https://github.com/ejetzer/x.phs1903/releases
+
+.. _`majpy`:
+
+Mises à jour du module Python
+...............................
+
+C'est probable que pendant le cours il y ait des mises à jour à faire du module Python pendant la session.
+Assurez-vous de régulièrement exécuter cette commande régulièrement en début de labo ou de travail:
+
+>>> pip install --upgrade x.phs1903
+
+pour obtenir la dernière version du module.
 
 Les détails
 ..............

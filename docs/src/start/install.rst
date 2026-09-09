@@ -41,84 +41,15 @@ débogage sont:
 
 .. _`gram`: https://gram-editor.com/
 
-Python
---------
 
-.. Pour installer Python, rendez-vous sur la `page officielle des téléchargements`_
-   de Python, et sélectionnez la version appropriée pour votre système
-   d'exploitation. Des informations détaillées sur l'installation sont
-   disponibles dans la `documentation officielle de Python sur Windows`_.
+.. toctree::
 
-.. _`page officielle des téléchargements`: https://www.python.org/downloads/latest/python3.14/
+   install/python
+   install/spyder
+   install/arduino
+   install/megaavr
+   install/w10sec
+   install/w11sec
 
-.. _`documentation officielle de Python sur Windows`: https://docs.python.org/fr/3.14/using/windows.html
-
-.. note::
-
-   Cette procédure a été testée pour Python 3.14 sur MacOS et Windows en août 2026.
-
-#. Téléchargez l'installeur approprié selon votre système d'exploitation à partir de la
-   `page officielle des téléchargements`_ de Python.
-#. Lancez l'installeur.
-#. Acceptez la licence, à moins que vous n'ayez une objection quelconque.
-   Si c'est le cas, vous devrez vous débrouiller avec le langage de programmation
-   de votre choix.
-#. Sélectionnez :guilabel:`Installer pour moi` si vous n'avez pas les droits
-   d'administration de votre ordinateur.
-#. Acceptez l'installation par défaut.
-#. Confirmez l'installation en appuyant sur :guilabel:`Installer`.
-#. Vérifiez l'installation en lançant l'application IDLE.
-   Sur Windows, elle se trouve via le menu :guilabel:`Windows`.
-   Sur MacOS elle se trouve dans le dossier :file:`/Applications/Python 3.14` ou
-   dans le lanceur d'applications («Launchpad»).
-#. Dans la console interactive d'IDLE, vous pouvez trouver où se trouve votre
-   installation Python en entrant ces commandes:
-
-   >>> import sys
-   >>> sys.executable
-
-   Ce sera utile pour fixer l'interpréteur dans :ref:`Spyder <spyder-sec>` plus tard.
-
-.. seealso::
-   `Documentation officielle de Python sur Windows`_
-
-.. _spyder-sec:
-
-Spyder
---------
-
-.. note::
-
-  Cette procédure a été testée pour Spyder 6.1 sur MacOS et Windows
-  en juin 2026.
-
-#. Téléchargez l'installeur à partir de `la page de téléchargements de Spyder`_.
-#. Lancez l'installeur
-#. Acceptez la licence, à moins que vous n'y aillez une objection quelconque.
-   Si c'est le cas, vous devrez trouver un autre éditeur.
-#. Sélectionnez :guilabel:`Installer pour moi` si vous n'avez pas les droits
-   d'administration de votre ordinateur.
-#. Acceptez le répertoire d'installation par défaut.
-#. Confirmez l'installation en appuyant sur :guilabel:`Installer`.
-
-.. _`la page de téléchargements de Spyder`: https://www.spyder-ide.org/download
-
-
-IDE Arduino
--------------
-
-.. note::
-
-  Cette procédure a été testée pour l'IDE Arduino 2.3 en juin 2026.
-
-#. Téléchargez l'installeur à partir de `la page de téléchargements d'Arduino`_.
-#. Lancez l'installeur
-#. Acceptez la licence, à moins que vous n'y aillez une objection quelconque.
-   Si c'est le cas, vous devrez trouver un autre éditeur et une chaîne de
-   compilation.
-#. Sélectionnez :guilabel:`Juste pour moi` si vous n'avez pas les droits
-   d'adminstration de votre ordinateur.
-#. Acceptez le répertoire d'installation par défaut.
-#. Confirmez l'installation en appuyant sur :guilabel:`Installer`.
-
-.. _`la page de téléchargements d'Arduino`: https://www.arduino.cc/en/software/#ide
+Après avoir complété cette section, continuez avec :doc:`quickstart`.
+Assurez-vous de régulièrement consulter :ref:`majpy` et :ref:`majard`.

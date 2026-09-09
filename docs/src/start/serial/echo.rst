@@ -24,6 +24,12 @@ Programme Python
 #. Vous devriez voir un invite de commande. Entrez du texte et appuyez sur :keyboard:`<enter>`.
    Le texte devrait vous être retourné par votre Arduino.
 
+.. info::
+
+   Sur Windows le module pourrait avoir de la difficulté à identifier votre Arduino. Si c'est le cas,
+   redéfinissez la fonction avec :code:`ArduinoNanoEvery(port='<port>', baudrate=9600)`. Pour connaître
+   le port assigné au Arduino, consultez :doc:`port`.
+
 Les détails
 ...........................
 

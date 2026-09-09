@@ -47,6 +47,17 @@ Vous devriez voir une diode clignoter sur la carte Arduino. Félicitations!
 
 .. _sorties: https://github.com/ejetzer/x.phs1903/releases
 
+.. _`majard`:
+
+Mises à jour du module Arduino
+..................................
+
+C'est probable que pendant le cours il y ait des mises à jour à faire du module Arduino pendant la session.
+Assurez-vous de régulièrement vérifier la page des `sorties`_ sur Github, et réinstallez le module à jour.
+Si l'IDE Arduino vous indique ne pas pouvoir parce que le module existe déjà, naviguez jusqu'au répertoire
+:file:`~/Arduino/librairies` (:file:`~/Documents/Arduino` sur Windows) et retirez le dossier :file:`xphs1903`
+avant de le réinstaller dans l'IDE Arduino.
+
 Les détails
 .............
 

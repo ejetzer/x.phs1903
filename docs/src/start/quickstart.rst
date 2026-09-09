@@ -8,9 +8,11 @@
 
 .. toctree::
 
-  arduino/blink
-  python/echo
   python/spyder-kernels
+  python/echo
+  python/AppData
+  arduino/blink
   arduino/echo
   serial/echo
+  serial/port
 

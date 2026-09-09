@@ -15,6 +15,24 @@
 .. projet et techniciens pour obtenir de l'aide avec ce module. En dehors de la
 .. session, soumettez un signalement de bogue via Github.
 
+Dans le cadre des ateliers de programmation du cours PHS1903, vous devrez compléter la section :doc:`start` et
+:doc:`tuto`. La documentation sera mise à jour au cours de la session.
+
+.. admonition:: Mise à jour du 9 septembre 2026
+
+   :ref:`majard`
+   :ref:`majpy`
+   :doc:`/start/serial/port`
+   :doc:`/start/install/arduino`
+   :doc:`/start/install/megaavr`
+   :doc:`/start/install/python`
+   :doc:`/start/install/spyder`
+   :doc:`/start/install/w10sec`
+   :doc:`/start/install/w11sec`
+   :doc:`/start/python/AppData`
+   :doc:`/start/python/echo`
+   :doc:`/start/arduino/blink`
+
 .. only:: latex
 
    .. warning::
