@@ -4,23 +4,31 @@ Premier pas avec l'Arduino Nano Every
 #. Téléchargez l'archive ``zip`` du module Arduino :mod:`!xphs1903` sur la page
    des `sorties`_ du répertoire sur Github (fichier :file:`xphs1903.zip`).
 
-   .. image:: github_release.png
+   .. figure:: github_release.png
+
+      Page des `sorties sur Github <sorties>`_
 
 #. Ouvrez l'IDE Arduino
 #. Dans la barre latérale, sélectionnez
    :guilabel:`Gestionnaire de bibliothèques`
 #. Cherchez et installez le module :arduinolib:`ArduinoSTL <arduinostl>`.
 
-   .. image:: ardstl.png
+   .. figure:: ardstl.png
+
+      Installation du module :arduinolib:`ArduinoSTL <arduinostl>`
 
 #. Cherchez et installez le module :arduinolib:`ArduinoFFT <arduinofft>`.
 
-   .. image:: ardfft.png
+   .. figure:: ardfft.png
+
+      Installation du module :arduinolib:`ArduinoFFT <arduinofft>`
 
 #. Dans la barre de menu, sélectionnez
    :menuselection:`Croquis --> Importer une bibliothèque --> Ajouter la bibliothèque .ZIP...`
 
-   .. image:: ardzip.png
+   .. figure:: ardzip.png
+
+      Installation d'une bibliothèque
 
 #. Sélectionnez l'archive :file:`xphs1903.zip`.
 
@@ -29,7 +37,9 @@ Une fois l'installation terminée,
 #. Dans la barre de menu, sélectionnez
    :menuselection:`Fichier --> Exemples --> xphs1903 --> phsblink`
 
-   .. image:: ardeg.png
+   .. figure:: ardeg.png
+
+      Sélection d'un exemple dans l'IDE Arduino
 
 #. Appuyez sur le bouton :guilabel:`Vérifier`.
 

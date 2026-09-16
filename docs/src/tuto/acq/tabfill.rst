@@ -31,78 +31,81 @@ classe permet de stocker en mémoire un nombre pré-déterminé de valeurs avec
 le moment de la mesure, pour pouvoir les envoyer d'un coup quand le tableau
 est plein.
 
-Pour l'utiliser, commencez par importer le module :file:`broche.h`.
-
-.. sourcecode:: C++
-  :name: lst:incl-broche
-
-  #include <broche.h>
-
-Ensuite, déclarez un objet de type :cpp:class:`phs::ListeBroche`. Le
-constructeur prend en arguments la broche à mesurer et le nombre
-d'échantillons à garder en mémoire.
+Nous allons modifier le programme créé dans :doc:`multiblink` pour séparer l'envoi
+et la collecte de données. Pour commencer, redéfinissez :obj:`autre_broche` ainsi:
 
 .. sourcecode:: C++
   :name: lst:decl-listebroche
 
-  phs::ListeBroche broche (A0, 100);
-
-Comme pour les autres objets du module :mod:`!xphs1903`, il faut invoquer les
-fonctions :c:func:`setup` et :c:func:`loop` aux bons endroits.
-
-.. sourcecode:: C++
-  :name: lst:setup-loop-listebroche
-  :emphasize-lines: 2,6
-
-  void setup() {
-    broche.setup();
-  }
-
-  void loop() {
-    broche.loop();
-  }
+  phs::ListeBroche autre_broche (A1, 100);
 
 Programmée de cette façon, la valeur de la broche est stockée à chaque itération
 de :c:func:`loop`. Je vous recommande de plutôt temporiser vos mesures pour
-avoir une fréquence d'échantillonage prévisible et ajustable. Pour ça il
-faut utiliser le module :file:`chrono.h`.
+avoir une fréquence d'échantillonage prévisible et ajustable. Nous avons déjà un chronomètre
+:obj:`chrono_clignotant` que nous pouvons utiliser aussi pour l'échantillonage en déplaçant
+:code:`chrono_autre.loop()`:
 
 .. sourcecode:: C++
   :name: lst:chrono-listebroche
-  :emphasize-lines: 2,5,9,13-15
+  :emphasize-lines: 24,30
 
+  #include <serie.h>
   #include <broche.h>
   #include <chrono.h>
 
-  phs::ListeBroche broche (A0, 100);
-  phs::Chrono chrono (5);
+  phs::LigneSerie com (115200);
+  phs::Broche clignotant (13);
+  phs::ListeBroche autre_broche (A1);
+  phs::Chrono chrono_clignotant (1);
+  phs::Chrono chrono_autre (5000);
 
-  void setup() {
-    broche.setup();
-    chrono.setup();
+  void setup ()
+  {
+    com.setup();
+    clignotant.setup();
+    autre_broche.setup();
+    chrono_clignotant.setup();
+    chrono_autre.setup();
   }
 
-  void loop() {
-    if (chrono.loop()) {
-      broche.loop();
+  void loop ()
+  {
+    com.loop();
+    clignotant.loop();
+
+
+    if ( chrono_clignotant.loop() )
+    {
+      int valeur_a1 = autre_broche.valeur();
+      clignotant.regler(valeur_a1);
+      autre_broche.loop();
+    }
+    else if ( chrono_autre.loop() )
+    {
+      com.print( chrono_autre );
+      com.tab();
+      com.print( clignotant );
+      com.tab();
+      com.println( autre_broche );
     }
   }
+
 
 La classe :cpp:class:`phs::ListeBroche` fournit aussi une fonction
 :c:func:`is_full` qui permet de tester si la liste est tout juste pleine.
-Elle s'insère comme suit dans le programme:
+Elle s'insère comme suit dans le programme, en remplaçant :code:`chrono_autre.loop()`:
 
 .. sourcecode: C++
   :name: lst:is-full
-  :emphasize-lines: 5-7
+  :emphasize-lines: 1
 
-  void loop() {
-    if (chrono.loop()) {
-      broche.loop();
-    }
-    if (broche.is_full()) {
-      // Faire quelque chose...
-    }
+  else if ( autre_broche.is_full() )
+  {
+    com.print( chrono_autre );
+    com.tab();
+    com.print( clignotant );
+    com.tab();
+    com.println( autre_broche );
   }
 
 On peut faire des calculs avec les valeurs en mémoire, ou les envoyer sur la
@@ -116,11 +119,11 @@ déclaré un objet :code:`phs::LigneSerie com`.
   :name: lst:listebroche-for
   :caption: Itération sur les valeurs de ``broche``
 
-  if (broche.is_full()) {
-    for (uint8_t i = broche.begin(); i < broche.end(); i++) {
-      broche.pos(i);
-      com.print(broche);
-      com.ln();
+  else if ( autre_broche.is_full() )
+  {
+    for (uint8_t i = autre_broche.begin(); i < autre_broche.end(); i++) {
+      autre_broche.pos(i);
+      com.println(autre_broche);
     }
   }
 

@@ -12,6 +12,26 @@ Plusieurs clignotements
 
    Ce tutoriel est basé sur :doc:`/start/arduino/blink`.
 
+Préparation
+,,,,,,,,,,,,,,,,,,
+
+Pour ce tutoriel, vous aurez besoin d'un générateur de fonction et d'un oscilloscope, ainsi que des fils
+pour connecter les appareils aux broches du Arduino Nano Every. Les connexions se feront ainsi:
+
+#. Sortie ``TTL`` du générateur de fonction vers l'entrée ``trigger`` de l'oscilloscope.
+#. Sortie du générateur de fonction à:
+
+   #. Canal 1 de l'oscilloscope
+   #. Broche A1 de l'Arduino
+
+#. Broche 13 du Arduino au canal 2 de l'oscilloscope
+
+Pour configurer le générateur de fonction, déconnectez les fils du Arduino pour ne pas l'endommager, et utilisez
+l'oscilloscope pour valider que vous générez une onde carrée allant de 0 à 5 V. Faites valider le montage et la
+configuration par un membre de l'équipe pédagogique.
+
+-------------------------------
+
 La bibliothèque :mod:`!xphs1903` pour Arduino Nano Every fournit le module
 :file:`broche.h` pour gérer les broches du Arduino, et le module
 :file:`chrono.h` pour gérer le temps sans bloquer la boucle d'exécution
@@ -44,7 +64,7 @@ broches ``13`` et ``A1``.
 
 Les numéros de broches et leurs alias sont disponibles dans la documentation
 officielle du :arduinocard:`Arduino Nano Every <nano-every>`, et reproduites
-dans le tableau :ref:`tab:broches`.
+dans le tableau :ref:`tab:broches` et la figure :ref:`fig:broches`.
 
 .. list-table:: Broches du Arduino Nano Every
   :header-rows: 1
@@ -113,6 +133,11 @@ dans le tableau :ref:`tab:broches`.
   * - ``21``
     - ``A7``
     - Broche de lecture analogique 7
+
+.. figure:: ABX00028-full-pinout.pdf
+   :name: fig:broches
+
+   Branchements du Arduino Nano Every
 
 Pour utiliser les objets :cpp:class:`phs::Broche`, il faut ajouter deux instructions
 par broche: une dans :c:func:`setup` et une :c:func:`loop`.

@@ -14,4 +14,5 @@ Dans ce tutoriel, vous verrez comment
   acq/multiblink
   acq/tabfill
   acq/tabsend
+  acq/pandas
 

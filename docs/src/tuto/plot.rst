@@ -40,6 +40,9 @@ PyPlot
 
 .. code:: python
 
+   from xphs1903.outils.serial import ArduinoNanoEvery
+   from xphs1903.outils.plot import PyPlotGraphe
+
    with ArduinoNanoEvery() as com:
        tab = PyPlotGraphe(com)
        tab.register(fft)
@@ -55,7 +58,7 @@ Fichier
 .. code:: python
 
    from xphs1903.outils.serial import ArduinoNanoEvery
-   from xphs1903.outils.plot import TkGraphe
+   from xphs1903.outils.plot import FichierGraphe
 
    with ArduinoNanoEvery() as com:
        tab = FichierGraphe(com)

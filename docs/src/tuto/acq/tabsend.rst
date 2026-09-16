@@ -68,13 +68,23 @@ Recevoir un tableau
                   break
 
 #. Exécutez le programme. Pendant l'exécution, appuyez sur :kbd:`<control>-C`. Le programme devrait s'arrêter.
-#. Pour sauvegarder vos données, ajoutez le code suivant après la boucle :py:`while` mais toujours dans le
-   bloc :py:`with`:
+#. Pour sauvegarder vos données, ajoutez le code suivant après la boucle :code:`while` mais toujours dans le
+   bloc :code:`with`:
 
    .. code:: python
 
-      tab.df.to_csv('données.csv')
+      with ArduinoNanoEvery as com, Tableau(com) as tab:
+          while True:
+              try:
+                  print(tab.df)
+                  time.sleep(5)
+              except KeyboardInterrupt:
+                  break
+
+          tab.df.to_csv('données.csv')
 
 #. Vérifiez que le fichier :file:`données.csv` apparaît bien dans votre répertoire de projet quand vous arrêtez
    l'exécution du programme.
 #. Ouvrez le fichier :file:`données.csv` et observez les colonnes. À quoi correspondent-elles?
+
+

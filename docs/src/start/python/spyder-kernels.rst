@@ -10,9 +10,9 @@ Installation sur MacOS
 #. Ouvrir l'application :file:`/Applications/Utilitaires/Terminal.app`.
 #. Entrez la commande
 
-   .. code:: shell
+   .. code:: console
 
-      python3.14 -m pip install spyder-kernels
+      $ python3.14 -m pip install spyder-kernels
 
    L'installation devrait se dérouler sans problème.
 
@@ -23,8 +23,8 @@ Installation sur Windows
 #. Ouvrir l'application :file:`cmd.exe` ou PowerShell.
 #. Entrez la commande
 
-   .. code:: shell
+   .. code:: console
 
-      py -3.14 -m pip install spyder-kernels
+      $ py -3.14 -m pip install spyder-kernels
 
    L'installation devrait se dérouler sans problème.

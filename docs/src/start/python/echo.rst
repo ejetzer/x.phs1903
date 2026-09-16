@@ -1,23 +1,6 @@
 Premier pas avec Spyder
 -------------------------
 
-.. info::
-
-   Les invites de commande sont des caractères utilisés en début de ligne pour indiquer
-   qu'une entrée est attendue de l'utilisateur. Ils ne font pas partie de la commande
-   elle même. En Python, ``>>>`` et ``...`` sont couramment utilisés, comme dans cet
-   exemple:
-
-   >>> def f():
-   ...     return 1
-   ...
-   >>> f()
-   1
-
-   Les trois chevrons indiquent qu'on peut entrer le début d'une nouvelle instruction,
-   et l'ellipse indique qu'on peut continuer une instruction ou un bloc. Dans les *shell*
-   comme bash ou PowerShell, ``$`` et ``#`` sont plus couramment utilisés.
-
 #. Téléchargez le modèle de projet :file:`template.zip` de la page des `sorties`_, ou:
 
    #. Créez un dossier de travail (si ce n'est pas déjà fait)
@@ -31,12 +14,16 @@ Premier pas avec Spyder
 
 #. Ouvrez Spyder.
 
-   .. image:: spydergen.png
+   .. figure:: spydergen.png
+
+      Interface de Spyder
 
 #. Sélectionnez :menuselection:`Projects --> New Project...` et créez un
    nouveau projet à partir de votre répertoire de travail.
 
-   .. image:: spyder_nouvproj.png
+   .. figure:: spyder_nouvproj.png
+
+      Création d'un nouveau projet dans Spyder
 
 #. Dans les réglages de Spyder, réglez l'interpréteur Python à
    l'interpréteur Python 3.14 que vous avez installé dans :doc:`../install`. Voir :doc:`AppData` si vous
@@ -45,7 +32,7 @@ Premier pas avec Spyder
    une nouvelle console. Pour l'installer, suivez les instructions appropriées dans :doc:`spyder-kernels`.
 #. Dans la console IPython de Spyder, entrez les commandes:
 
-   .. code:: python
+   .. code:: pycon
 
       >>> import venv
       >>> venv.create('.venv', system_site_packages=True, with_pip=True)
@@ -56,15 +43,17 @@ Premier pas avec Spyder
    probablement d'utiliser le sélecteur de fichier et d'y naviguer jusqu'à
    votre interpréteur.
 #. Rechargez la console IPython de Spyder
-#. Dans la console IPython, entrez
+#. Dans la console IPython, entrez [#inv]_
 
-   .. code:: bash
+   .. code:: console
 
        $ pip install -r requirements.txt
 
+   .. [#inv] Voir :term:`invite` pour une description des invites de commande.
+
 #. Dans la console IPython, entrez
 
-   .. code:: python
+   .. code:: pycon
 
        >>> from xphs1903.demos.echo import echo
        >>> echo()

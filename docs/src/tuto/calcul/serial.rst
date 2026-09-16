@@ -84,7 +84,7 @@ Transmettre des données structurées
       tab.register(f)
 
 #. Ajoutez une boucle avec une condition pour afficher les résultats du calcul à chaque fois que vous appuyez sur
-   :kdb:`<enter>`:
+   :kbd:`Enter`:
 
    .. code:: python
 
