@@ -1,0 +1,14 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage[siunitx, RPvoltages]{circuitikz}
+
+\begin{document}
+  \begin{circuitikz}[]
+    \draw (0, 0) node[anchor=east] (ttl) {Signal TTL} -- +(1, 0) node[anchor=west] {Déclencheur};
+    \draw (0, 1) node[anchor=east] {Sortie} -- +(0.5, 0) node (tee) {};
+    \draw[fill=black] (tee) circle (0.05);
+    \draw (tee.center) -- ++(0, 0.5) -- +(0.5, 0) node[anchor=west] {Canal 1};
+    \draw (tee.center) -- ++(0, -0.5) -- +(0.5, 0) node[anchor=west] {Broche A1};
+    \draw (0, 2) node[anchor=east] {Canal 2} -- +(1, 0) node[anchor=west] {Broche 13};
+  \end{circuitikz}
+\end{document}

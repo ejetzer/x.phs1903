@@ -5,3 +5,5 @@
 build
 .ruff_cache
 *.zip
+multiblink.pdf
+oscilloscope.pdf

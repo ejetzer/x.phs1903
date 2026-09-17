@@ -26,6 +26,10 @@ pour connecter les appareils aux broches du Arduino Nano Every. Les connexions s
 
 #. Broche 13 du Arduino au canal 2 de l'oscilloscope
 
+.. figure:: multiblink.*
+
+   Connexions entre les appareils. Les ports du générateur de fonction sont en turquoise.
+
 Pour configurer le générateur de fonction, déconnectez les fils du Arduino pour ne pas l'endommager, et utilisez
 l'oscilloscope pour valider que vous générez une onde carrée allant de 0 à 5 V. Faites valider le montage et la
 configuration par un membre de l'équipe pédagogique.
@@ -134,10 +138,10 @@ dans le tableau :ref:`tab:broches` et la figure :ref:`fig:broches`.
     - ``A7``
     - Broche de lecture analogique 7
 
-.. figure:: ABX00028-full-pinout.pdf
+.. figure:: ABX00028-full-pinout.png
    :name: fig:broches
 
-   Branchements du Arduino Nano Every
+   Branchements du Arduino Nano Every, voir :download:`ABX00028-full-pinout.pdf`
 
 Pour utiliser les objets :cpp:class:`phs::Broche`, il faut ajouter deux instructions
 par broche: une dans :c:func:`setup` et une :c:func:`loop`.

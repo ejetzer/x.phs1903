@@ -1,0 +1,32 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage[siunitx, RPvoltages]{circuitikz}
+
+\begin{document}
+  \begin{circuitikz}[]
+    \ctikzset{bipoles/oscope/width=1.6}\ctikzset{bipoles/oscope/height=1.2}
+    \draw (0, 3) node[oscopeshape, label=Oscilloscope](O1){};
+    \node [bnc, orange, rotate=-90, anchor=zero](bnc1) at (O1.in 1){};
+    \node [bnc, blue, rotate=-90, anchor=zero](bnc2) at (O1.in 2){};
+    \node [anchor=west, orange] at (bnc1.north){1};
+    \node [anchor=west, blue] at (bnc2.north){2};
+    \draw (O1.left) to[short, *-] ++(-0.5, 0) to[short] ++(0, -0.5) node[ground](gnd1){};
+    \draw (O1.right) to[short, *-] ++(0.5, 0) node[bnc, anchor=west](trig){Trigger};
+    \draw (trig) to[short] ++(1, 0) node[bnc, rotate=180, anchor=east](ttlbnc){};
+    \draw (5.5, 0) node[ground](gnd2){};
+    \draw (ttlbnc.west) to[short] ++(0.5, 0) to[sqV, l_={TTL}, color=teal] ++(1, 0) to[short] ++(0.5, 0) coordinate(tmp) to[short] (tmp -| gnd2) -- (gnd2);
+    \draw[orange] (bnc1) to[short] ++(0, -0.5) node[bnc, rotate=90, anchor=east] (teein){};
+    \draw[orange] (teein.west) to[short] ++(0, -2);
+    \draw[orange] (teein.west) ++(0, -0.5) to[short, *-, color=orange] ++(0.5, 0) node[bnc, anchor=west](teeout1){};
+    \draw[orange] (teein.west) ++(0, -2) to[short] ++(0.5, 0) node[bnc, anchor=west](teeout2){};
+    \draw[orange] (teeout1.east) to[short] ++(0.5, 0) node[bnc, rotate=180, anchor=east](sigout){};
+    \draw (sigout.west) to[short] ++(0.5, 0) to[csV, l_={Sortie}, color=teal] ++(1, 0) to[short] ++(0.5, 0) coordinate(tmp) to[short, -*] (tmp -| gnd2);
+    \draw (teeout2.east) to[short, -*] ++(0.5, 0) node[anchor=west](A1){};
+    \draw (A1) node[anchor=west]{Broche A1};
+    %\draw (bnc1) to[short, -*] ++(0, -1) node(tee1){} to[short] ++(2, 0) node[bnc, rotate=180, anchor=east](out1){};
+    %\draw (out1.west) to[short] ++(0.5, 1) to[csV, l_={out}] ++(1, 0) to[short] ++(0.5, 0);
+    \draw[blue] (bnc2) to[short] ++(0, -0.5) to[short, -*, color=blue] ++(1, 0);
+    \draw (bnc2) ++(1, -0.5) node[anchor=west] {Broche 13};
+    \draw (6.5, 3) node[anchor=south]{Arduino GND} to[short, *-] (6.5, 0) node[ground]{};
+  \end{circuitikz}
+\end{document}

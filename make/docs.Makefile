@@ -59,5 +59,45 @@ mandocs: man
 man texinfo: $(prerequis_docs) $(conf_py)
 	$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) 2> "$(LOGS)/$(notdir $@).log"
 
+# Figures TikZ
+
+FIGS = $(SOURCEDIR)/tuto/acq/multiblink.png $(SOURCEDIR)/tuto/acq/oscilloscope.png
+SVGS = $(patsubst %.png,%.svg,$(FIGS))
+PDFS = $(patsubst %.png,%.pdf,$(FIGS))
+TIKZ = $(patsubst %.png,%.tikz,$(FIGS))
+$(info Fichiers TikZ)
+$(info )
+$(info --------------)
+$(info )
+$(info $(TIKZ))
+$(info )
+$(info Fichiers PDF)
+$(info )
+$(info --------------)
+$(info )
+$(info $(PDFS))
+$(info )
+$(info Fichiers PNG)
+$(info --------------)
+$(info )
+$(info $(FIGS))
+$(info )
+
+$(TIKZ):
+	[[ -e $@ ]]
+
+latexmkrc = docs/src/latexmkrc
+latexmk = /Library/TeX/texbin/latexmk
+$(PDFS): %.pdf: %.tikz
+	$(latexmk) -gg -norc -r $(latexmkrc) -out2dir="$(dir $@)" $< 2> "$(LOGS)/$(notdir $@).log"
+
+MAGICK = /Users/emilejetzer/.local/bin/magick
+$(FIGS): %.png: %.pdf
+	$(MAGICK) -density 600 $< $@ 2> "$(LOGS)/$(notdir $@).log"
+
+$(SVGS): %.svg: %.pdf
+	$(MAGICK) $< $@ 2> "$(LOGS)/$(notdir $@).log"
+
+figures: $(FIGS) #$(SVGS)
 
 $(info $(curr_mk) lu.)
