@@ -240,7 +240,7 @@ obtenir la valeur de :c:var:`autre_broche` et régler la valeur de
     autre_broche.loop();
 
     if ( chrono_clignotant.loop() ) {
-      int valeur_a1 = autre_broche.valeur();
+      int valeur_a1 = autre_broche.valeur() > 512;
       clignotant.regler(valeur_a1);
     } else if ( chrono_autre.loop() ) {
       // Code ici...
@@ -301,7 +301,7 @@ classe :cpp:class:`phs::LigneSerie`.
     autre_broche.loop();
 
     if ( chrono_clignotant.loop() ) {
-      int valeur_a1 = autre_broche.valeur();
+      int valeur_a1 = autre_broche.valeur() > 512;
       clignotant.regler(valeur_a1);
     } else if ( chrono_autre.loop() ) {
       com.print( chrono_autre );

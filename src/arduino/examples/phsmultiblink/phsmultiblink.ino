@@ -25,7 +25,7 @@ void loop ()
 
   if ( chrono_clignotant.loop() )
   {
-    int valeur_a1 = autre_broche.valeur();
+    int valeur_a1 = autre_broche.valeur() > 512;
     clignotant.regler(valeur_a1);
   }
   else if ( chrono_autre.loop() )
