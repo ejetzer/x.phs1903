@@ -488,7 +488,7 @@ class LigneSerie(WithLogger):
             # ou externes.
             for c in val:
                 try:
-                    c = c.decode("utf-8")  # noqa: PLW2901
+                    c = bytes([c]).decode("utf-8")  # noqa: PLW2901
                 except UnicodeDecodeError:
                     c = "▮"  # noqa: PLW2901
                 finally:

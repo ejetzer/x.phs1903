@@ -4,7 +4,7 @@
 
 phs::LigneSerie com (115200);
 phs::Broche clignotant (13);
-phs::ListeBroche<uint8_t> autre_broche (A1);
+phs::ListeBroche<uint16_t> autre_broche (A1);
 phs::Chrono chrono_clignotant (1);
 phs::Chrono chrono_autre (5000);
 
