@@ -505,9 +505,18 @@ class LigneSerie(WithLogger):
             items = val.split("\t")
 
             if all((":" in mot) for mot in items):
-                return {
-                    k: float(v) for k, v in (mot.split(":") for mot in items)
-                }
+                d = {}
+
+                for k, v in (mot.split(":") for mot in items):
+                    if k.isprintable():
+                        try:
+                            res = float(v)
+                        except ValueError:
+                            d[k] = None
+                        else:
+                            d[k] = res
+
+                return d
 
         raise ParsableArduinoSerialDataError(val)
 
