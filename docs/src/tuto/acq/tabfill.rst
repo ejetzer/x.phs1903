@@ -37,7 +37,7 @@ et la collecte de données. Pour commencer, redéfinissez :obj:`autre_broche` ai
 .. sourcecode:: C++
   :name: lst:decl-listebroche
 
-  phs::ListeBroche autre_broche (A1, 100);
+  phs::ListeBroche<uint8_t> autre_broche (A1, 100);
 
 Programmée de cette façon, la valeur de la broche est stockée à chaque itération
 de :c:func:`loop`. Je vous recommande de plutôt temporiser vos mesures pour
@@ -55,7 +55,7 @@ avoir une fréquence d'échantillonage prévisible et ajustable. Nous avons déj
 
   phs::LigneSerie com (115200);
   phs::Broche clignotant (13);
-  phs::ListeBroche autre_broche (A1);
+  phs::ListeBroche<uint8_t> autre_broche (A1, 100);
   phs::Chrono chrono_clignotant (1);
   phs::Chrono chrono_autre (5000);
 
@@ -76,7 +76,7 @@ avoir une fréquence d'échantillonage prévisible et ajustable. Nous avons déj
 
     if ( chrono_clignotant.loop() )
     {
-      int valeur_a1 = autre_broche.valeur();
+      int valeur_a1 = autre_broche.valeur() > 512;
       clignotant.regler(valeur_a1);
       autre_broche.loop();
     }
