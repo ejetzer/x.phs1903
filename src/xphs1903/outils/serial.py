@@ -495,7 +495,7 @@ class LigneSerie(WithLogger):
                     res += c
 
             val = res
-        else:
+        finally:
             val = val.strip()
 
         if not parse:
