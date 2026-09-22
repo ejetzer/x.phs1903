@@ -108,5 +108,6 @@ publish: export
 include make/demos.Makefile
 include make/release.Makefile
 include make/faq.Makefile
+include make/git.Makefile
 
 $(info Makefile lu.)

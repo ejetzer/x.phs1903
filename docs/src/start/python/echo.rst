@@ -55,7 +55,7 @@ Premier pas avec Spyder
 
    .. code:: pycon
 
-       >>> from xphs1903.demos.echo import echo
+       >>> from xphs1903.demos.serial.text.echo import echo
        >>> echo()
 
 Vous devriez voir apparaître un invite de commande, qui vous renvoie exactement
@@ -94,10 +94,10 @@ fier aux versions de bibliothèques du système d'exploitation. Spécifiquement,
 le module :mod:venv de Python crée un répertoire ``.venv`` contenant un
 interpréteur Python et un répertoire de bibliothèques distinct.
 
-.. code:: python
+.. code:: pycon
 
-  import venv
-  venv.create('.venv', system_site_packages=True, with_pip=True)
+  >>> import venv
+  >>> venv.create('.venv', system_site_packages=True, with_pip=True)
 
 Pour utiliser cet environnement dans Spyder, nous devons lui indiquer où se
 trouve l'interpréteur propre à l'environnement virtuel. C'est ce que nous
@@ -108,9 +108,9 @@ plus accessible est celle du fichier ``requirements.txt``, qui contient une
 simple liste des modules et parfois de leur version, lisible par l'outil ``pip``
 avec la commande
 
-.. code:: bash
+.. code:: console
 
-  pip install -r requirements.txt
+  $ pip install -r requirements.txt
 
 Au cours de votre projet, si vous avez besoin d'un module qui n'est pas déjà
 installé, ajoutez le à ``requirements.txt`` et relancez ``pip``. Le fichier
@@ -121,10 +121,10 @@ Une fois l'environnement virtuel activé, on peut y exécuter du code. Dans ce
 cas-ci, on importe le module ``xphs1903.demos``, mais pas en entier:
 seulement la fonction ``echo``. Ensuite, on l'exécute.
 
-.. code:: python
+.. code:: pycon
 
-  from xphs1903.demos.echo import echo
-  echo()
+  >>> from xphs1903.demos.serial.text.echo import echo
+  >>> echo()
 
 Pour plus de détails sur la fonction :py:func:`!echo`, utilisez la fonction
 :py:func:`help`.

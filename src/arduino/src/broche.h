@@ -31,9 +31,9 @@ public:
   virtual size_t
   printTo (Print &p) const
   {
-    size_t n = p.print (F("broche_"));
+    size_t n = p.print (F ("broche_"));
     n += p.print (this->numero);
-    n += p.print (F(":"));
+    n += p.print (F (":"));
     n += p.print (this->valeur ());
     return n;
   }
@@ -56,9 +56,9 @@ public:
   virtual size_t
   printTo (Print &p) const
   {
-    size_t n = p.print (F("V_"));
+    size_t n = p.print (F ("V_"));
     n += p.print (this->numero);
-    n += p.print (F(":"));
+    n += p.print (F (":"));
     uint16_t pot = this->potentiel ();
     n += p.print (pot);
     return n;
@@ -78,8 +78,7 @@ public:
   void regler (uint8_t val);
 };
 
-template <typename T = uint16_t>
-class ListeBroche : public Broche
+template <typename T = uint16_t> class ListeBroche : public Broche
 {
 public:
   ListeBroche ();
@@ -101,7 +100,7 @@ public:
   uint16_t move (uint16_t);
   T valeur (uint16_t) const;
   T valeur () const;
-  uint16_t potentiel(uint16_t) const;
+  uint16_t potentiel (uint16_t) const;
   uint16_t potentiel () const;
   uint16_t temps (uint16_t) const;
   uint16_t temps () const;
@@ -115,20 +114,20 @@ public:
   {
     size_t n = p.print ("t_");
     n += p.print (this->numero);
-    n += p.print (F(":"));
+    n += p.print (F (":"));
     uint16_t t = this->temps ();
     n += p.print (t);
-    n += p.print (F("\t"));
-    n += p.print (F("broche_"));
+    n += p.print (F ("\t"));
+    n += p.print (F ("broche_"));
     n += p.print (this->numero);
-    n += p.print (F(":"));
+    n += p.print (F (":"));
     uint16_t v = this->valeur ();
     n += p.print (v);
     return n;
   }
 };
 
-int freeRam();
+int freeRam ();
 
 }
 
