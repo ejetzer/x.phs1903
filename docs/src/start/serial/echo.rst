@@ -21,7 +21,7 @@ Programme Python
    >>> from xphs1903.outils.serial import ardecho
    >>> ardecho()
 
-#. Vous devriez voir un invite de commande. Entrez du texte et appuyez sur :keyboard:`<enter>`.
+#. Vous devriez voir un invite de commande. Entrez du texte et appuyez sur :kbd:`<enter>`.
    Le texte devrait vous être retourné par votre Arduino.
 
 .. info::

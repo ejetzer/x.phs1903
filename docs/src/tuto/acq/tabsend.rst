@@ -59,7 +59,7 @@ Recevoir un tableau
       from xphs1903.outils.serial import ArduinoNanoEvery
       from xphs1903.outils.acq import Tableau
 
-      with ArduinoNanoEvery as com, Tableau(com) as tab:
+      with ArduinoNanoEvery() as com, Tableau(com) as tab:
           while True:
               try:
                   print(tab.df)
@@ -73,7 +73,7 @@ Recevoir un tableau
 
    .. code:: python
 
-      with ArduinoNanoEvery as com, Tableau(com) as tab:
+      with ArduinoNanoEvery() as com, Tableau(com) as tab:
           while True:
               try:
                   print(tab.df)
