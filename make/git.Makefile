@@ -16,6 +16,8 @@ status:
 
 CURRBRANCH := $(shell $(git) branch --show-current)
 VERBRANCH := $(subst -dev,,$(CURRBRANCH))
+$(info Sur la branche $(VERBRANCH) / $(CURRBRANCH)...)
+
 merge: commit upverse
 	$(git) checkout $(VERBRANCH)
 	$(git) rebase $(CURRBRANCH)
