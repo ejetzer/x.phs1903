@@ -7,7 +7,14 @@
 #######################################
 
 uint8_t	KEYWORD1
+uint16_t KEYWORD1
 val_t	KEYWORD1
+LigneSerie KEYWORD1
+Chrono KEYWORD1
+Broche KEYWORD1
+ListeBroche KEYWORD1
+BrocheAnalogique KEYWORD1
+EchoSerie KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -16,6 +23,26 @@ val_t	KEYWORD1
 set_PF	KEYWORD2
 fftInit	KEYWORD2
 fft	KEYWORD2
+setup KEYWORD2
+loop KEYWORD2
+regler KEYWORD2
+valeur KEYWORD2
+sonde KEYWORD2
+potentiel KEYWORD2
+move KEYWORD2
+temps KEYWORD2
+begin KEYWORD2
+end KEYWORD2
+next KEYWORD2
+is_full KEYWORD2
+empty KEYWORD2
+cmd KEYWORD2
+write KEYWORD2
+available KEYWORD2
+print KEYWORD2
+println KEYWORD2
+tab KEYWORD2
+ln KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
