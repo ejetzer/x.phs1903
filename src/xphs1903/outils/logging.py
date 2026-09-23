@@ -231,7 +231,7 @@ class WithLogger:
                 "show_time": True,
                 "show_level": True,
                 "enable_link_path": True,
-                "rich_traceback": True,
+                "rich_tracebacks": True,
             } | kargs
             self.logger.addHandler(RichHandler(**kargs))
 

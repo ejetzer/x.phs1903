@@ -62,7 +62,6 @@ import serial
 from .dummy import signal as dummy_signal
 from .exceptions import (
     CouldNotConnectToSerialPortError,
-    ParsableArduinoSerialDataError,
     WrongSerialInputTypeError,
 )
 from .functools import staticproperty
@@ -288,7 +287,7 @@ class Processus(WithLogger):
             self.debug("%s", self.__thread)
 
             if self.__thread.is_alive():
-                self.__thread.interrupt()
+                self.__thread.terminate()
 
         self.reset()
 
@@ -354,18 +353,24 @@ class Processus(WithLogger):
         """  # noqa: DOC502
         self.checkin()
 
+        self.debug("output.empty() -> %s", self.__output.empty())
+        self.debug("output.full() -> %s", self.__output.full())
         try:
             val: bytes = self.__output.get(block=block, timeout=timeout)
-        except queue.Empty:
+        except queue.Empty as err:
+            self.debug("", exc_info=err)
             return None
-        except ValueError:
+        except ValueError as err:
+            self.debug("", exc_info=err)
             return None
         else:
+            self.debug("val=%r", val)
             self.__output.task_done()
 
         try:
             val: str = val.decode("utf-8")
-        except UnicodeDecodeError:
+        except UnicodeDecodeError as err:
+            self.warning("", exc_info=err)
             # Les erreurs d'encodage peuvent arriver quand le
             # débit de communication est mal réglé ou si les
             # interlocuteurs sont désynchronisés. Plutôt que
@@ -383,7 +388,8 @@ class Processus(WithLogger):
             for c in val:
                 try:
                     c = bytes([c]).decode("utf-8")  # noqa: PLW2901
-                except UnicodeDecodeError:
+                except UnicodeDecodeError as err2:
+                    self.warning("inserting '▮'...", exc_info=err2)
                     c = "▮"  # noqa: PLW2901
                 finally:
                     res += c
@@ -392,6 +398,7 @@ class Processus(WithLogger):
         finally:
             val = val.strip()
 
+        self.debug("val = %r", val)
         return val
 
     def __iter__(self) -> iter:
@@ -602,7 +609,7 @@ class LigneSerie(Processus):
         else:
             with loquet:
                 ser.write(cmd)
-            input.task_done()
+            input_.task_done()
 
     @staticmethod
     def send_out(
@@ -733,23 +740,20 @@ class LigneSerie(Processus):
             Les données en UTF-8.
         dict
             Les données en format tabulaire.
+        """
+        self.checkin()
 
-        Raises
-        ---------
-        ParsableArduinoSerialDataError
-            Quand les données ne peuvent pas être analysées.
-        """  # noqa: DOC502
         val = super().next(block=block)
+        self.debug("val = %r", val)
 
         if not parse:
             return val
 
+        d = {}
         if "\t" in val:
             items = val.split("\t")
 
             if all((":" in mot) for mot in items):
-                d = {}
-
                 for k, v in (mot.split(":") for mot in items):
                     if k.isprintable():
                         try:
@@ -759,9 +763,7 @@ class LigneSerie(Processus):
                         else:
                             d[k] = res
 
-                return d
-
-        raise ParsableArduinoSerialDataError(val)
+        return d
 
     def close(self) -> None:
         """Fermer la connexion série."""
@@ -813,10 +815,7 @@ class LigneSerie(Processus):
         self.checkin()
 
         if self.is_open:
-            return (
-                f"LigneSerie<{hex(id(self))}> "
-                f"to {self.__port} running on {self.__thread}"
-            )
+            return f"LigneSerie<{hex(id(self))}> to {self.__port} (active)"
 
         return f"LigneSerie<{hex(id(self))}> to {self.__port}"
 

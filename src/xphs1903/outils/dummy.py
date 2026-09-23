@@ -48,7 +48,7 @@ def signal(
     if len(args) == 0:
         args = (np.sin,)
 
-    _float = np.float128
+    _float = getattr(np, "float128", np.longdouble)
 
     _0 = _float(0)
     t_noise = [lambda: _0 for x in args]
