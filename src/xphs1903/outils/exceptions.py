@@ -199,4 +199,13 @@ class InvalidCalculKeyTypeError(TypeError, BaseXPHS1903Exception):
         super().__init__(msg)
 
 
+class CouldNotConnectToSerialPortError(RuntimeError, BaseXPHS1903Exception):
+    """Erreur indiquant une incapacité à se connecter à un port série."""
+
+    def __init__(self, port: str) -> None:
+        """Crée le message d'erreur."""
+        msg = f"""Could not connect to {port}."""
+        super().__init__(msg)
+
+
 __all__ = []

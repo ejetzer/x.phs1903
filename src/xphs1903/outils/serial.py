@@ -56,8 +56,12 @@ import queue
 import time
 import typing
 
+import numpy as np
+import serial
+
 from .dummy import signal as dummy_signal
 from .exceptions import (
+    CouldNotConnectToSerialPortError,
     ParsableArduinoSerialDataError,
     WrongSerialInputTypeError,
 )
@@ -78,37 +82,15 @@ nécessitant un échantillonage à haute fréquence.
 """
 
 
-class LigneSerie(WithLogger):
-    """Classe de lien série."""
-
+class Processus(WithLogger):
     def __init__(
         self,
-        port: str = "loop://",
-        baudrate: BaudRateType = 115_200,
         *,
         stop_event: multiprocessing.Event | None = None,
         lock: multiprocessing.Lock | None = None,
     ) -> None:
-        """Initialise un lien série.
-
-        Ouvre une connexion à une ligne série au port :obj:`!port` et
-        débit :obj:`!baudrate`.
-
-        Parameters
-        ------------------
-        port
-            Port auquel se connecter. Voir :external+serial:ref:`URLs`.
-        baudrate
-            Débit maximal attendu pour la communication.
-        stop_event
-            Un objet :class:`threading.Event` permettant de signaler
-            l'arrêt de la communication et de fermer la connexion.
-        """
+        """Initialise le processus."""
         self.checkin()
-
-        self.__port = port
-        self.__baudrate = baudrate
-        self.__timeout = 0.005
 
         self.__arret: multiprocessing.Event = (
             multiprocessing.Event() if stop_event is None else stop_event
@@ -124,25 +106,7 @@ class LigneSerie(WithLogger):
 
         self.debug("%s", self.__loquet)
 
-        self.__reset()
-
-    @property
-    def device(self) -> str:
-        """Retourne le port série."""
-        self.checkin()
-        return self.__port
-
-    @property
-    def port(self) -> str:
-        """Retourne le port série."""
-        self.checkin()
-        return self.__port
-
-    @property
-    def baudrate(self) -> int:
-        """Retourne le débit maximal de communication attendu."""
-        self.checkin()
-        return self.__baudrate
+        self.reset()
 
     @property
     def sending(self) -> bool:
@@ -155,124 +119,6 @@ class LigneSerie(WithLogger):
         """Vérifie s'il reste des données à lire."""
         self.checkin()
         return not self.__output.empty()
-
-    def print(
-        self,
-        data: str | list[dict[str, int | str]],
-        *,
-        end: str = "\n",
-        block: bool = True,
-    ) -> None:
-        """Envoyer :obj:`!data` via la ligne série.
-
-        Permet d'envoyer des données selon deux formats, soit un
-        :class:`str`, soit une liste de dictionnaires, dont les clés
-        sont des :class:`str` et les éléments sont des :class:`int`.
-
-        Parameters
-        ------------------
-        data
-            Les informations à transmettre.
-        end
-            Le caractère de fin d'instruction à envoyer.
-
-        Raises
-        ------------------
-        WrongSerialInputTypeError(data)
-            Quand :obj:`!data` n'est pas du bon type.
-
-        Examples
-        ------------------
-        >>> com.print("allo monde")
-
-        >>> com.print([{"A2": 120, "13": 255}])
-
-        """  # noqa: DOC502
-        self.checkin()
-        self.debug("len(data) = %s, type(data) = %s", len(data), type(data))
-
-        if (
-            isinstance(data, list)
-            and all(isinstance(x, dict) for x in data)
-            and all(all(isinstance(x, str) for x in d) for d in data)
-        ):
-            data = end.join(
-                "\t".join(f"{k}:{v}" for k, v in d.items()) for d in data
-            )
-
-        if isinstance(data, str):
-            try:
-                self.__input.put((data + end).encode("utf-8"), block=block)
-            except queue.Full as err:
-                self.debug(
-                    "input.full()=%s", self.__input.full(), exc_info=err
-                )
-        else:
-            raise WrongSerialInputTypeError(data)
-
-    @staticmethod
-    def ligne_serie_run(  # noqa: PLR0917, PLR0913
-        port: str,
-        baudrate: BaudRateType,
-        timeout: float,
-        arret: multiprocessing.Event,
-        input: multiprocessing.Queue,  # noqa: A002
-        output: multiprocessing.Queue,
-        loquet: multiprocessing.Lock,
-    ) -> None:
-        """Gère la connexion série dans un autre processus."""
-        # Normalement les modules sont importés dans l'espace de nom
-        # global en début de fichier. serial est importé ici pour
-        # réduire les possibilités de problèmes avec multiprocessing
-        # en exécutant l'entièreté du code concernant serial dans le
-        # même processus.
-        import serial  # noqa: PLC0415
-
-        ser = serial.serial_for_url(port, do_not_open=True)
-        """Objet :class:`serial.Serial` propre à cette ligne série."""
-
-        ser.baudrate = baudrate
-        ser.timeout = timeout
-
-        with loquet:
-            ser.open()
-
-        temp_val: bytes = b""
-        val: bytes = b""
-
-        ser.read_until(b"\n")
-        with contextlib.suppress(KeyboardInterrupt):
-            while not arret.is_set():
-                if not input.empty() and not ser.out_waiting:
-                    try:
-                        cmd: bytes = input.get()
-                    except ValueError:
-                        break
-                    else:
-                        with loquet:
-                            ser.write(cmd)
-                        input.task_done()
-
-                if len(val) > 0:
-                    try:
-                        output.put(val, block=False)
-                    except ValueError:
-                        break
-                    else:
-                        val = b""
-                elif not output.full() and ser.in_waiting:
-                    max_size: int = 100
-                    with loquet:
-                        val = ser.read_until(b"\n", size=max_size)
-
-                    if val.endswith(b"\n"):
-                        val = temp_val + val
-                        temp_val = b""
-                    elif len(val) == max_size:
-                        temp_val += val
-                        val = b""
-
-        ser.close()
 
     def __enter__(self) -> Self:
         """Ouvre la ligne série et démarre l'exécution du fil parallèle.
@@ -298,45 +144,92 @@ class LigneSerie(WithLogger):
         return self
 
     def open(self) -> None:
+        """Ouverture naïve, à surclasser."""
+        self.start()
+
+    @classmethod
+    def run(
+        cls: type[Self],
+        arret: multiprocessing.Event,
+        input_: multiprocessing.Queue,  # noqa: ARG003
+        output: multiprocessing.Queue,  # noqa: ARG003
+        loquet: multiprocessing.Lock,  # noqa: ARG003
+        log_queue: multiprocessing.Queue,  # noqa: ARG003
+    ) -> None:
+        """Fonction à exécuter très simple, à surclasser."""
+        cls.setup()
+
+        while not arret.is_set():
+            cls.loop()
+
+    @classmethod
+    def setup(cls: type[Self]) -> None:
+        """Rien, à surclasser."""
+
+    @classmethod
+    def loop(cls: type[Self]) -> None:
+        """Rien, à surclasser."""
+
+    def start(self, name: str | None = None, *, args: tuple = ()) -> None:
         """Ouvre la connexion série."""
         self.checkin()
 
-        self.__input: multiprocessing.Queue = multiprocessing.JoinableQueue()
-        self.__output: multiprocessing.Queue = multiprocessing.JoinableQueue()
+        self.__ctx: multiprocessing.Context = multiprocessing.get_context(
+            method="spawn"
+        )
+        self.__input: multiprocessing.Queue = self.__ctx.JoinableQueue()
+        self.__output: multiprocessing.Queue = self.__ctx.JoinableQueue()
+        self.__log_queue: multiprocessing.Queue = self.__ctx.JoinableQueue()
 
-        self.__thread: multiprocessing.Process = multiprocessing.Process(
+        self.__thread: multiprocessing.Process = self.__ctx.Process(
             group=None,
-            target=self.ligne_serie_run,
-            args=(
-                self.__port,
-                self.__baudrate,
-                self.__timeout,
+            target=self.run,
+            args=args
+            + (
                 self.__arret,
                 self.__input,
                 self.__output,
                 self.__loquet,
+                self.__log_queue,
             ),
-            name=f"{self.__port}",
+            name=name,
             daemon=True,
         )
         """Objet :class:`threading.Thread` propre à cette ligne série."""
 
         self.__thread.start()
         self.debug("%s", self.__thread)
-        self.__open = True
 
     @property
-    def is_open(self) -> bool:
-        """Vérifie si la connexion est ouverte.
+    def is_alive(self) -> bool:
+        """Si le processus est actif."""
+        return self.__thread.is_alive()
+
+    def print(self, data: str, *, end: str = "\n", block: bool = True) -> None:
+        """Envoie un message au processus."""
+        self.checkin()
+        self.debug("len(data) = %s, type(data) = %s", len(data), type(data))
+
+        if isinstance(data, str):
+            try:
+                self.__input.put((data + end).encode("utf-8"), block=block)
+            except queue.Full as err:
+                self.debug(
+                    "input.full()=%s", self.__input.full(), exc_info=err
+                )
+        else:
+            raise WrongSerialInputTypeError(data)
+
+    @property
+    def serial_log(self) -> multiprocessing.Queue:
+        """Les messages d'erreur du processus parallèle.
 
         Returns
-        ---------------
-        self.__open: bool
-            Variable indiquant si la connexion est ouverte.
+        -------------
+        multiprocessing.Queue
+            La file contenant les messages d'erreur.
         """
-        self.checkin()
-
-        return self.__open
+        return self.__log_queue
 
     def __exit__(
         self,
@@ -368,6 +261,10 @@ class LigneSerie(WithLogger):
         """
         self.checkin()
 
+        while not self.serial_log.empty():
+            err = self.serial_log.get()
+            self.warning("Erreur dans le processus parallèle:", exc_info=err)
+
         if typ is not None:
             self.warning("", exc_info=exc)
 
@@ -376,16 +273,16 @@ class LigneSerie(WithLogger):
         return False  # Re-raise the exception please
 
     def close(self) -> None:
-        """Ferme la connexion série."""
+        """Ferme le processus."""
         self.checkin()
-        self.debug("%s", self.__open)
 
-        if self.__open:
+        if self.is_alive:
             self.__arret.set()
             self.debug("%s", self.__arret)
 
             self.__input.close()
             self.__output.close()
+            self.__log_queue.close()
 
             self.__thread.join(timeout=0.005)
             self.debug("%s", self.__thread)
@@ -393,10 +290,20 @@ class LigneSerie(WithLogger):
             if self.__thread.is_alive():
                 self.__thread.interrupt()
 
-            self.__open = False
+        self.reset()
 
-        self.debug("%s", self.__open)
-        self.__reset()
+    def reset(self) -> None:
+        """Réinitialise le processus."""
+        self.checkin()
+
+        if self.__arret.is_set():
+            self.__arret.clear()
+
+        self.__thread = None
+        self.__ctx = None
+        self.__input = None
+
+        self.debug("%s", self.__arret)
 
     def wait(self) -> None:
         """Attends d'avoir vidé les files."""
@@ -407,16 +314,6 @@ class LigneSerie(WithLogger):
 
         while self.holding:
             continue
-
-    def __reset(self) -> None:
-        self.checkin()
-
-        self.__open = False
-        self.__temp_val = b"\n"
-
-        if self.__arret.is_set():
-            self.__arret.clear()
-        self.debug("%s", self.__arret)
 
     def __next__(self) -> str:
         """Renvoie l'élément suiant reçu sur la ligne série.
@@ -430,12 +327,11 @@ class LigneSerie(WithLogger):
         """
         return self.next()
 
-    def next(  # noqa: PLR0912
+    def next(
         self,
         *,
         block: bool = True,
         timeout: float | None = None,
-        parse: bool = False,
     ) -> str | dict[str, float]:
         """Renvoie l'élément suiant reçu sur la ligne série.
 
@@ -445,15 +341,11 @@ class LigneSerie(WithLogger):
             Si on attend la ligne suivante.
         timeout: float | None = None
             Combien de temps attendre une ligne.
-        parse: bool = False
-            Si on essait de convertir le résultat.
 
         Returns
         ---------------
         val: str
             Chaîne de caractères reçus.
-        val: dict[str, float]
-            Valeurs reçues.
 
         Raises
         ---------------
@@ -468,6 +360,8 @@ class LigneSerie(WithLogger):
             return None
         except ValueError:
             return None
+        else:
+            self.__output.task_done()
 
         try:
             val: str = val.decode("utf-8")
@@ -498,27 +392,7 @@ class LigneSerie(WithLogger):
         finally:
             val = val.strip()
 
-        if not parse:
-            return val
-
-        if "\t" in val:
-            items = val.split("\t")
-
-            if all((":" in mot) for mot in items):
-                d = {}
-
-                for k, v in (mot.split(":") for mot in items):
-                    if k.isprintable():
-                        try:
-                            res = float(v)
-                        except ValueError:
-                            d[k] = None
-                        else:
-                            d[k] = res
-
-                return d
-
-        raise ParsableArduinoSerialDataError(val)
+        return val
 
     def __iter__(self) -> iter:
         """Retourne un itérateur sur l'entrée série.
@@ -573,6 +447,326 @@ class LigneSerie(WithLogger):
 
         while True:
             yield self.next(block=block, timeout=timeout)
+
+
+class LigneSerie(Processus):
+    """Classe de lien série."""
+
+    def __init__(
+        self,
+        port: str = "loop://",
+        baudrate: BaudRateType = 115_200,
+        *,
+        stop_event: multiprocessing.Event | None = None,
+        lock: multiprocessing.Lock | None = None,
+    ) -> None:
+        """Initialise un lien série.
+
+        Ouvre une connexion à une ligne série au port :obj:`!port` et
+        débit :obj:`!baudrate`.
+
+        Parameters
+        ------------------
+        port
+            Port auquel se connecter. Voir :external+serial:ref:`URLs`.
+        baudrate
+            Débit maximal attendu pour la communication.
+        stop_event
+            Un objet :class:`threading.Event` permettant de signaler
+            l'arrêt de la communication et de fermer la connexion.
+        """
+        self.checkin()
+
+        self.__port = port
+        self.__baudrate = baudrate
+        self.__timeout = 0.005
+        self.__open = False
+        super().__init__(stop_event=stop_event, lock=lock)
+
+    @property
+    def device(self) -> str:
+        """Retourne le port série."""
+        self.checkin()
+        return self.__port
+
+    @property
+    def port(self) -> str:
+        """Retourne le port série."""
+        self.checkin()
+        return self.__port
+
+    @property
+    def baudrate(self) -> int:
+        """Retourne le débit maximal de communication attendu."""
+        self.checkin()
+        return self.__baudrate
+
+    def print(
+        self,
+        data: str | list[dict[str, int | str]],
+        *,
+        end: str = "\n",
+        block: bool = True,
+    ) -> None:
+        """Envoyer :obj:`!data` via la ligne série.
+
+        Permet d'envoyer des données selon deux formats, soit un
+        :class:`str`, soit une liste de dictionnaires, dont les clés
+        sont des :class:`str` et les éléments sont des :class:`int`.
+
+        Parameters
+        ------------------
+        data
+            Les informations à transmettre.
+        end
+            Le caractère de fin d'instruction à envoyer.
+
+        Raises
+        ------------------
+        WrongSerialInputTypeError(data)
+            Quand :obj:`!data` n'est pas du bon type.
+
+        Examples
+        ------------------
+        >>> com.print("allo monde")
+
+        >>> com.print([{"A2": 120, "13": 255}])
+
+        """  # noqa: DOC502
+        if (
+            isinstance(data, list)
+            and all(isinstance(x, dict) for x in data)
+            and all(all(isinstance(x, str) for x in d) for d in data)
+        ):
+            data = end.join(
+                "\t".join(f"{k}:{v}" for k, v in d.items()) for d in data
+            )
+
+        super().print(data, end=end, block=block)
+
+    def open(self) -> None:
+        """Ouvre la connexion série."""
+        self.start(
+            name=self.__port,
+            args=(self.__port, self.__baudrate, self.__timeout),
+        )
+        self.__open = True
+
+    @classmethod
+    def setup(  # noqa: PLR0917, PLR0913
+        cls: type[LigneSerie],
+        port: str,
+        baudrate: BaudRateType,
+        timeout: float,
+        arret: multiprocessing.Event,
+        loquet: multiprocessing.Lock,
+        log_queue: multiprocessing.Queue,
+    ) -> (serial.Serial, bytes):
+        """Initialise la communication série.
+
+        Returns
+        --------------
+        ser: serial.Serial, b""
+            La connexion série et la valeur initiale.
+        """
+        ser = serial.serial_for_url(port, do_not_open=True)
+        ser.baudrate = baudrate
+        ser.timeout = timeout
+
+        with loquet, contextlib.suppress(Exception):
+            ser.open()
+
+        if not ser.is_open:
+            err = CouldNotConnectToSerialPortError(port)
+            log_queue.put(err)
+            arret.set()
+
+        ser.read_until(b"\n")
+
+        return ser, b""
+
+    @staticmethod
+    def write_out(
+        ser: serial.Serial,
+        input_: multiprocessing.Queue,
+        arret: multiprocessing.Event,
+        loquet: multiprocessing.Lock,
+        log_queue: multiprocessing.Queue,
+    ) -> None:
+        """Envoie un message de la file d'entrée à la ligne série."""
+        try:
+            cmd: bytes = input_.get()
+        except ValueError as e:
+            log_queue.put(e)
+            arret.set()
+        else:
+            with loquet:
+                ser.write(cmd)
+            input.task_done()
+
+    @staticmethod
+    def send_out(
+        val: bytes,
+        output: multiprocessing.Queue,
+        arret: multiprocessing.Event,
+        log_queue: multiprocessing.Queue,
+    ) -> bytes:
+        """Rend un message reçu disponible pour next.
+
+        Returns
+        -------------
+        b""
+            Une valeur vierge pour val dans loop.
+        """
+        try:
+            output.put(val)
+        except (ValueError, queue.Full) as e:
+            log_queue.put(e)
+            arret.set()
+
+        return b""
+
+    @staticmethod
+    def read_in(ser: serial.Serial, loquet: multiprocessing.Lock) -> bytes:
+        """Lire une valeur de la ligne série.
+
+        Returns
+        ---------
+        val: bytes
+            La valeur lue.
+        """
+        with loquet:
+            val = ser.read_until(b"\n")
+
+        return val  # noqa: RET504
+
+    @classmethod
+    def loop(  # noqa: PLR0917, PLR0913
+        cls: type[Self],
+        ser: serial.Serial,
+        val: bytes,
+        arret: multiprocessing.Event,
+        input_: multiprocessing.Queue,
+        output: multiprocessing.Queue,
+        loquet: multiprocessing.Lock,
+        log_queue: multiprocessing.Queue,
+    ) -> bytes:
+        """Exécute une itération de suivi de la ligne série.
+
+        Returns
+        ------------
+        val: bytes
+            La valeur lue dans cette itération.
+        """
+        if not input_.empty() and not ser.out_waiting:
+            cls.write_out(ser, input_, arret, loquet, log_queue)
+
+        if len(val) > 0:
+            val = cls.send_out(val, output, arret, log_queue)
+
+        if not output.full() and ser.in_waiting:
+            val = cls.read_in(ser, loquet)
+
+        return val
+
+    @classmethod
+    def run(  # noqa: PLR0917, PLR0913
+        cls: type[Self],
+        port: str,
+        baudrate: BaudRateType,
+        timeout: float,
+        arret: multiprocessing.Event,
+        input_: multiprocessing.Queue,
+        output: multiprocessing.Queue,
+        loquet: multiprocessing.Lock,
+        log_queue: multiprocessing.Queue,
+    ) -> None:
+        """Gère la connexion série dans un autre processus."""
+        # Normalement les modules sont importés dans l'espace de nom
+        # global en début de fichier. serial est importé ici pour
+        # réduire les possibilités de problèmes avec multiprocessing
+        # en exécutant l'entièreté du code concernant serial dans le
+        # même processus.
+        ser, val = cls.setup(
+            port,
+            baudrate,
+            timeout,
+            arret,
+            loquet,
+            log_queue,
+        )
+
+        with contextlib.suppress(KeyboardInterrupt):
+            while not arret.is_set():
+                val = cls.loop(
+                    ser, val, arret, input_, output, loquet, log_queue
+                )
+
+        ser.close()
+
+    @property
+    def is_open(self) -> bool:
+        """Vérifie si la connexion est ouverte.
+
+        Returns
+        ---------------
+        self.__open: bool
+            Variable indiquant si la connexion est ouverte.
+        """
+        self.checkin()
+
+        return self.__open and self.is_alive
+
+    def next(self, *, block: bool = True, parse: bool = False) -> str | dict:
+        """Retourne le prochain élément reçu.
+
+        Parameters
+        --------------
+        block: bool = True
+            Si on attend le prochain élément, ou si on retourne None.
+        parse: bool = False
+            Analyse le résultat et retourne le dictionnaire.
+
+        Returns
+        ----------
+        str
+            Les données en UTF-8.
+        dict
+            Les données en format tabulaire.
+
+        Raises
+        ---------
+        ParsableArduinoSerialDataError
+            Quand les données ne peuvent pas être analysées.
+        """  # noqa: DOC502
+        val = super().next(block=block)
+
+        if not parse:
+            return val
+
+        if "\t" in val:
+            items = val.split("\t")
+
+            if all((":" in mot) for mot in items):
+                d = {}
+
+                for k, v in (mot.split(":") for mot in items):
+                    if k.isprintable():
+                        try:
+                            res = float(v)
+                        except ValueError:
+                            d[k] = np.nan
+                        else:
+                            d[k] = res
+
+                return d
+
+        raise ParsableArduinoSerialDataError(val)
+
+    def close(self) -> None:
+        """Fermer la connexion série."""
+        self.__open = False
+        super().close()
 
     def parse(
         self, *, block: bool = True, timeout: int | None = 0.001
