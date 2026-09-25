@@ -8,12 +8,9 @@ documentation: <https://www.sphinx-doc.org/en/master/usage/configuration.html>
 """
 
 import logging
-import os
-import os.path
 import sys
 from pathlib import Path
 
-import pygit2 as pygit
 from clang.cindex import Config
 from hawkmoth.util import readthedocs
 
@@ -44,7 +41,7 @@ __logger.info("%s", project_copyright)
 sys.path.insert(
     0, str((Path(__file__).parent.parent.parent / "lib").resolve())
 )
-import version as mkversion  # noqa: E402
+import version as mkversion  # noqa: E402, E0401
 
 version = mkversion.vstring()
 print(version)

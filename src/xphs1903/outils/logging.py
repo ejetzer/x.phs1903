@@ -291,10 +291,12 @@ def config(
     level: float = WARNING,
     stream: TextIO = sys.stderr,
     use_rich: bool = False,
+    propagate: bool = True,
 ) -> None:
     """Configuration de base pour un Logger nommé par name."""
     logger: logging.Logger = logging.getLogger(name)
     logger.setLevel(level)
+    logger.propagate = propagate
 
     if not use_rich:
         handler = logging.StreamHandler(stream=stream)
@@ -309,11 +311,13 @@ def config(
 
 # :func:`basicConfig` reprend le nom d'une fonction du module :mod:`logging`
 # :func:`basic_config` est un alias disponible et favorisé.
-def basic_config(level: float = WARNING, *, use_rich: bool = True) -> None:
+def basic_config(
+    level: float = WARNING, *, use_rich: bool = True, propagate: bool = False
+) -> None:
     """Configuration de base pour un logger de module ou script."""
     frame = inspect.stack()[1].frame
     name = frame.f_globals["__name__"]
-    config(name, level=level, use_rich=use_rich)
+    config(name, level=level, use_rich=use_rich, propagate=propagate)
 
 
 basicConfig = basic_config  # noqa: N816

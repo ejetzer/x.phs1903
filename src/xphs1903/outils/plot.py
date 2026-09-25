@@ -585,7 +585,7 @@ class BaseGraphe(CalTab):
         elif not val and self._updated.is_set():
             self._updated.clear()
 
-    def frame(self) -> None:
+    def frame(self, *, block: bool = False) -> None:  # noqa: ARG002
         """Met à jour les données du graphique."""
         self.checkin()
 
@@ -755,7 +755,7 @@ class FichierGraphe(CanvasGraphe):
     ) -> None:
         """Création des objets d'exécution parallèle."""
         self.checkin()
-        super().__init__(com, CanvasClass=FigureCanvasAgg)
+        super().__init__(com, canvas_class=FigureCanvasAgg)
         self.__name = Path(name)
         self.__thread = threading.Thread(target=self.__run)
         self.__loquet = threading.Lock()
@@ -819,7 +819,7 @@ class TkGraphe(CanvasGraphe):
     ) -> None:
         """Initialise le graphe."""
         self.checkin()
-        super().__init__(com, CanvasClass=FigureCanvasTkAgg, master=root)
+        super().__init__(com, canvas_class=FigureCanvasTkAgg, master=root)
         self.__root: tk.Frame = root
         self.__toolbar = None
 

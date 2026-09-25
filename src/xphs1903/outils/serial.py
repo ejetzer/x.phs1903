@@ -64,12 +64,11 @@ from .exceptions import (
     CouldNotConnectToSerialPortError,
     WrongSerialInputTypeError,
 )
-from .functools import staticproperty
 from .logging import DEBUG, WithLogger, basicConfig, info
 
 if typing.TYPE_CHECKING:
     from types import TracebackType
-    from typing import Self
+    from typing import Final, Self
 
 type BaudRateType = typing.Literal[9600, 115_200, 1_000_000]
 """Valeurs permises pour les débits de communication série.
@@ -80,8 +79,144 @@ Un débit de 1000000 ne devrait pas être utilisé en dehors d'application
 nécessitant un échantillonage à haute fréquence.
 """
 
+TIMEOUT: Final[int] = 1
+"""Valeur globale des délais maximaux pour la communication."""
+
+KEY_VAL_SEP = ":"
+"""Séparateur entre clé et valeur dans la notation série Arduino."""
+
+VAL_SEP = "\t"
+"""Séparateur en les valeurs dans la notation série Arduino."""
+
+
+class Synchronisateur(WithLogger):
+    """Objet de synchronisation.
+
+    Combine loquet, files d'entrée et sortie, journal d'erreur et
+    événement d'arrêt.
+    """
+
+    def __init__(
+        self,
+        *,
+        stop_event: multiprocessing.Event | None = None,
+        lock: multiprocessing.Lock | None = None,
+    ) -> None:
+        """Initialise les événements d'arrêt et le loquet.
+
+        Parameters
+        ------------------
+        stop_event: multiprocessing.Event | None = None
+            Événement d'arrêt commun à un autre objet ou processus.
+        lock: multiprocessing.Lock | None = None
+            Loquet de synchronisation commun à un autre objet ou processus.
+        """
+        self.__stop_event = (
+            multiprocessing.Event() if stop_event is None else stop_event
+        )
+        self.__loquet = multiprocessing.Lock() if lock is None else lock
+
+    def reset(self) -> None:
+        """Initialise le contexte d'exécution parallèle."""
+        self.__ctx = multiprocessing.get_context(method="spawn")
+        self.__in_queue = self.__ctx.JoinableQueue()
+        self.__out_queue = self.__ctx.JoinableQueue()
+        self.__log_queue = self.__ctx.JoinableQueue()
+
+    @property
+    def context(self) -> multiprocessing.Context:
+        """Contexte d'exécution parallèle s'il est défini."""
+        return self.__ctx
+
+    @property
+    def outqueue(self) -> multiprocessing.Queue:
+        """File de sortie."""
+        return self.__out_queue
+
+    @property
+    def inqueue(self) -> multiprocessing.Queue:
+        """File d'entrée."""
+        return self.__in_queue
+
+    @property
+    def logqueue(self) -> multiprocessing.Queue:
+        """File d'erreurs."""
+        return self.__log_queue
+
+    @property
+    def lock(self) -> multiprocessing.Lock:
+        """Loquet de synchronisation."""
+        return self.__loquet
+
+    @property
+    def is_stopped(self) -> bool:
+        """Si l'événement d'arrêt est déclenché."""
+        return self.__stop_event.is_set()
+
+    @property
+    def is_locked(self) -> bool:
+        """Si le loquet est barré."""
+        return self.__loquet.locked()
+
+    def stop(self) -> None:
+        """Déclenche l'événement d'arrêt."""
+        if not self.__stop_event.is_set():
+            self.__stop_event.set()
+
+    def close(self) -> None:
+        """Ferme les files."""
+        self.__in_queue.close()
+        self.__out_queue.close()
+        self.__log_queue.close()
+
+    def start(self) -> None:
+        """Réinitialise l'événement d'arrêt."""
+        if self.__stop_event.is_set():
+            self.__stop_event.clear()
+
+    def log(self, exc: Exception) -> None:
+        """Ajoute une erreur à la file d'erreurs."""
+        self.__log_queue.put(exc)
+
+    def printout(self) -> None:
+        """Envoie les erreurs à l'erreur standard."""
+        while not self.logqueue.empty():
+            err = self.logqueue.get()
+            self.warning("Erreur dans le processus parallèle:", exc_info=err)
+
+    def __enter__(self) -> Self:
+        """Verrouille le loquet."""
+        self.__loquet.acquire()
+
+    def __exit__(
+        self,
+        typ: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> bool:
+        """Libère le loquet et resoulève l'erreur.
+
+        Parameters
+        ---------------
+        typ: type[BaseException] | None
+        exc: BaseException | None
+        tb: TracebackType | None
+
+        Returns
+        ---------------
+        False
+        """
+        self.__loquet.release()
+
+        if typ is not None:
+            self.warning("", exc_info=exc)
+
+        return False
+
 
 class Processus(WithLogger):
+    """Objet abstrait de processus parallèle."""
+
     def __init__(
         self,
         *,
@@ -90,34 +225,22 @@ class Processus(WithLogger):
     ) -> None:
         """Initialise le processus."""
         self.checkin()
-
-        self.__arret: multiprocessing.Event = (
-            multiprocessing.Event() if stop_event is None else stop_event
+        self.__sync: Synchronisateur = Synchronisateur(
+            stop_event=stop_event, lock=lock
         )
-        """Signal d'arrêt pour la ligne série."""
-
-        self.debug("%s", self.__arret)
-
-        self.__loquet: multiprocessing.Lock = (
-            multiprocessing.Lock() if lock is None else lock
-        )
-        """Loquet de synchronisation pour la ligne série."""
-
-        self.debug("%s", self.__loquet)
-
         self.reset()
 
     @property
     def sending(self) -> bool:
         """Vérifie s'il reste des données à envoyer."""
         self.checkin()
-        return not self.__input.empty()
+        return not self.__sync.inqueue.empty()
 
     @property
     def holding(self) -> bool:
         """Vérifie s'il reste des données à lire."""
         self.checkin()
-        return not self.__output.empty()
+        return not self.__sync.outqueue.empty()
 
     def __enter__(self) -> Self:
         """Ouvre la ligne série et démarre l'exécution du fil parallèle.
@@ -149,16 +272,13 @@ class Processus(WithLogger):
     @classmethod
     def run(
         cls: type[Self],
-        arret: multiprocessing.Event,
-        input_: multiprocessing.Queue,  # noqa: ARG003
-        output: multiprocessing.Queue,  # noqa: ARG003
-        loquet: multiprocessing.Lock,  # noqa: ARG003
+        sync: Synchronisateur,
         log_queue: multiprocessing.Queue,  # noqa: ARG003
     ) -> None:
         """Fonction à exécuter très simple, à surclasser."""
         cls.setup()
 
-        while not arret.is_set():
+        while not sync.is_stopped():
             cls.loop()
 
     @classmethod
@@ -172,25 +292,12 @@ class Processus(WithLogger):
     def start(self, name: str | None = None, *, args: tuple = ()) -> None:
         """Ouvre la connexion série."""
         self.checkin()
+        self.__sync.reset()
 
-        self.__ctx: multiprocessing.Context = multiprocessing.get_context(
-            method="spawn"
-        )
-        self.__input: multiprocessing.Queue = self.__ctx.JoinableQueue()
-        self.__output: multiprocessing.Queue = self.__ctx.JoinableQueue()
-        self.__log_queue: multiprocessing.Queue = self.__ctx.JoinableQueue()
-
-        self.__thread: multiprocessing.Process = self.__ctx.Process(
+        self.__thread: multiprocessing.Process = self.__sync.context.Process(
             group=None,
             target=self.run,
-            args=args
-            + (
-                self.__arret,
-                self.__input,
-                self.__output,
-                self.__loquet,
-                self.__log_queue,
-            ),
+            args=args + (self.__sync,),
             name=name,
             daemon=True,
         )
@@ -209,15 +316,15 @@ class Processus(WithLogger):
         self.checkin()
         self.debug("len(data) = %s, type(data) = %s", len(data), type(data))
 
-        if isinstance(data, str):
-            try:
-                self.__input.put((data + end).encode("utf-8"), block=block)
-            except queue.Full as err:
-                self.debug(
-                    "input.full()=%s", self.__input.full(), exc_info=err
-                )
-        else:
+        if not isinstance(data, str):
             raise WrongSerialInputTypeError(data)
+
+        try:
+            self.__sync.inqueue.put((data + end).encode("utf-8"), block=block)
+        except queue.Full as err:
+            self.warning(
+                "input.full()=%s", self.__sync.inqueue.full(), exc_info=err
+            )
 
     @property
     def serial_log(self) -> multiprocessing.Queue:
@@ -228,7 +335,7 @@ class Processus(WithLogger):
         multiprocessing.Queue
             La file contenant les messages d'erreur.
         """
-        return self.__log_queue
+        return self.__sync.logqueue
 
     def __exit__(
         self,
@@ -260,9 +367,7 @@ class Processus(WithLogger):
         """
         self.checkin()
 
-        while not self.serial_log.empty():
-            err = self.serial_log.get()
-            self.warning("Erreur dans le processus parallèle:", exc_info=err)
+        self.__sync.printout()
 
         if typ is not None:
             self.warning("", exc_info=exc)
@@ -276,14 +381,10 @@ class Processus(WithLogger):
         self.checkin()
 
         if self.is_alive:
-            self.__arret.set()
-            self.debug("%s", self.__arret)
+            self.__sync.stop()
+            self.__sync.close()
 
-            self.__input.close()
-            self.__output.close()
-            self.__log_queue.close()
-
-            self.__thread.join(timeout=0.005)
+            self.__thread.join(timeout=1)  # Pas un délai de communication
             self.debug("%s", self.__thread)
 
             if self.__thread.is_alive():
@@ -295,14 +396,8 @@ class Processus(WithLogger):
         """Réinitialise le processus."""
         self.checkin()
 
-        if self.__arret.is_set():
-            self.__arret.clear()
-
-        self.__thread = None
-        self.__ctx = None
-        self.__input = None
-
-        self.debug("%s", self.__arret)
+        if self.__sync.is_stopped:
+            self.__sync.start()
 
     def wait(self) -> None:
         """Attends d'avoir vidé les files."""
@@ -326,11 +421,36 @@ class Processus(WithLogger):
         """
         return self.next()
 
+    def __semidecode(self, val: bytes) -> str:
+        # Les erreurs d'encodage peuvent arriver quand le
+        # débit de communication est mal réglé ou si les
+        # interlocuteurs sont désynchronisés. Plutôt que
+        # d'ignorer les caractères erronés silencieusement,
+        # on les remplace ici par un caractère reconnaissable
+        # comme indicateur de problème.
+        res = ""
+
+        # Ci-dessous, la variable c est redéfinie à l'intérieur de
+        # la boucle. C'est un idiome fréquent en Python pour des
+        # cas simples, il s'agit ici d'une boucle très simple
+        # où les modifications n'ont pas d'effets secondaires
+        # ou externes.
+        for c in val:
+            try:
+                d = bytes([c]).decode("utf-8")
+            except UnicodeDecodeError as err2:
+                self.warning("inserting '▮'...", exc_info=err2)
+                d = "▮"
+            finally:
+                res += d
+
+        return res
+
     def next(
         self,
         *,
         block: bool = True,
-        timeout: float | None = None,
+        timeout: float | None = TIMEOUT,
     ) -> str | dict[str, float]:
         """Renvoie l'élément suiant reçu sur la ligne série.
 
@@ -353,10 +473,8 @@ class Processus(WithLogger):
         """  # noqa: DOC502
         self.checkin()
 
-        self.debug("output.empty() -> %s", self.__output.empty())
-        self.debug("output.full() -> %s", self.__output.full())
         try:
-            val: bytes = self.__output.get(block=block, timeout=timeout)
+            val: bytes = self.__sync.outqueue.get(block=block, timeout=timeout)
         except queue.Empty as err:
             self.debug("", exc_info=err)
             return None
@@ -365,36 +483,13 @@ class Processus(WithLogger):
             return None
         else:
             self.debug("val=%r", val)
-            self.__output.task_done()
+            self.__sync.outqueue.task_done()
 
         try:
             val: str = val.decode("utf-8")
         except UnicodeDecodeError as err:
             self.warning("", exc_info=err)
-            # Les erreurs d'encodage peuvent arriver quand le
-            # débit de communication est mal réglé ou si les
-            # interlocuteurs sont désynchronisés. Plutôt que
-            # d'ignorer les caractères erronés silencieusement,
-            # on les remplace ici par un caractère reconnaissable
-            # comme indicateur de problème.
-
-            res = ""
-
-            # Ci-dessous, la variable c est redéfinie à l'intérieur de
-            # la boucle. C'est un idiome fréquent en Python pour des
-            # cas simples, il s'agit ici d'une boucle très simple
-            # où les modifications n'ont pas d'effets secondaires
-            # ou externes.
-            for c in val:
-                try:
-                    c = bytes([c]).decode("utf-8")  # noqa: PLW2901
-                except UnicodeDecodeError as err2:
-                    self.warning("inserting '▮'...", exc_info=err2)
-                    c = "▮"  # noqa: PLW2901
-                finally:
-                    res += c
-
-            val = res
+            val = self.__semidecode(val)
         finally:
             val = val.strip()
 
@@ -412,7 +507,9 @@ class Processus(WithLogger):
         """
         return self.iter()
 
-    def iter(self, *, block: bool = False, timeout: int | None = None) -> str:
+    def iter(
+        self, *, block: bool = True, timeout: int | None = TIMEOUT
+    ) -> str:
         """Retourne un itérateur sur série.
 
         Parameters
@@ -486,7 +583,7 @@ class LigneSerie(Processus):
 
         self.__port = port
         self.__baudrate = baudrate
-        self.__timeout = 0.005
+        self.__timeout = TIMEOUT
         self.__open = False
         super().__init__(stop_event=stop_event, lock=lock)
 
@@ -560,14 +657,12 @@ class LigneSerie(Processus):
         self.__open = True
 
     @classmethod
-    def setup(  # noqa: PLR0917, PLR0913
+    def setup(
         cls: type[LigneSerie],
         port: str,
         baudrate: BaudRateType,
-        timeout: float,
-        arret: multiprocessing.Event,
-        loquet: multiprocessing.Lock,
-        log_queue: multiprocessing.Queue,
+        timeout: float,  # noqa: ARG003
+        sync: Synchronisateur,
     ) -> (serial.Serial, bytes):
         """Initialise la communication série.
 
@@ -578,45 +673,40 @@ class LigneSerie(Processus):
         """
         ser = serial.serial_for_url(port, do_not_open=True)
         ser.baudrate = baudrate
-        ser.timeout = timeout
+        ser.timeout = TIMEOUT
 
-        with loquet, contextlib.suppress(Exception):
+        with sync, contextlib.suppress(Exception):
             ser.open()
 
         if not ser.is_open:
             err = CouldNotConnectToSerialPortError(port)
-            log_queue.put(err)
-            arret.set()
-
-        ser.read_until(b"\n")
+            sync.logqueue.put(err)
+            sync.stop()
+        else:
+            ser.read_until(b"\n")
 
         return ser, b""
 
     @staticmethod
     def write_out(
         ser: serial.Serial,
-        input_: multiprocessing.Queue,
-        arret: multiprocessing.Event,
-        loquet: multiprocessing.Lock,
-        log_queue: multiprocessing.Queue,
+        sync: Synchronisateur,
     ) -> None:
         """Envoie un message de la file d'entrée à la ligne série."""
         try:
-            cmd: bytes = input_.get()
+            cmd: bytes = sync.inqueue.get()
         except ValueError as e:
-            log_queue.put(e)
-            arret.set()
+            sync.logqueue.put(e)
+            sync.stop()
         else:
-            with loquet:
+            with sync:
                 ser.write(cmd)
-            input_.task_done()
+            sync.inqueue.task_done()
 
     @staticmethod
     def send_out(
         val: bytes,
-        output: multiprocessing.Queue,
-        arret: multiprocessing.Event,
-        log_queue: multiprocessing.Queue,
+        sync: Synchronisateur,
     ) -> bytes:
         """Rend un message reçu disponible pour next.
 
@@ -626,15 +716,15 @@ class LigneSerie(Processus):
             Une valeur vierge pour val dans loop.
         """
         try:
-            output.put(val)
+            sync.outqueue.put(val)
         except (ValueError, queue.Full) as e:
-            log_queue.put(e)
-            arret.set()
+            sync.logqueue.put(e)
+            sync.stop()
 
         return b""
 
     @staticmethod
-    def read_in(ser: serial.Serial, loquet: multiprocessing.Lock) -> bytes:
+    def read_in(ser: serial.Serial, sync: Synchronisateur) -> bytes:
         """Lire une valeur de la ligne série.
 
         Returns
@@ -642,51 +732,52 @@ class LigneSerie(Processus):
         val: bytes
             La valeur lue.
         """
-        with loquet:
+        with sync:
             val = ser.read_until(b"\n")
 
         return val  # noqa: RET504
 
     @classmethod
-    def loop(  # noqa: PLR0917, PLR0913
+    def loop(
         cls: type[Self],
         ser: serial.Serial,
         val: bytes,
-        arret: multiprocessing.Event,
-        input_: multiprocessing.Queue,
-        output: multiprocessing.Queue,
-        loquet: multiprocessing.Lock,
-        log_queue: multiprocessing.Queue,
+        sync: Synchronisateur,
     ) -> bytes:
         """Exécute une itération de suivi de la ligne série.
+
+        Parameters
+        ------------
+        ser: serial.Serial
+            Objet de connexion série.
+        val: bytes
+            Dernière valeur.
+        sync: Synchronisateur
+            Objet de communication et synchronisation.
 
         Returns
         ------------
         val: bytes
             La valeur lue dans cette itération.
         """
-        if not input_.empty() and not ser.out_waiting:
-            cls.write_out(ser, input_, arret, loquet, log_queue)
+        if not sync.inqueue.empty() and not ser.out_waiting:
+            cls.write_out(ser, sync)
 
         if len(val) > 0:
-            val = cls.send_out(val, output, arret, log_queue)
+            val = cls.send_out(val, sync)
 
-        if not output.full() and ser.in_waiting:
-            val = cls.read_in(ser, loquet)
+        if not sync.outqueue.full() and ser.in_waiting:
+            val = cls.read_in(ser, sync)
 
         return val
 
     @classmethod
-    def run(  # noqa: PLR0917, PLR0913
+    def run(
         cls: type[Self],
         port: str,
         baudrate: BaudRateType,
         timeout: float,
-        arret: multiprocessing.Event,
-        input_: multiprocessing.Queue,
-        output: multiprocessing.Queue,
-        loquet: multiprocessing.Lock,
-        log_queue: multiprocessing.Queue,
+        sync: Synchronisateur,
     ) -> None:
         """Gère la connexion série dans un autre processus."""
         # Normalement les modules sont importés dans l'espace de nom
@@ -698,16 +789,12 @@ class LigneSerie(Processus):
             port,
             baudrate,
             timeout,
-            arret,
-            loquet,
-            log_queue,
+            sync,
         )
 
         with contextlib.suppress(KeyboardInterrupt):
-            while not arret.is_set():
-                val = cls.loop(
-                    ser, val, arret, input_, output, loquet, log_queue
-                )
+            while not sync.is_stopped:  # pylint: disable=W0149
+                val = cls.loop(ser, val, sync)
 
         ser.close()
 
@@ -724,7 +811,13 @@ class LigneSerie(Processus):
 
         return self.__open and self.is_alive
 
-    def next(self, *, block: bool = True, parse: bool = False) -> str | dict:
+    def next(
+        self,
+        *,
+        block: bool = True,
+        timeout: float = TIMEOUT,
+        parse: bool = False,
+    ) -> str | dict:
         """Retourne le prochain élément reçu.
 
         Parameters
@@ -743,18 +836,21 @@ class LigneSerie(Processus):
         """
         self.checkin()
 
-        val = super().next(block=block)
+        val = super().next(block=block, timeout=timeout)
         self.debug("val = %r", val)
 
         if not parse:
             return val
 
-        d = {}
-        if "\t" in val:
-            items = val.split("\t")
+        if val is None:
+            return {}
 
-            if all((":" in mot) for mot in items):
-                for k, v in (mot.split(":") for mot in items):
+        d = {}
+        if VAL_SEP in val:
+            items = val.split(VAL_SEP)
+
+            if all((KEY_VAL_SEP in mot) for mot in items):
+                for k, v in (mot.split(KEY_VAL_SEP) for mot in items):
                     if k.isprintable():
                         try:
                             res = float(v)
@@ -770,9 +866,7 @@ class LigneSerie(Processus):
         self.__open = False
         super().close()
 
-    def parse(
-        self, *, block: bool = True, timeout: int | None = 0.001
-    ) -> dict[str, float]:
+    def parse(self, *, block: bool = True) -> dict[str, float]:
         """Renvoie un dictionnaire par ligne au format du traceur Arduino.
 
         Prends une ligne de texte au format ``A1:244 A2:32`` et retourne
@@ -782,8 +876,6 @@ class LigneSerie(Processus):
         ---------------
         block: bool = False
             Si on attend chaque ligne.
-        timeout: float | None = None
-            Combien de temps attendre une ligne.
 
         Yields
         ---------------
@@ -800,8 +892,8 @@ class LigneSerie(Processus):
         """
         self.checkin()
 
-        while True:
-            yield self.next(block=block, timeout=timeout, parse=True)
+        while True:  # pylint: disable=W0149
+            yield self.next(block=block, parse=True)
 
     def __repr__(self) -> str:
         """Retourne une description d'un :class:LigneSerie.
@@ -823,8 +915,8 @@ class LigneSerie(Processus):
 class Appareil(LigneSerie):
     """Classe abstraite permettant de se connecter automatiquement."""
 
-    @staticproperty
-    def APPAREIL() -> str:  # noqa: N802
+    @property
+    def APPAREIL(self) -> str:  # noqa: N802  # pylint: disable=C0103
         """Addresse utilisée pour l'appareil.
 
         Returns
@@ -879,8 +971,8 @@ class ArduinoNanoEvery(Appareil):
     prochain Arduino Nano Every disponible.
     """
 
-    @staticproperty
-    def APPAREIL() -> str:  # noqa: N802
+    @property
+    def APPAREIL(self) -> str:  # noqa: N802
         """Addresse utilisée pour l'appareil.
 
         Returns
@@ -898,7 +990,9 @@ class ArduinoNanoEvery(Appareil):
 
 def print_ports() -> None:
     """Affiche les ports série disponibles."""
-    from serial.tools.list_ports import comports  # noqa: PLC0415
+    from serial.tools.list_ports import (  # noqa: PLC0415
+        comports,
+    )  # pylint: disable=C0415
 
     for p in comports():
         print(p.device, p.description, p.hwid, sep="\t")
@@ -935,8 +1029,8 @@ def echo(*, debug: bool = False) -> None:
 
     with LigneSerie() as com:
         info("Connecté à %r.", com)
-        while True:
-            try:
+        while True:  # pylint: disable=W0149
+            try:  # pylint: disable=W0717
                 com.print(input(">>>"))
                 print(com.next(block=True))
             except KeyboardInterrupt:
@@ -961,8 +1055,8 @@ def ardecho(*, debug: bool = False) -> None:
 
     with ArduinoNanoEvery(baudrate=9600) as com:
         info("Connecté à %r.", com)
-        while True:
-            try:
+        while True:  # pylint: disable=W0149
+            try:  # noqa: W0717
                 com.print(input(">>>"))
                 print(com.next(block=True))
             except KeyboardInterrupt:
@@ -985,7 +1079,7 @@ def echodata(*, debug: bool = False) -> None:
     with LigneSerie() as com:
         info("Connecté à %r.", com)
         for sig in dummy_signal():
-            try:
+            try:  # noqa: W0717
                 com.print(sig)
                 print(com.next(block=True, parse=True))
             except KeyboardInterrupt:
@@ -1007,7 +1101,7 @@ def arddata(*, debug: bool = False) -> None:
 
     with ArduinoNanoEvery(baudrate=9600) as com:
         info("Connecté à %r.", com)
-        while True:
+        while True:  # pylint: disable=W0149
             try:
                 print(com.next(block=True, parse=True))
             except KeyboardInterrupt:

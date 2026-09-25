@@ -7,3 +7,4 @@ build
 *.zip
 multiblink.pdf
 oscilloscope.pdf
+tests/graphe.png
