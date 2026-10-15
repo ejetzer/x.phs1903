@@ -46,6 +46,7 @@ Ils ne demandent aucun fenêtrage ou affichage, mais certains peuvent créer des
 HEADER = """
 ## Test {0}: {1}
 
+{2}
 """
 
 Q_POURSUIVRE = "Poursuivre?"
@@ -60,7 +61,7 @@ A_SUCCES = "Test {0} réussi!"
 A_ECHEC = "Test {0} échoué."
 
 def header(i: int, test: Callable) -> str:
-    return Markdown(HEADER.format(i+1, test.__name__))
+    return Markdown(HEADER.format(i+1, test.__name__, test.__doc__))
 
 def ask(q: str, opt: list[str], def_: str) -> str:
     return Prompt.ask(q, choices=opt, default=def_, case_sensitive=False)
