@@ -51,6 +51,6 @@ class ClassPropertyClass(property):
 classproperty = ClassPropertyClass
 
 __all__ = [
-    "staticproperty",
     "classproperty",
+    "staticproperty",
 ]

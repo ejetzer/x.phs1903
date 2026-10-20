@@ -65,7 +65,7 @@ from .exceptions import (
     WrongSerialInputTypeError,
 )
 from .logging import DEBUG, WithLogger, basicConfig, info
-from .multiprocessing import Synchronisateur, Processus
+from .multiprocessing import Processus, Synchronisateur
 
 if typing.TYPE_CHECKING:
     from types import TracebackType

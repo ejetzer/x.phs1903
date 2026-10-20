@@ -6,7 +6,7 @@
  * programmation Arduino dans le cadre du cours
  * PHS1903 de Polytechnique Montréal.
  */
+#include "adc.h"
 #include "broche.h"
 #include "chrono.h"
-#include "adc.h"
 #include "serie.h"

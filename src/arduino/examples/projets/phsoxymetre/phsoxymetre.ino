@@ -1,6 +1,6 @@
-#include <serie.h>
 #include <broche.h>
 #include <chrono.h>
+#include <serie.h>
 
 phs::LigneSerie com (115200);
 phs::ListeBroche<uint16_t> acq_1 (A0, 625); // 625 * 2 * 2 o = 2.5 ko
@@ -14,50 +14,52 @@ bool groupe = false;
 // Indicateur de quelle mesure on prend
 // false -> acq_1, del_1; true -> acq_2, del_2
 
-void setup ()
+void
+setup ()
 {
-  com.setup();
-  acq_1.setup();
-  acq_2.setup();
-  del_1.setup();
-  del_2.setup();
-  mesure.setup();
+  com.setup ();
+  acq_1.setup ();
+  acq_2.setup ();
+  del_1.setup ();
+  del_2.setup ();
+  mesure.setup ();
 }
 
-void loop ()
+void
+loop ()
 {
   com.loop ();
   del_1.loop ();
   del_2.loop ();
 
-  if ( mesure.loop () )
-  {
-    if ( groupe )
+  if (mesure.loop ())
     {
-      acq_2.loop ();
-      del_1.regler (LOW);
-      del_2.regler (HIGH);
+      if (groupe)
+        {
+          acq_2.loop ();
+          del_1.regler (LOW);
+          del_2.regler (HIGH);
+        }
+      else
+        {
+          acq_1.loop ();
+          del_1.regler (HIGH);
+          del_2.regler (LOW);
+        }
+      groupe = !groupe;
     }
-    else
-    {
-      acq_1.loop ();
-      del_1.regler (HIGH);
-      del_2.regler (LOW);
-    }
-    groupe = !groupe;
-  }
 
-  if ( acq_1.is_full () && acq_2.is_full () )
-  {
-    for ( uint16_t i = acq_1.begin (); i < acq_1.end (); i++ )
+  if (acq_1.is_full () && acq_2.is_full ())
     {
-      acq_1.pos (i);
-      acq_2.pos (i);
-      com.print (acq_1);
-      com.tab ();
-      com.println (acq_2);
+      for (uint16_t i = acq_1.begin (); i < acq_1.end (); i++)
+        {
+          acq_1.pos (i);
+          acq_2.pos (i);
+          com.print (acq_1);
+          com.tab ();
+          com.println (acq_2);
+        }
+      acq_1.empty ();
+      acq_2.empty ();
     }
-    acq_1.empty();
-    acq_2.empty();
-  }
 }

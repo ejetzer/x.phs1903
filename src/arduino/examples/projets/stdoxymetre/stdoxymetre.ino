@@ -19,47 +19,50 @@ bool groupe = false;
 // Indicateur de quelle mesure on prend
 // false -> acq_1, del_1; true -> acq_2, del_2
 
-void setup ()
+void
+setup ()
 {
-  Serial.begin(115200);
-  pinMode(A0, INPUT_PULLUP);
-  pinMode(A1, INPUT_PULLUP);
-  pinMode(DEL0, OUTPUT);
-  pinMode(DEL1, OUTPUT);
+  Serial.begin (115200);
+  pinMode (A0, INPUT_PULLUP);
+  pinMode (A1, INPUT_PULLUP);
+  pinMode (DEL0, OUTPUT);
+  pinMode (DEL1, OUTPUT);
 }
 
-void loop ()
+void
+loop ()
 {
-  if ( (millis () - t_mes) >=  TMES )
-  {
-    if ( groupe )
+  if ((millis () - t_mes) >= TMES)
     {
-      acq_2[idx_2] = analogRead(A1);
-      t_2[idx_2] = millis();
-      idx_2++;
-      digitalWrite(DEL0, LOW);
-      digitalWrite(DEL1, HIGH);
+      if (groupe)
+        {
+          acq_2[idx_2] = analogRead (A1);
+          t_2[idx_2] = millis ();
+          idx_2++;
+          digitalWrite (DEL0, LOW);
+          digitalWrite (DEL1, HIGH);
+        }
+      else
+        {
+          acq_1[idx_1] = analogRead (A0);
+          t_1[idx_1] = millis ();
+          idx_1++;
+          digitalWrite (DEL1, LOW);
+          digitalWrite (DEL0, HIGH);
+        }
+      t_mes = millis ();
+      groupe = !groupe;
     }
-    else
-    {
-      acq_1[idx_1] = analogRead(A0);
-      t_1[idx_1] = millis();
-      idx_1++;
-      digitalWrite(DEL1, LOW);
-      digitalWrite(DEL0, HIGH);
-    }
-    t_mes = millis();
-    groupe = !groupe;
-  }
 
-  if ( idx_1 >= NMES && idx_2 >= NMES )
-  {
-    for ( uint16_t i = 0; i < NMES; i++ )
+  if (idx_1 >= NMES && idx_2 >= NMES)
     {
-      Serial.print("t0:" + String(t_1[i]) + "\tA0:" + String(acq_1[i]));
-      Serial.println("\tt1:" + String(t_2[i]) + "\tA1:" + String(acq_2[i]));
+      for (uint16_t i = 0; i < NMES; i++)
+        {
+          Serial.print ("t0:" + String (t_1[i]) + "\tA0:" + String (acq_1[i]));
+          Serial.println ("\tt1:" + String (t_2[i])
+                          + "\tA1:" + String (acq_2[i]));
+        }
+      idx_1 = 0;
+      idx_2 = 0;
     }
-    idx_1 = 0;
-    idx_2 = 0;
-  }
 }

@@ -1,2 +1,10 @@
 # (c) Copyright 2026 Émile Jetzer. All Rights Reserved.
 """Définitions pertinentes pour l'oxymètre."""
+
+
+def stdlib():
+    pass
+
+
+def phslib():
+    pass

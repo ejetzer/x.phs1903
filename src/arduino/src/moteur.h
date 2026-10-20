@@ -10,30 +10,25 @@
 namespace phs
 {
 
-  class Moteur
-  {
+class Moteur
+{
+};
 
-  };
+class Servo : public Moteur
+{
+};
 
-  class Servo : public Moteur
-  {
+class PasPas : public Moteur
+{
+};
 
-  };
+class DC : public Moteur
+{
+};
 
-  class PasPas : public Moteur
-  {
-
-  };
-
-  class DC : public Moteur
-  {
-
-  };
-
-  class Encodeur
-  {
-
-  };
+class Encodeur
+{
+};
 
 }
 #endif
