@@ -8,5 +8,5 @@
  */
 #include "broche.h"
 #include "chrono.h"
-#include "hautefrequence.h"
+#include "adc.h"
 #include "serie.h"

@@ -20,7 +20,7 @@ namespace phs
 {
 
 uint8_t
-clear_PF ()
+reinit_prefacteur ()
 {
   // Régler à 256
   ADC0.CTRLC &= ~(bit (0) | bit (1) | bit (2)); // 0b11100000
@@ -76,7 +76,7 @@ regler_prefacteur (uint8_t pf_pow)
 uint8_t
 regler_prefacteur ()
 {
-  return set_PF (7);
+  return regler_prefacteur (7);
 }
 
 }

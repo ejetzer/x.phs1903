@@ -114,7 +114,6 @@ void
 phs::ListeBroche<T>::setup ()
 {
   pinMode (this->numero, INPUT_PULLUP);
-  this->regler (LOW);
 }
 
 template <typename T>
