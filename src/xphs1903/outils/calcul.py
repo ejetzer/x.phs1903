@@ -229,6 +229,9 @@ def fft(
         logger = logging.getLogger(f"{__name__}.fft")
 
     logger.debug("df =\n%r", df)
+    if df.empty:
+        return df
+
     ts, xs = zip(
         *(
             (df.iloc[:, i].to_numpy(), df.iloc[:, i + 1].to_numpy())
@@ -313,7 +316,7 @@ def no_op(*, debug: bool = False) -> None:
     if debug:
         basicConfig(DEBUG)
 
-    with LigneSerie as com, TableauCalcul(com) as tab:
+    with LigneSerie() as com, TableauCalcul(com) as tab:
         if debug:
             com.log_to_stderr()
             com.setLevel(DEBUG)

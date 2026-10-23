@@ -213,6 +213,9 @@ class Tableau(WithLogger):
             Index key en dehors du nombe de séries de mesures.
         """
         self.checkin()
+        if self.df.empty:
+            return self.df
+
         if key > len(self.df.columns) // 2:
             raise KeyError
 

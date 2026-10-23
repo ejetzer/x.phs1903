@@ -18,6 +18,7 @@ if typing.TYPE_CHECKING:
     from types import TracebackType
     from typing import Final, Self
 
+TIMEOUT: Final[float] = 5
 
 class Synchronisateur(WithLogger):
     """Objet de synchronisation.

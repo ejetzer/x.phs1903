@@ -13,5 +13,5 @@ class Prompt(Processus):
 
     @classmethod
     def loop(cls: type[Self], i: int | None = None) -> None:
-        rich.print(cls.prompt)
+        rich.print(cls.prompt(i))
         ligne = sys.stdin.readline()
